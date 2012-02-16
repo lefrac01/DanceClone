@@ -5,6 +5,9 @@
 //
 //TODO: implement #STOPS:
 //
+//TODO: if the log is going to stay it has to support logging levels
+//
+
 
 //include "../../../../../../Generic/log_console_globbed.h"
 
@@ -138,14 +141,6 @@ void Game_menu_stepimport_sm(char* filename)
   debug_log << "BPMS arrays..." << endl;
   debug_log.close();
   #endif
-
-// FLOWERS GROW IN THE SUNSHINE          
-// FLOWERS GROW IN THE SUNSHINE          
-// FLOWERS GROW IN THE SUNSHINE          
-// FLOWERS GROW IN THE SUNSHINE          
-// FLOWERS GROW IN THE SUNSHINE          
-ofstream flower_log;
-        flower_log.open("debug", std::ios_base::trunc);
 
   #ifdef LOG_IMPORT
   debug_log.open("debug", std::ios_base::app);
@@ -410,18 +405,9 @@ ofstream flower_log;
           // there is a BPM change on this beat.
           tempBPMS = BPMS[current_BPM_index];
           
-// FLOWERS GROW IN THE SUNSHINE          
-        flower_log.open("debug", std::ios_base::app);
-        flower_log << "groovy baby!  a BPM change occured on beat " << current_beat << ".  the new BPM is " << tempBPMS << endl;
-        flower_log.close();
-          
           // move index to next index (if there is one!)
           if (current_BPM_index < maxBPMS)
           {
-// FLOWERS ARE VERY GAY IN THE SUNSHINE
-flower_log.open("debug", std::ios_base::app);
-flower_log << "also, more groovy data exists to nourish this flourish" << endl;
-flower_log.close();
             current_BPM_index++;
           }
         }
@@ -439,16 +425,7 @@ flower_log.close();
         #endif
         for(int a=(int)(1/notetimevalue*4); a>0; a--){
           currenttime=currenttime+notetimevalue*1000*60/tempBPMS;
-// FLOWERS GROW IN THE SUNSHINE          
-flower_log.open("debug", std::ios_base::app);
-flower_log << currenttime << " is how much time the flowers got in the sun at current_beat " << current_beat << endl;
-flower_log.close();
-          #ifdef LOG_IMPORT
-          debug_log.open("debug", std::ios_base::app);
-          debug_log << "currenttime is now " << currenttime << endl;
-          debug_log << "looking in lastlines[a][0]: " << lastlines[a][0] << " for a 1 and using n_arrows and maxarrows " << n_arrows << " and " << maxarrows << endl;
-          debug_log.close();
-          #endif
+
           if(lastlines[a][0]=='1' && n_arrows<maxarrows){
             arrows[n_arrows] = new arrow(0,(int)(currenttime),0);
             n_arrows++;}
@@ -485,12 +462,6 @@ flower_log.close();
           if(lastlines[a][3]=='3' && n_arrows<maxarrows)
             for(int b=n_arrows-1; b>0; b--)if(arrows[b]->direction==3){
               arrows[b]->length=(int)currenttime-arrows[b]->time;b=0;}
-              
-          #ifdef LOG_IMPORT
-          debug_log.open("debug", std::ios_base::app);
-          debug_log << "incremented currenttime ???? currenttime is now " << currenttime << endl;
-          debug_log.close();
-          #endif
         }
         
         // the beat has been processed.

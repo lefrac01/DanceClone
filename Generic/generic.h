@@ -1,23 +1,23 @@
 #ifdef WIN
-	#include <windows.h>
-	#include <SDL.h>
-	#include <SDL_image.h>
-	#include <SDL_mixer.h>
-	#ifdef ONLINE
-		#include <SDL_net.h>
-	#endif
+  #include <windows.h>
+  #include <SDL.h>
+  #include <SDL_image.h>
+  #include <SDL_mixer.h>
+  #ifdef ONLINE
+    #include <SDL_net.h>
+  #endif
 #endif
 #ifdef WII
-	#include <gccore.h>
-	#include <wiiuse/wpad.h> 
-	#include <SDL/SDL.h>
-	#include <SDL/SDL_image.h>
-	#include <SDL/SDL_mixer.h>
-	#include <fat.h>
-	#include <dirent.h>
-	#include <unistd.h>
-	#include <asndlib.h>
-	#include <mp3player.h>
+  #include <gccore.h>
+  #include <wiiuse/wpad.h> 
+  #include <SDL/SDL.h>
+  #include <SDL/SDL_image.h>
+  #include <SDL/SDL_mixer.h>
+  #include <fat.h>
+  #include <dirent.h>
+  #include <unistd.h>
+  #include <asndlib.h>
+  #include <mp3player.h>
 #endif
 
 //#include <Box2D.h>
@@ -60,23 +60,23 @@ int framecap=60;
 
 void init()
 {
-	srand((int)time(NULL));
-	SDL_Init(SDL_INIT_EVERYTHING);
-	SDL_ShowCursor(SDL_DISABLE);
+  srand((int)time(NULL));
+  SDL_Init(SDL_INIT_EVERYTHING);
+  SDL_ShowCursor(SDL_DISABLE);
 #ifdef WIN
-	screen = SDL_SetVideoMode(screenx, screeny, screenb, SDL_DOUBLEBUF);
-	//screen = SDL_SetVideoMode(screenx,screeny,16,SDL_FULLSCREEN);
-	SDL_WM_SetCaption( "DanceClone 0.51", NULL );
+  screen = SDL_SetVideoMode(screenx, screeny, screenb, SDL_DOUBLEBUF);
+  //screen = SDL_SetVideoMode(screenx,screeny,16,SDL_FULLSCREEN);
+  SDL_WM_SetCaption( "DanceClone 0.52", NULL );
 #endif
 #ifdef WII
-	screen = SDL_SetVideoMode(screenx, screeny, 16, SDL_DOUBLEBUF);
-	WPAD_Init();
-	WPAD_SetVRes(WPAD_CHAN_ALL, 640, 480);
-	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);	
-	SYS_SetResetCallback(WiiResetPressed);
-	SYS_SetPowerCallback(WiiPowerPressed);
-	WPAD_SetPowerButtonCallback(WiimotePowerPressed);
-	fatInitDefault(); //fatMountSimple("sd", &__io_wiisd); is not required - this is done by fatInitDefault()
+  screen = SDL_SetVideoMode(screenx, screeny, 16, SDL_DOUBLEBUF);
+  WPAD_Init();
+  WPAD_SetVRes(WPAD_CHAN_ALL, 640, 480);
+  WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);  
+  SYS_SetResetCallback(WiiResetPressed);
+  SYS_SetPowerCallback(WiiPowerPressed);
+  WPAD_SetPowerButtonCallback(WiimotePowerPressed);
+  fatInitDefault(); //fatMountSimple("sd", &__io_wiisd); is not required - this is done by fatInitDefault()
 #endif
 }
 

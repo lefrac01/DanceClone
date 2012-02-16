@@ -1,0 +1,13 @@
+changelog
+--
+v0.52
+-fixed import of multiple BPMS
+-added initial support for note lengths up to 16th notes
+-fixed import now reads only dance-single data
+
+v0.51
+-fixed crash on import of stepmania files
+-fixed reading offset during stepmania import
+
+v0.50
+current release available at http://wiibrew.org/wiki/Dance_Clone

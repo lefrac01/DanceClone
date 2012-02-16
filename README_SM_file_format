@@ -1,0 +1,103 @@
+stepmania file format:
+(from http://www.stepmania.com/wiki/The_.SM_file_format on thu feb 16, 2012 7:59EST)
+
+The .SM song file format was created to be one file format that supports all game types that StepMania can play (dance, pump, beat, guitar, etc). The syntax of a .SM is similar to .DWI and .KSF except that some tags are different.
+Note that StepMania can load images in PNG, GIF, JPEG, and BMP formats, and can load sounds in OGG, MP3, and WAV formats.
+Any text field in an SM file can contain UTF-8 characters.
+#TITLE:...; - The "main title" of the song.
+#SUBTITLE:...; - This text will appear underneath the main title of the song on the Select Music screen. e.g. "~Dirty Mix~" or "(remix)".
+#ARTIST:...; - The artist of the song.
+#TITLETRANSLIT:...; - Transliteration of song's main title.
+#SUBTITLETRANSLIT:...; - Transliteration of song's subtitle.
+#ARTISTTRANSLIT:...; - Transliteration of the artist's name.
+#CREDIT:...; - Give yourself some credit here for creating a wonderful song.
+#BANNER:...; - The file name of the banner image. e.g. "b4u-banner.png". This image must reside in the song folder.
+#BACKGROUND:...; - The file name of the background image. e.g. "b4u-bg.png". This image must reside in the song folder.
+#CDTITLE:...; - The file name of the spinning CD logo. e.g. "b4u-cdtitle.png". This image must reside in the song folder.
+#MUSIC:...; - The file name of the music file. e.g. "b4u.mp3". This image must reside in the song folder.
+#OFFSET:...; - The amount of time in seconds before or after the music starts that beat 0 occurs. Positive values place it before the song starts, negative values after.
+#SAMPLESTART:...; - The time in seconds to start the music sample that plays on the Select Music screen. This is specified as a floating point value. e.g. "32.34".
+#SAMPLELENGTH:...; - The time in seconds let the sample music play after starting. This is specified as a floating point value. e.g. "16.00". Note that in the last 1 second of playing the music will fade out.
+#SELECTABLE:...; - If "NO", the song can not be selected manually and can only be played as part of a course. If "ROULETTE", the song can can also be selected via roulette. The default value is "YES".
+#BPMS:...; - A value of the format "beat=bpm". Indicates that at 'beat', the speed of the arrows will change to "bpm". Both of these values are specified as (positive) floating point values. You must specifiy a BPM value for beat 0. Multiple BPMs can be given by separating them with commas. e.g. "0=160,120=80".
+#STOPS:...; - A value of the format "beat=sec". Indicates that at 'beat', the motion of the arrows should stop for "sec" seconds. Both of these values are specified as floating point values. Multiple stops can be given by separating them with commas. e.g. "60=2.23,80=1.12".
+#BGCHANGE:...; - A value of the format "beat=bg name". Indicates that at 'beat', the background should begin playing a new background named 'bg name'. 'beat' is a fractional value value and 'bg name' is a string. Different bg changes are separated by commas. e.g. "60=falling,80=flower". When StepMania looks for a backgound, it searches in this order:
+Looks for a movie with file name = "bg name" in the song folder. You must include the file extension in "bg name". e.g. "60=falling.avi,80=flower.mpg".
+Looks for a BGAnimation folder with the name "bg name" in the song folder.
+Looks for a movie with file name "bg name" in the RandomMovies folder. You must include the file extension in "bg name". e.g. "60=falling.avi,80=flower.mpg".
+Looks for a BGAnimation with file name "bg name" in the BGAnimations folder.
+Looks for a Visualization with the file name "bg name" in the Visualizations folder. For example, if you have a song B4U and special B4U-specific BGAnimations called "robot" and "electric". First, move the robot and electric BGAnimation folders into the B4U song folder (e.g. "Songs\4th Mix\B4U\robot" and "Songs\4th Mix\B4U\electric"). Then, using the editor, insert a new background change at each point in the song where you to switch to a new BGAnimation.
+#NOTES...; - The main part of the file, that describes the steps.
+#NOTES
+The #NOTES descriptor always takes this form:
+#NOTES:
+<NotesType>:
+<Description>:
+<DifficultyClass>:
+<DifficultyMeter>:
+<RadarValues>:
+<NoteData>
+;
+NotesType - Must be one of the currently supported types in StepMania:
+dance-single
+dance-double
+dance-couple
+dance-solo
+pump-single
+pump-double
+pump-couple
+ez2-single
+ez2-double
+ez2-real
+para-single
+Description - This will be displayed on the gameplay screen. This can be any text, but is most commonly: "Beginner", "Basic", "Another", "Trick", "Standard", "SSR", "Maniac", "Heavy", "Challenge", or "SManiac", for traditional reasons.
+DifficultyClass - This value must be "beginner", "easy", "medium", "hard", or "challenge". These values correspond to the five levels of difficulty on the Select Difficulty screen.
+DifficultyMeter - The difficulty of these notes as a bar rating. The value must be an integer between 1 and traditionally 10, though many keyboard files go above ten.
+RadarValues - Five floating point numbers separated by commas that determine the "voltage", "stream", "chaos", "freeze", and "air" values for the set of steps, as is displayed in the "groove radar" in the default theme, for example.
+NoteData - This value requires a longer explanation:
+Each note is represented by a character:
+0 = no note here
+1 = a regular "tap note"
+2 = beginning of a "hold note"
+3 = end of a "hold note"
+4 = beginning of a roll (3.9+, 3.95+, 4.0)
+M = Mine
+L = Lift (3.9+ and 4.0)
+a-z,A-z = tap notes reserved for game types that have sounds associated with notes
+Notes that are hit at the same time are grouped into rows. For example, if the NotesType is "dance-single", the row "1001" would specify that both the Left and Right panels should be hit at the same time.
+The number of notes per row (also called the number of 'columns') depends on the "NotesType".
+dance-single = 4 notes/row (Left,Down,Up,Right)
+dance-double = 8 notes/row
+dance-couple = 8 notes/row
+dance-solo = 6 notes/row
+pump-single = 5 notes/row
+pump-double = 10 notes/row
+pump-couple = 10 notes/row
+ez2-single = 5 notes/row
+ez2-double = 10 notes/row
+ez2-real = 7 notes/row
+para-single = 5 notes/row
+Note rows are grouped into measures. The number of note rows you specify in a measure will determine the time value of each note. For example, if there are 4 note rows in a measure, each note will be treated as a quarter note. If there are 8 notes rows in a measure, each note will be treated as a eighth note. If there are 12 notes rows in a measure, each note will be treated as a triplet (1/12th) note. Measures are separated by a comma.
+Example:
+#NOTES:
+     dance-single:
+     these are some sample steps:
+     beginner:
+     5:
+     0.000,0.250,0.500,0.750,1.000:
+// measure 1
+2010
+0000
+0100
+0000
+, // measure 2
+0001
+0100
+0001
+0000
+3010
+0000
+0000
+0000
+;
+In the example, a set of steps has been specified for a single-pad dance game. The description of the set of steps is "these are some sample steps", the level is beginner (the easiest), the difficulty is 5, and the radar values are 0, 0.25, 0.5, 0.75, and 1. The notes in the first measure are at a quarter note "resolution", and the notes in the second measure are at an eighth note "resolution". Notice the freeze in the left panel from beat 1:1 to beat 2:3.

@@ -1,3 +1,19 @@
+//TODO: scrap wiidish and SDL_GetTicks() in favor of gettime()
+//
+//DOH on second thought, inspecting SDL_Systimer.c reveals the
+// exact code block below is implemented in SDL_GetTicks().
+//eg:
+/*
+Uint64 get_tick_count()
+{
+  const Uint64 ticks = gettime();
+  const Uint64 ms = ticks / TB_TIMER_CLOCK;
+  return ms;
+}
+*/
+//
+//TODO: ask tueidj advice on gettime()-based frame updates vs VIinterrupt...
+//
 //TODO: prevent wiidash from being callable during play.  dash appears,
 // music keeps playing but arrows stop animating so sync is lost.
 //
