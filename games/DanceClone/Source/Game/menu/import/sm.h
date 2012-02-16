@@ -1,8 +1,5 @@
 //NOTE: stepmania file format at http://www.stepmania.com/wiki/The_.SM_file_format
 //
-//TODO: check for dance-single.  it is the only format understood,
-// must ignore others
-//
 //TODO: support full stepmania BPM spec.  BPM is currently only supported as single BPM.
 //
 //TODO: implement #STOPS:
