@@ -1,0 +1,37 @@
+Windows
+---
+The original source code for version 0.50 compiled under Microsoft Windows using Visual C++ 9.  See README for more details about this version of the source code and for questions about dependencies and project setup.
+
+Linux - compiling for the Wii
+---
+As of 0.51 the source code should compile the Wii version of DanceClone under debian linux with the following dependencies:
+devkitppc r24
+libogc 1.8.8
+SDLwii 1.2
+
+--the following files were used on an Ubuntu 10.04LTS workstation to compile the source:
+(http://sourceforge.net/projects/devkitpro/)
+---
+devkitPPC_r24-x86_64-linux.tar.bz2
+libogc-1.8.8.tar.bz2
+libpng-1.5.4-ppc.tar.bz2
+freetype-2.4.2-ppc.tar.bz2
+jpeg8a-ppc.tar.bz2
+tremor-lowmem-ppc.tar.bz2
+libfat-ogc-1.0.10.tar.bz2
+zlib-1.2.5-ppc.tar.bz2
+
+SDL from source.
+(http://code.google.com/p/sdl-wii/source/checkout)
+note SDL source was finicky to compile, check LIBOGC in the wii_rules
+and make sure dependencies are correctly located
+---
+
+Information about setting up the correct build environment can be found at 
+http://wiibrew.org/wiki/Devkitppc_setup_(Linux)
+
+The aim is to cross-compile a boot.dol file executable natively by the Wii.
+
+First install v0.50 of DanceClone available at http://wiibrew.org/wiki/Dance_Clone which will give you the installed application and the necessary resources.
+
+For additional support visit #wiidev on efnet.  

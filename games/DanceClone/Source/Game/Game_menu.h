@@ -1,0 +1,7 @@
+#include "menu/credits.h"
+#include "menu/score.h"
+#include "menu/songselectp1.h"
+#include "menu/songselectp2.h"
+#include "menu/stepcreate.h"
+#include "menu/stepimport.h"
+#include "menu/titlescreen.h"

@@ -1,0 +1,359 @@
+//TODO: support full stepmania BPM spec.  stepmania stores BPM up to 
+//three decimal places.  DC is currently doing atoi on the input...
+//
+
+//##include "../../../../../../Generic/log_console_globbed.h"
+
+// Laugh now
+int pauselogging = 0;
+
+/*
+void wait_button()
+{
+  int done=0;
+  if (pauselogging)
+  {
+    while(!done)
+    {
+      SDL_PumpEvents();
+      updatecontrolinput();
+      if(WiiButtonsDown[0] & WPAD_BUTTON_A)done=1;
+      if(WiiButtonsDown[0] & WPAD_CLASSIC_BUTTON_A)done=1;
+    }
+  }
+}
+*/
+void writesteps(ofstream &outdata)
+{
+	if(n_arrows)
+  {
+    if(difficulty == 0) outdata << "<startbeginner>" << endl;
+    if(difficulty == 1) outdata << "<starteasy>" << endl;
+    if(difficulty == 2) outdata << "<startmedium>" << endl;
+    if(difficulty == 3) outdata << "<starthard>" << endl;
+    if(difficulty == 4) outdata << "<startchallenge>" << endl;
+    for(int a = 0; a < n_arrows; a++)
+    {
+      outdata << arrows[a]->direction << endl;
+      outdata << arrows[a]->time << endl;
+      outdata << arrows[a]->length << endl;
+      outdata << "----" << endl;
+    }
+    outdata << "<stop>" << endl;
+    
+    while(n_arrows) deletearrow(0);
+	}
+}
+
+void Game_menu_stepimport_sm(char* filename)
+{
+  // be prepared to laugh
+  /*
+  static GXRModeObj *rmode = NULL;
+  rmode = VIDEO_GetPreferredMode(NULL);
+  log_console_init(rmode, 0, 20, 20, 600, 440);
+  log_console_enable_video(true);
+  printf("hello console ERRRRRRRRRRRRRRR 1234567890 BOOOO!\n");  
+  printf("about to wait...\n");  
+  //#pauselogging = 1;
+  printf("logging pause enabled...\n");  
+  wait_button();
+  printf("done!\n");  
+  // stop laughing
+  * */
+  ofstream debug_log;
+
+  debug_log.open("debug", std::ios_base::trunc | std::ios_base::app);
+  debug_log << "beginning Game_menu_stepimport_sm(" << filename << ")" << endl;
+  debug_log.flush();  
+//  printf("declaring ofstream outdata...\n");  
+//  wait_button();
+  debug_log << "declaring ofstream outdata" << endl;
+  debug_log.flush();  
+	ofstream outdata;
+#ifdef WII
+//  printf("declaring ifstream indata...\n");  
+//  wait_button();
+  debug_log << "declaring ifstream indata" << endl;
+  debug_log.flush();  
+	ifstream indata;
+#endif
+#ifdef WIN
+	FILE * indata;
+#endif
+
+//  pauselogging = 0;
+
+	const int maxlinelength = 10000;    // fix many BPM changes easily over original 1000
+	char temptext[maxlinelength + 10];
+	char newtemp[maxlinelength + 10];
+	char lastlines[20][maxlinelength + 10];
+
+ 	double tempBPMS = 0;
+	double tempoffset = 0;
+	double currenttime = 0;
+	double notetimevalue = 0;
+	int tempint1 = 0;
+	int tempint2 = 0;
+	bool placeingnotes = 0;
+
+/*
+  debug_log << "wiping working mem..." << endl;
+  debug_log.flush();
+  memset(temptext, 0, sizeof(temptext));
+  memset(newtemp, 0, sizeof(newtemp));
+  memset(lastlines, 0, sizeof(lastlines));
+  debug_log << "done" << endl;
+  debug_log.flush();
+*/
+
+	sprintf(temptext, "%s%s%s", "Music/", songfilename, ".dc");
+//  printf("outdata.open(%s)...\n",temptext);  
+//  wait_button();
+  debug_log << "outdata.open(" << temptext << ")" << endl;
+  debug_log.flush();
+	outdata.open(temptext);
+	
+	sprintf(temptext, "%s%s", "Music/", filename);
+#ifdef WIN
+	indata = fopen(temptext, "r");
+#endif
+#ifdef WII
+  //#printf("indata.open(%s)...\n", temptext);  
+  //#wait_button();
+  debug_log << "indata.open(" << temptext << ")" << endl;
+  debug_log.flush();
+	indata.open(temptext);
+#endif
+	
+#ifdef WIN
+	while(fgets(newtemp, maxlinelength, indata)) if(strlen(newtemp) > 1)
+  {
+#endif
+#ifdef WII
+  //#printf("while(indata.good()...\n");  
+  //#wait_button();
+	while(indata.good())
+  {
+#endif
+		for(int a = 20-1; a > 0; a--)
+    {
+      /*
+      if (pauselogging == 1 && a == 2)
+      {
+        printf("sprintf from lastlines[%d] to lastlines[%d].\n", a, a-1);  
+        wait_button();
+        printf("before beginning, some chars: %d %d %d\n", lastlines[a-1][maxlinelength + 7], lastlines[a-1][maxlinelength + 8], lastlines[a-1][maxlinelength + 9]);
+        wait_button();
+        for (int blue=0; blue<100; blue++)
+        {
+          char tempish[101];
+          strncpy(tempish, lastlines[a-1]+blue*100, 99);
+          tempish[100]=0;
+          printf("%d:%s\n", blue, tempish);
+          wait_button();
+        }
+        char tempish[11];
+        strncpy(tempish, lastlines[a-1]+100*100, 9);
+        tempish[10]=0;
+        printf("100:%s\n", tempish);
+        wait_button();
+      } 
+      * */   
+      //BONJOUR CARL!!!!!
+      
+      // LE CRASH EST ICI!!!!
+      // QUAND A = 2.... la source doit être affichée avant que le noob puisse voir ;)
+      
+      //#sprintf(lastlines[a], "%s", lastlines[a - 1]);
+debug_log << "lastlines[" << a << "] <== lastlines["<< a-1 << "]" << endl;
+debug_log.flush();
+      strncpy(lastlines[a], lastlines[a-1], maxlinelength + 10);
+      lastlines[a][maxlinelength + 9] = 0;
+    }
+#ifdef WIN
+		newtemp[strlen(newtemp) - 1] = '\0';
+#endif
+#ifdef WII
+    //#printf("indata >> newtemp...\n");  
+    //#wait_button();
+		indata >> newtemp;
+    //#printf("got newtemp: %s\n", newtemp);  
+    //#wait_button();
+#endif
+    //#printf("sprintf into lastlines[0].\n");  
+    //#wait_button();
+		sprintf(lastlines[0],"%s",newtemp);
+		//outdata << newtemp << endl;
+
+
+    printf("charmatchstart on lastlines[0].  looking for #BPMS:\n");  
+		if(charmatchstart(lastlines[0],(char*)"#BPMS:")){
+      //#printf("charmatchstart returned true\n");  
+      //#pauselogging = 1;
+      //#wait_button();
+			tempint1=-1;tempint2=-1;
+      //#printf("looping on lastlines[0]\n");  
+      //#wait_button();
+			for(unsigned int a=0; a<strlen(lastlines[0]); a++){
+				if(lastlines[0][a]=='=')tempint1=a+1;}
+      //#printf("looping on lastlines[0] again\n");  
+      //#wait_button();
+			for(unsigned int a=0; a<strlen(lastlines[0]); a++){
+				if(lastlines[0][a]==';')tempint2=a+0;}
+			if(tempint1!=-1 && tempint2!=-1)
+      {
+        //#printf("looping on lastlines[0] again again\n");  
+        //#wait_button();
+				for(int a=0; a<tempint2-tempint1; a++){
+					temptext[a]=lastlines[0][a+tempint1];
+					//#temptext[a+1]='\n';}
+					temptext[a+1]=0;}
+      }
+      //#printf("found tempBPMS: %s\n", temptext);  
+      //#wait_button();
+			tempBPMS=atoi(temptext);
+      //#printf("extracted tempBPMS: %g\n", tempBPMS);  
+      //#wait_button();
+		}
+    //#printf("charmatchstart on lastlines[0].  looking for #OFFSET:\n");  
+		if(charmatchstart(lastlines[0],(char*)"#OFFSET:")){
+      //#printf("charmatchstart on lastlines[0].  found #OFFSET:\n");  
+      //#wait_button();
+			tempint1=-1;tempint2=-1;
+			for(unsigned int a=0; a<strlen(lastlines[0]); a++){
+				if(lastlines[0][a]=='=')tempint1=a+1;}
+			for(unsigned int a=0; a<strlen(lastlines[0]); a++){
+				if(lastlines[0][a]==';')tempint2=a+0;}
+			if(tempint1!=-1 && tempint2!=-1)
+				for(int a=0; a<tempint2-tempint1; a++){
+					temptext[a]=lastlines[0][a+tempint1];
+					temptext[a+1]='\n';}
+			tempoffset=atoi(temptext)*1000;
+		}
+    //#printf("charmatchend on lastlines[0].  looking for Beginner:\n");  
+		if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Beginner:")){
+      //#printf("charmatchstart on lastlines[0].  found Beginner:\n");  
+      //#wait_button();
+			while(n_arrows)deletearrow(0);
+			placeingnotes=1;difficulty=0;
+			currenttime=tempoffset;}
+    //#printf("charmatchend on lastlines[0].  looking for Easy:\n");  
+		if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Easy:")){
+      //#printf("charmatchstart on lastlines[0].  found Easy:\n");  
+      //#wait_button();
+			while(n_arrows)deletearrow(0);
+			placeingnotes=1;difficulty=1;
+			currenttime=tempoffset;}
+    //#printf("charmatchend on lastlines[0].  looking for Medium:\n");  
+		if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Medium:")){
+      //#printf("charmatchstart on lastlines[0].  found Medium:\n");  
+      //#wait_button();
+			while(n_arrows)deletearrow(0);
+			placeingnotes=1;difficulty=2;
+			currenttime=tempoffset;}
+    //#printf("charmatchend on lastlines[0].  looking for Hard:\n");  
+		if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Hard:")){
+      //#printf("charmatchstart on lastlines[0].  found Hard:\n");  
+      //#wait_button();
+			while(n_arrows)deletearrow(0);
+			placeingnotes=1;difficulty=3;
+			currenttime=tempoffset;}
+    //#printf("charmatchend on lastlines[0].  looking for Challenge:\n");  
+		if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Challenge:")){
+      //#printf("charmatchstart on lastlines[0].  found Challenge:\n");  
+      //#wait_button();
+			while(n_arrows)deletearrow(0);
+			placeingnotes=1;difficulty=4;
+			currenttime=tempoffset;}
+    //#printf("placing notes... but only if %d == 1\n", (int)placeingnotes);  
+    //#wait_button();
+		if(placeingnotes==0){
+      //#printf("ugly if strlen lastlines[1]...\n");  
+      //#wait_button();
+			if((lastlines[0][0]==','||lastlines[0][0]==';') && strlen(lastlines[1])==4){
+				notetimevalue=0;
+        //#printf("uglier for strlen lastlines[index]...\n");  
+        //#wait_button();
+				for(int a=1; a<20; a++){
+          //#printf("strlen lastlines[%d]...\n", a);  
+          //#wait_button();
+					if(strlen(lastlines[a])!=4){
+						notetimevalue=1/(double)(a-1)*4;
+						a=500;}
+				}
+        //#printf("undecipherable for on a...\n");  
+        //#wait_button();
+				for(int a=(int)(1/notetimevalue*4); a>0; a--){
+          //#printf("currenttime calc at a=%d...\n", a);  
+          //#wait_button();
+					currenttime=currenttime+notetimevalue*1000*60/tempBPMS;
+          //#printf("currenttime got %g...\n", currenttime);  
+          //#wait_button();
+					if(lastlines[a][0]=='1' && n_arrows<maxarrows){
+						arrows[n_arrows] = new arrow(0,(int)(currenttime),0);
+						n_arrows++;}
+					if(lastlines[a][1]=='1' && n_arrows<maxarrows){
+						arrows[n_arrows] = new arrow(1,(int)(currenttime),0);
+						n_arrows++;}
+					if(lastlines[a][2]=='1' && n_arrows<maxarrows){
+						arrows[n_arrows] = new arrow(2,(int)(currenttime),0);
+						n_arrows++;}
+					if(lastlines[a][3]=='1' && n_arrows<maxarrows){
+						arrows[n_arrows] = new arrow(3,(int)(currenttime),0);
+						n_arrows++;}
+					if(lastlines[a][0]=='2' && n_arrows<maxarrows){
+						arrows[n_arrows] = new arrow(0,(int)(currenttime),0);
+						n_arrows++;}
+					if(lastlines[a][1]=='2' && n_arrows<maxarrows){
+						arrows[n_arrows] = new arrow(1,(int)(currenttime),0);
+						n_arrows++;}
+					if(lastlines[a][2]=='2' && n_arrows<maxarrows){
+						arrows[n_arrows] = new arrow(2,(int)(currenttime),0);
+						n_arrows++;}
+					if(lastlines[a][3]=='2' && n_arrows<maxarrows){
+						arrows[n_arrows] = new arrow(3,(int)(currenttime),0);
+						n_arrows++;}
+					if(lastlines[a][0]=='3' && n_arrows<maxarrows)
+						for(int b=n_arrows-1; b>0; b--)if(arrows[b]->direction==0){
+							arrows[b]->length=(int)currenttime-arrows[b]->time;b=0;}
+					if(lastlines[a][1]=='3' && n_arrows<maxarrows)
+						for(int b=n_arrows-1; b>0; b--)if(arrows[b]->direction==1){
+							arrows[b]->length=(int)currenttime-arrows[b]->time;b=0;}
+					if(lastlines[a][2]=='3' && n_arrows<maxarrows)
+						for(int b=n_arrows-1; b>0; b--)if(arrows[b]->direction==2){
+							arrows[b]->length=(int)currenttime-arrows[b]->time;b=0;}
+					if(lastlines[a][3]=='3' && n_arrows<maxarrows)
+						for(int b=n_arrows-1; b>0; b--)if(arrows[b]->direction==3){
+							arrows[b]->length=(int)currenttime-arrows[b]->time;b=0;}
+					currenttime=currenttime+1;
+				}
+			}
+			if(lastlines[0][0]==';')
+      {
+        placeingnotes = 0;
+        //#printf("writing steps <cringe>...\n");  
+        //#wait_button();
+        writesteps(outdata);
+      }
+		}
+    //#printf("done the loop body.  going back to while indata.good() test \n");  
+    //#wait_button();
+	}
+  //#printf("writing steps again<cringe>...\n");  
+  //#wait_button();
+	writesteps(outdata);
+	#ifdef WII
+  //#printf("closing indata...\n");  
+  //#wait_button();
+	indata.close();
+	#endif
+  //#printf("closing outdata...\n");  
+  //#wait_button();
+	outdata.close();
+
+  //#printf("done\n");  
+  //#wait_button();
+  //#log_console_enable_video(false);
+
+}
