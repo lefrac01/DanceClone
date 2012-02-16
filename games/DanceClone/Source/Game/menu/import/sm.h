@@ -1,6 +1,7 @@
 //NOTE: stepmania file format at http://www.stepmania.com/wiki/The_.SM_file_format
 //
-//TODO: support full stepmania BPM spec.  BPM is currently only supported as single BPM.
+//TODO: output variable BPM.  currently BPMS are read and processed but the
+// playback speed stays constant since BPM data is not present in the .DC format
 //
 //TODO: implement #STOPS:
 //
@@ -82,7 +83,15 @@ void Game_menu_stepimport_sm(char* filename)
   char* newtemp = 0;
   const int lastlineslength = 70;
   char** lastlines;
-  
+
+  // maxlinelength is 10000 chars.  one BPM definition requires
+  // about 10 chars so max ~1000 definitions.  
+  const int maxBPMS = 1000;
+  int*  BPMSindices = 0;
+  float* BPMS = 0;
+  int   current_beat = 0;
+  int   current_BPM_index = 0;
+  int   numBPMS = 0;
   double tempBPMS = 0;
   double tempoffset = 0;
   double currenttime = 0;
@@ -120,6 +129,23 @@ void Game_menu_stepimport_sm(char* filename)
     lastlines[i] = (char*)malloc(maxlinelength + 10);
     memset(lastlines[i], 0, sizeof(lastlines[i]));
   }
+
+  BPMSindices = (int*)malloc(maxBPMS * sizeof(int));
+  BPMS = (float*)malloc(maxBPMS * sizeof(float));
+  
+  #ifdef LOG_IMPORT
+  debug_log.open("debug", std::ios_base::app);
+  debug_log << "BPMS arrays..." << endl;
+  debug_log.close();
+  #endif
+
+// FLOWERS GROW IN THE SUNSHINE          
+// FLOWERS GROW IN THE SUNSHINE          
+// FLOWERS GROW IN THE SUNSHINE          
+// FLOWERS GROW IN THE SUNSHINE          
+// FLOWERS GROW IN THE SUNSHINE          
+ofstream flower_log;
+        flower_log.open("debug", std::ios_base::trunc);
 
   #ifdef LOG_IMPORT
   debug_log.open("debug", std::ios_base::app);
@@ -174,33 +200,109 @@ void Game_menu_stepimport_sm(char* filename)
 #endif
     sprintf(lastlines[0],"%s",newtemp);
 
-    if(charmatchstart(lastlines[0],(char*)"#BPMS:")){
-      tempint1=-1;tempint2=-1;
-      for(unsigned int a=0; a<strlen(lastlines[0]); a++){
-        if(lastlines[0][a]=='=')tempint1=a+1;}
-      for(unsigned int a=0; a<strlen(lastlines[0]); a++){
-        if(lastlines[0][a]==';')tempint2=a+0;}
-      if(tempint1!=-1 && tempint2!=-1)
+
+    //NOTE: sample and definition of SM BPMS tag
+    //#BPMS:0=140.215,1=140.208,14=140.215,16=140.208,43=140.215;
+    //#BPMS:<int beat>=<float BPM>[,<int beat>=<float BPM>];
+    //beat 0 must be defined
+    if(charmatchstart(lastlines[0],(char*)"#BPMS:"))
+    {
+      unsigned int linelength = strlen(lastlines[0]);
+      for(unsigned int offset=0; offset<linelength; offset++)
       {
-        for(int a=0; a<tempint2-tempint1; a++){
-          temptext[a]=lastlines[0][a+tempint1];
-          temptext[a+1]=0;}
-          
-        tempBPMS=atof(temptext);
-        #ifdef LOG_IMPORT
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "extracted tempBPMS:" << tempBPMS << " from text " << temptext << endl;
-        debug_log.close();
-        #endif
+        if (lastlines[0][offset]==':' || lastlines[0][offset]==',')
+        {
+          tempint1 = offset+1;
+          tempint2 = -1;
+          for(unsigned int a=tempint1; a<linelength && tempint2==-1; a++)
+          {
+            if(lastlines[0][a]=='=')
+            {
+              tempint2 = a;
+            }
+          }
+          if(tempint2!=-1) // found an int describing the beat to apply the BPM
+          {
+            for(int a=0; a<tempint2-tempint1; a++)
+            {
+              temptext[a]=lastlines[0][tempint1+a];
+            }
+            temptext[tempint2-tempint1]=0;
+            int temp_beat = atoi(temptext);
+
+            #ifdef LOG_IMPORT
+            debug_log.open("debug", std::ios_base::app);
+            debug_log << "extracted int beat: " << temp_beat << " from text (" << temptext << ")" << endl;
+            debug_log.close();
+            #endif
+            
+            // continue past '=' looking for BPM data
+            tempint1 = tempint2+1;
+            tempint2 = -1;
+            for(unsigned int a=tempint1; a<linelength && tempint2==-1; a++)
+            {
+              if(lastlines[0][a]==',' || lastlines[0][a]==';')
+              {
+                tempint2 = a;
+              }
+            }
+            if(tempint2!=-1) // found a float describing the BPM
+            {
+              for(int a=0; a<tempint2-tempint1; a++)
+              {
+                temptext[a]=lastlines[0][tempint1+a];
+              }
+              temptext[tempint2-tempint1]=0;
+              float temp_BPM = atof(temptext);
+              
+              #ifdef LOG_IMPORT
+              debug_log.open("debug", std::ios_base::app);
+              debug_log << "extracted float BPM: " << temp_BPM << " from text (" << temptext << ")" << endl;
+              debug_log.close();
+              #endif
+              
+              if (numBPMS < maxBPMS)
+              {
+                BPMSindices[numBPMS] = temp_beat;
+                BPMS[numBPMS] = temp_BPM;
+                numBPMS++;
+              }
+              else
+              {
+                #ifdef LOG_ERRORS
+                error_log.open("errors", std::ios_base::app);
+                error_log << "ERROR: too many BPMS changes! (more than " << maxBPMS << ")" << endl;
+                error_log.close();
+                #endif
+              }
+            }
+            else
+            {
+              #ifdef LOG_ERRORS
+              error_log.open("errors", std::ios_base::app);
+              error_log << "ERROR: invalid BPMS data!" << endl;
+              error_log.close();
+              #endif
+            }
+          }
+          else
+          {
+            #ifdef LOG_ERRORS
+            error_log.open("errors", std::ios_base::app);
+            error_log << "ERROR: invalid BPMS data!" << endl;
+            error_log.close();
+            #endif
+          }
+        }
       }
-      else
+      #ifdef LOG_ERRORS
+      if (numBPMS == 0)
       {
-        #ifdef LOG_ERRORS
         error_log.open("errors", std::ios_base::app);
-        error_log << "ERROR: failed to extract BPM!" << endl;
+        error_log << "ERROR: failed to extract BPMS!" << endl;
         error_log.close();
-        #endif
       }
+      #endif
     }
     if(charmatchstart(lastlines[0],(char*)"#OFFSET:")){
       #ifdef LOG_IMPORT
@@ -302,19 +404,27 @@ void Game_menu_stepimport_sm(char* filename)
         debug_log.close();
         #endif
         
-        //QUESTION: what does notetimevalue represent?
-        //ANSWER: stepmania outputs steps in blocks of varying lengths depending
-        // on the shortest step time value in the block.  example if all steps in a beat
-        // are at least quarter note beats (ie four steps per beat) then there are four
-        // lines in the file.  if there are eighth note beats (blue steps) then there are eight
-        // lines.
-        //PROBLEM: this import algo uses a buffer of latest lines read from input file
-        // and searches backward in the buffer to find the length of the step block.
-        // since the original buffer is 20 lines long, at most 16-line step blocks can be detected.
-        // it is common for DDR songs to use shorter note beats (yellow and/or green steps?)
-        //QUESTION2: what is the minimum supported note length beat.  ddreamstudio allows 192nd
-        // notes but that is ridiculous, meaning a 192x4 block length.  in practice 64 should be a 
-        // reasonable target.
+        // set BPM according to current beat and list of BPMs that apply to each beat
+        if (BPMSindices[current_BPM_index] == current_beat)
+        {
+          // there is a BPM change on this beat.
+          tempBPMS = BPMS[current_BPM_index];
+          
+// FLOWERS GROW IN THE SUNSHINE          
+        flower_log.open("debug", std::ios_base::app);
+        flower_log << "groovy baby!  a BPM change occured on beat " << current_beat << ".  the new BPM is " << tempBPMS << endl;
+        flower_log.close();
+          
+          // move index to next index (if there is one!)
+          if (current_BPM_index < maxBPMS)
+          {
+// FLOWERS ARE VERY GAY IN THE SUNSHINE
+flower_log.open("debug", std::ios_base::app);
+flower_log << "also, more groovy data exists to nourish this flourish" << endl;
+flower_log.close();
+            current_BPM_index++;
+          }
+        }
         
         notetimevalue=0;
         for(int a=1; a<lastlineslength; a++){
@@ -329,6 +439,10 @@ void Game_menu_stepimport_sm(char* filename)
         #endif
         for(int a=(int)(1/notetimevalue*4); a>0; a--){
           currenttime=currenttime+notetimevalue*1000*60/tempBPMS;
+// FLOWERS GROW IN THE SUNSHINE          
+flower_log.open("debug", std::ios_base::app);
+flower_log << currenttime << " is how much time the flowers got in the sun at current_beat " << current_beat << endl;
+flower_log.close();
           #ifdef LOG_IMPORT
           debug_log.open("debug", std::ios_base::app);
           debug_log << "currenttime is now " << currenttime << endl;
@@ -378,6 +492,9 @@ void Game_menu_stepimport_sm(char* filename)
           debug_log.close();
           #endif
         }
+        
+        // the beat has been processed.
+        current_beat++;
       }
       if(lastlines[0][0]==';')
       {
@@ -410,6 +527,9 @@ void Game_menu_stepimport_sm(char* filename)
     free(lastlines[i]);
   }
   free(lastlines);
+  
+  free(BPMSindices);
+  free(BPMS);
   
   #ifdef LOG_IMPORT
   debug_log.open("debug", std::ios_base::app);
