@@ -1,0 +1,23 @@
+What is this?  Source code intended for development of the Wii version of 
+DanceClone to be compiled under debian linux.
+
+***
+
+DanceClone
+Open source DDR clone for Nintendo Wii and Windows
+
+Original code for DanceClone version 0.50 by ThatOtherPerson
+For more information and for to install the current release 
+please visit http://wiibrew.org/wiki/Dance_Clone
+
+Development as of version 0.51 continued by Carl Lefrançois
+
+
+DanceClone
+------------------------
+DanceClone is a DDR clone aiming to support basic stepmania 
+files.  It uses SDL and runs on the Nintendo Wii using the
+Wiibrew channel and Microsoft Windows.  
+
+This source code is distributed under GNU LGPL, which can be
+found in the file "COPYING".
