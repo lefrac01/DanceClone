@@ -1,3 +1,7 @@
+//TODO: prevent wiidash from being callable during play.  dash appears,
+// music keeps playing but arrows stop animating so sync is lost.
+//
+
 //#define WIN
 #define WII
 //#define USEACCELEROMETER
@@ -8,41 +12,46 @@ bool done = false;
 
 int main(int argc, char* argv[])
 {
-	init();
-	Game_init();
-	WiiDash_init();
+  init();
+  Game_init();
+  WiiDash_init();
   
-	Timer fps;
-	while(!done)
+//  Timer fps;
+  while(!done)
   {
-		fps.start();
-		SDL_PumpEvents();
-		updatecontrolinput();
+//    fps.start();
+    SDL_PumpEvents();
+    updatecontrolinput();
     
-		if(WDonoffpercent == 0)
+    if(WDonoffpercent == 0)
     {
       Game_run();
     }
-		WiiDash_run();
+    WiiDash_run();  // hmm.  would rather rip out functionality and run wiidash when home button callback is pressed
     
-		SDL_Flip(screen);
-		SDL_Event event;
+    SDL_Flip(screen);
+    SDL_Event event;
     
-		while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_ALLEVENTS) > 0)
+    while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_ALLEVENTS) > 0)
     {
-			if(event.type == SDL_QUIT)
+      if(event.type == SDL_QUIT)
       {
         done = 1;
       }
     }
     
-		if(WDonoffpercent==0)
-			if(fps.get_ticks()<1000/framecap)
-				SDL_Delay((1000/framecap)-fps.get_ticks());
-		if(WDonoffpercent!=0)
-			if(fps.get_ticks()<1000/60)
-				SDL_Delay((1000/60)-fps.get_ticks());
-	}
+    
+    // game runs fine without the following...
+    
+    // LOOK FOR HITCH HERE
+/*    if(WDonoffpercent==0)
+      if(fps.get_ticks()<1000/framecap)
+        SDL_Delay((1000/framecap)-fps.get_ticks());
+    if(WDonoffpercent!=0)
+      if(fps.get_ticks()<1000/60)
+        SDL_Delay((1000/60)-fps.get_ticks());
+        */
+  }
   cleanup();
-	return 0;
+  return 0;
 }
