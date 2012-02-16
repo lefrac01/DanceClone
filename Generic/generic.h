@@ -66,7 +66,7 @@ void init()
 #ifdef WIN
   screen = SDL_SetVideoMode(screenx, screeny, screenb, SDL_DOUBLEBUF);
   //screen = SDL_SetVideoMode(screenx,screeny,16,SDL_FULLSCREEN);
-  SDL_WM_SetCaption( "DanceClone 0.52", NULL );
+  SDL_WM_SetCaption( GAMEVERSIONSTRING, NULL );
 #endif
 #ifdef WII
   screen = SDL_SetVideoMode(screenx, screeny, 16, SDL_DOUBLEBUF);

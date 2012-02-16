@@ -20,6 +20,12 @@ int timehaspast;
 #include "play/controls.h"
 
 void Game_play(){
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "Game_play() begins" << endl;
+    debug_log.close();
+  }
 
   timehaspast=songtime;
   songtime=WDgametime-songstarttime;
@@ -30,6 +36,12 @@ void Game_play(){
 
   Game_play_controls();
 
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "applying surface ratings" << endl;
+    debug_log.close();
+  }
   for(int a=0;a<n_ratings;a++){
     apply_surface(ratings[a]->posx,ratings[a]->posy,ratingsimage,screen,&ratingsframes[ratings[a]->type]);
     ratings[a]->posy=ratings[a]->posy-(int)((double)timehaspast/10);
@@ -41,6 +53,12 @@ void Game_play(){
     }
   }
   
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "lighting home arrows according to pad presses" << endl;
+    debug_log.close();
+  }
   if(leftcontrol==0)
     apply_surface(185,goalline,arrowsimage,screen,&arrowsframes[4]);
   else if(leftcontrol==1)
@@ -67,49 +85,63 @@ void Game_play(){
     apply_surface(385,goalline,arrowsimage,screen,&arrowsframes[3]);
 
   SDL_Rect temprect={50,0,50,35};
-  for(int a=0;a<n_arrows;a++){
-    int posy=(int)(goalline+((double)(arrows[a]->time-songtime))/5);
+  //#for(int a=0;a<playerarrowcount;a++){
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "beginning main arrow animation loop with playerbasearrow=" << playerbasearrow << " and playerarrowcount=" << playerarrowcount << endl;
+    debug_log.close();
+  }    
+  for(int a=playerbasearrow;a<playerarrowcount;a++){
+    //#int posy=(int)(goalline+((double)(playerarrows[a]->time-songtime))/5);
+    int posy=(int)(goalline+((double)(playerarrows[a].time-songtime))/5);
     if(posy>0-70 && posy<480){
-      if(arrows[a]->length){
-        if(arrows[a]->direction==0){
+      if(playerarrows[a].length){
+        if(playerarrows[a].direction==0){
           apply_surface(185+10,posy,holdimage,screen,&holdframes[0]);
-          for(int b=0;b<floor((double)arrows[a]->length/5/35);b++)
+          for(int b=0;b<floor((double)playerarrows[a].length/5/35);b++)
             apply_surface(185+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-          temprect.h = (Uint16)(arrows[a]->length/5-floor((double)arrows[a]->length/5/35)*35);
-          apply_surface(185+10,posy+(int)floor((double)arrows[a]->length/5/35)*35+35,holdimage,screen,&temprect);
-          apply_surface(185+10,posy+arrows[a]->length/5+35,holdimage,screen,&holdframes[2]);}
-        if(arrows[a]->direction==1){
+          temprect.h = (Uint16)(playerarrows[a].length/5-floor((double)playerarrows[a].length/5/35)*35);
+          apply_surface(185+10,posy+(int)floor((double)playerarrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
+          apply_surface(185+10,posy+playerarrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
+        if(playerarrows[a].direction==1){
           apply_surface(250+10,posy,holdimage,screen,&holdframes[0]);
-          for(int b=0;b<floor((double)arrows[a]->length/5/35);b++)
+          for(int b=0;b<floor((double)playerarrows[a].length/5/35);b++)
             apply_surface(250+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-          temprect.h = (Uint16)(arrows[a]->length/5-floor((double)arrows[a]->length/5/35)*35);
-          apply_surface(250+10,posy+(int)floor((double)arrows[a]->length/5/35)*35+35,holdimage,screen,&temprect);
-          apply_surface(250+10,posy+arrows[a]->length/5+35,holdimage,screen,&holdframes[2]);}
-        if(arrows[a]->direction==2){
+          temprect.h = (Uint16)(playerarrows[a].length/5-floor((double)playerarrows[a].length/5/35)*35);
+          apply_surface(250+10,posy+(int)floor((double)playerarrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
+          apply_surface(250+10,posy+playerarrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
+        if(playerarrows[a].direction==2){
           apply_surface(320+10,posy,holdimage,screen,&holdframes[0]);
-          for(int b=0;b<floor((double)arrows[a]->length/5/35);b++)
+          for(int b=0;b<floor((double)playerarrows[a].length/5/35);b++)
             apply_surface(320+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-          temprect.h = (Uint16)(arrows[a]->length/5-floor((double)arrows[a]->length/5/35)*35);
-          apply_surface(320+10,posy+(int)floor((double)arrows[a]->length/5/35)*35+35,holdimage,screen,&temprect);
-          apply_surface(320+10,posy+arrows[a]->length/5+35,holdimage,screen,&holdframes[2]);}
-        if(arrows[a]->direction==3){
+          temprect.h = (Uint16)(playerarrows[a].length/5-floor((double)playerarrows[a].length/5/35)*35);
+          apply_surface(320+10,posy+(int)floor((double)playerarrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
+          apply_surface(320+10,posy+playerarrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
+        if(playerarrows[a].direction==3){
           apply_surface(385+10,posy,holdimage,screen,&holdframes[0]);
-          for(int b=0;b<floor((double)arrows[a]->length/5/35);b++)
+          for(int b=0;b<floor((double)playerarrows[a].length/5/35);b++)
             apply_surface(385+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-          temprect.h = (Uint16)(arrows[a]->length/5-floor((double)arrows[a]->length/5/35)*35);
-          apply_surface(385+10,posy+(int)floor((double)arrows[a]->length/5/35)*35+35,holdimage,screen,&temprect);
-          apply_surface(385+10,posy+arrows[a]->length/5+35,holdimage,screen,&holdframes[2]);}
+          temprect.h = (Uint16)(playerarrows[a].length/5-floor((double)playerarrows[a].length/5/35)*35);
+          apply_surface(385+10,posy+(int)floor((double)playerarrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
+          apply_surface(385+10,posy+playerarrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
       }
-      if(arrows[a]->direction==0)
+      if(playerarrows[a].direction==0)
         apply_surface(185,posy,arrowsimage,screen,&arrowsframes[12]);
-      if(arrows[a]->direction==1)
+      if(playerarrows[a].direction==1)
         apply_surface(250,posy,arrowsimage,screen,&arrowsframes[13]);
-      if(arrows[a]->direction==2)
+      if(playerarrows[a].direction==2)
         apply_surface(320,posy,arrowsimage,screen,&arrowsframes[14]);
-      if(arrows[a]->direction==3)
+      if(playerarrows[a].direction==3)
         apply_surface(385,posy,arrowsimage,screen,&arrowsframes[15]);
     }
   }
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "done" << endl;
+    debug_log.close();
+  }    
 
   if(combo>longestcombo)longestcombo=combo;
 
@@ -159,4 +191,10 @@ void Game_play(){
   }else if(MP3Player_Paused()){MP3Player_Resume();}*/
   #endif
 
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "Game_play() done " << endl;
+    debug_log.close();
+  }    
 }

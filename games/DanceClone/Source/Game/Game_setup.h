@@ -27,12 +27,22 @@ Mix_Music* music = NULL;
 
 void Game_init()
 {
+  if (DEBUG_LEVEL > DEBUG_OFF)
+  {
+    debug_log.open("debug", std::ios_base::trunc);
+    debug_log << GAMEVERSIONSTRING << " startup" << endl;
+    debug_log.close();
+  }
+  #ifdef LOG_ERRORS
+  error_log.open("errors", std::ios_base::trunc);
+  error_log.close();
+  #endif
 
 #ifdef WIN
-	Mix_OpenAudio(0,0,0,0);
-	//Mix_VolumeMusic(100);
-	//Mix_PlayMusic(music, -1);
+  Mix_OpenAudio(0,0,0,0);
+  //Mix_VolumeMusic(100);
+  //Mix_PlayMusic(music, -1);
 #endif
 
-	Game_setup_sprites();
+  Game_setup_sprites();
 }

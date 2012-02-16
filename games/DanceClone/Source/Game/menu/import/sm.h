@@ -9,20 +9,17 @@
 //
 
 
+//#define LOG_IMPORT in Game_main.h
 //include "../../../../../../Generic/log_console_globbed.h"
-
-//#define LOG_IMPORT
-#define LOG_ERRORS
 
 void writesteps(ofstream &outdata)
 {
   #ifdef LOG_IMPORT
-  ofstream debug_log;
   debug_log.open("debug", std::ios_base::app);
-  debug_log << "writesteps() difficulty:" << difficulty << " n_arrows:" << n_arrows << endl;
+  debug_log << "writesteps() difficulty:" << difficulty << " number of arrows:" << songarrowcount[difficulty] << endl;
   debug_log.close();
   #endif
-  if(n_arrows)
+  if(songarrowcount[difficulty])
   {
     #ifdef LOG_IMPORT
     debug_log.open("debug", std::ios_base::app);
@@ -38,14 +35,14 @@ void writesteps(ofstream &outdata)
 
     #ifdef LOG_IMPORT
     debug_log.open("debug", std::ios_base::app);
-    debug_log << "processing " << n_arrows << " arrows." << endl;
+    debug_log << "processing " << songarrowcount[difficulty] << " arrows." << endl;
     debug_log.close();
     #endif
-    for(int a = 0; a < n_arrows; a++)
+    for(int a = 0; a < songarrowcount[difficulty]; a++)
     {
-      outdata << arrows[a]->direction << endl;
-      outdata << arrows[a]->time << endl;
-      outdata << arrows[a]->length << endl;
+      outdata << songarrows[difficulty][a].direction << endl;
+      outdata << songarrows[difficulty][a].time << endl;
+      outdata << songarrows[difficulty][a].length << endl;
       outdata << "----" << endl;
     }
     outdata << "<stop>" << endl;
@@ -55,22 +52,16 @@ void writesteps(ofstream &outdata)
     debug_log << "deleting arrows" << endl;
     debug_log.close();
     #endif
-    while(n_arrows) deletearrow(0);
+    initarrowstructures();
   }
 }
 
 void Game_menu_stepimport_sm(char* filename)
 {
   #ifdef LOG_IMPORT
-  ofstream debug_log;
-  debug_log.open("debug", std::ios_base::trunc);
+  debug_log.open("debug", std::ios_base::app);
   debug_log << "beginning Game_menu_stepimport_sm(" << filename << ")" << endl;
   debug_log.close();
-  #endif
-  #ifdef LOG_ERRORS
-  ofstream error_log;
-  error_log.open("error", std::ios_base::trunc);
-  error_log.close();
   #endif
 
   ofstream outdata;
@@ -351,7 +342,7 @@ void Game_menu_stepimport_sm(char* filename)
         debug_log << "charmatchend on lastlines[0].  found Beginner" << endl;
         debug_log.close();
         #endif
-        while(n_arrows)deletearrow(0);
+        initarrowstructures();
         placeingnotes=1;difficulty=0;
         currenttime=tempoffset;}
       if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Easy:")){
@@ -360,7 +351,7 @@ void Game_menu_stepimport_sm(char* filename)
         debug_log << "charmatchend on lastlines[0].  found Easy" << endl;
         debug_log.close();
         #endif
-        while(n_arrows)deletearrow(0);
+        initarrowstructures();
         placeingnotes=1;difficulty=1;
         currenttime=tempoffset;}
       if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Medium:")){
@@ -369,7 +360,7 @@ void Game_menu_stepimport_sm(char* filename)
         debug_log << "charmatchend on lastlines[0].  found Medium" << endl;
         debug_log.close();
         #endif
-        while(n_arrows)deletearrow(0);
+        initarrowstructures();
         placeingnotes=1;difficulty=2;
         currenttime=tempoffset;}
       if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Hard:")){
@@ -378,7 +369,7 @@ void Game_menu_stepimport_sm(char* filename)
         debug_log << "charmatchend on lastlines[0].  found Hard" << endl;
         debug_log.close();
         #endif
-        while(n_arrows)deletearrow(0);
+        initarrowstructures();
         placeingnotes=1;difficulty=3;
         currenttime=tempoffset;}
       if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Challenge:")){
@@ -387,7 +378,7 @@ void Game_menu_stepimport_sm(char* filename)
         debug_log << "charmatchend on lastlines[0].  found Challenge" << endl;
         debug_log.close();
         #endif
-        while(n_arrows)deletearrow(0);
+        initarrowstructures();
         placeingnotes=1;difficulty=4;
         currenttime=tempoffset;}
     }
@@ -426,42 +417,31 @@ void Game_menu_stepimport_sm(char* filename)
         for(int a=(int)(1/notetimevalue*4); a>0; a--){
           currenttime=currenttime+notetimevalue*1000*60/tempBPMS;
 
-          if(lastlines[a][0]=='1' && n_arrows<maxarrows){
-            arrows[n_arrows] = new arrow(0,(int)(currenttime),0);
-            n_arrows++;}
-          if(lastlines[a][1]=='1' && n_arrows<maxarrows){
-            arrows[n_arrows] = new arrow(1,(int)(currenttime),0);
-            n_arrows++;}
-          if(lastlines[a][2]=='1' && n_arrows<maxarrows){
-            arrows[n_arrows] = new arrow(2,(int)(currenttime),0);
-            n_arrows++;}
-          if(lastlines[a][3]=='1' && n_arrows<maxarrows){
-            arrows[n_arrows] = new arrow(3,(int)(currenttime),0);
-            n_arrows++;}
-          if(lastlines[a][0]=='2' && n_arrows<maxarrows){
-            arrows[n_arrows] = new arrow(0,(int)(currenttime),0);
-            n_arrows++;}
-          if(lastlines[a][1]=='2' && n_arrows<maxarrows){
-            arrows[n_arrows] = new arrow(1,(int)(currenttime),0);
-            n_arrows++;}
-          if(lastlines[a][2]=='2' && n_arrows<maxarrows){
-            arrows[n_arrows] = new arrow(2,(int)(currenttime),0);
-            n_arrows++;}
-          if(lastlines[a][3]=='2' && n_arrows<maxarrows){
-            arrows[n_arrows] = new arrow(3,(int)(currenttime),0);
-            n_arrows++;}
-          if(lastlines[a][0]=='3' && n_arrows<maxarrows)
-            for(int b=n_arrows-1; b>0; b--)if(arrows[b]->direction==0){
-              arrows[b]->length=(int)currenttime-arrows[b]->time;b=0;}
-          if(lastlines[a][1]=='3' && n_arrows<maxarrows)
-            for(int b=n_arrows-1; b>0; b--)if(arrows[b]->direction==1){
-              arrows[b]->length=(int)currenttime-arrows[b]->time;b=0;}
-          if(lastlines[a][2]=='3' && n_arrows<maxarrows)
-            for(int b=n_arrows-1; b>0; b--)if(arrows[b]->direction==2){
-              arrows[b]->length=(int)currenttime-arrows[b]->time;b=0;}
-          if(lastlines[a][3]=='3' && n_arrows<maxarrows)
-            for(int b=n_arrows-1; b>0; b--)if(arrows[b]->direction==3){
-              arrows[b]->length=(int)currenttime-arrows[b]->time;b=0;}
+
+          //NOTE: this logic moves away from a beat-based data block
+          //format to an arrow-based data block format.  implications??
+          
+          if(lastlines[a][0]=='1')assignsongarrow(difficulty,0,currenttime,0,0);
+          if(lastlines[a][1]=='1')assignsongarrow(difficulty,1,currenttime,0,0);
+          if(lastlines[a][2]=='1')assignsongarrow(difficulty,2,currenttime,0,0);
+          if(lastlines[a][3]=='1')assignsongarrow(difficulty,3,currenttime,0,0);
+          if(lastlines[a][0]=='2')assignsongarrow(difficulty,0,currenttime,0,1);
+          if(lastlines[a][1]=='2')assignsongarrow(difficulty,1,currenttime,0,1);
+          if(lastlines[a][2]=='2')assignsongarrow(difficulty,2,currenttime,0,1);
+          if(lastlines[a][3]=='2')assignsongarrow(difficulty,3,currenttime,0,1);
+          
+          if(lastlines[a][0]=='3' && songarrowcount[difficulty]<maxarrows)
+            for(int b=songarrowcount[difficulty]-1; b>0; b--)if(songarrows[difficulty][b].direction==0){
+              songarrows[difficulty][b].length=(int)currenttime-songarrows[difficulty][b].time;b=0;}
+          if(lastlines[a][1]=='3' && songarrowcount[difficulty]<maxarrows)
+            for(int b=songarrowcount[difficulty]-1; b>0; b--)if(songarrows[difficulty][b].direction==1){
+              songarrows[difficulty][b].length=(int)currenttime-songarrows[difficulty][b].time;b=0;}
+          if(lastlines[a][2]=='3' && songarrowcount[difficulty]<maxarrows)
+            for(int b=songarrowcount[difficulty]-1; b>0; b--)if(songarrows[difficulty][b].direction==2){
+              songarrows[difficulty][b].length=(int)currenttime-songarrows[difficulty][b].time;b=0;}
+          if(lastlines[a][3]=='3' && songarrowcount[difficulty]<maxarrows)
+            for(int b=songarrowcount[difficulty]-1; b>0; b--)if(songarrows[difficulty][b].direction==3){
+              songarrows[difficulty][b].length=(int)currenttime-songarrows[difficulty][b].time;b=0;}
         }
         
         // the beat has been processed.
@@ -489,6 +469,7 @@ void Game_menu_stepimport_sm(char* filename)
   #ifdef WII
   indata.close();
   #endif
+  outdata << "<end>";
   outdata.close();
 
   free(temptext);
