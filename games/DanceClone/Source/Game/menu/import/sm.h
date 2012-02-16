@@ -24,17 +24,24 @@
 
 //include "../../../../../../Generic/log_console_globbed.h"
 
+//#define LOG_IMPORT
+#define LOG_ERRORS
+
 void writesteps(ofstream &outdata)
 {
+  #ifdef LOG_IMPORT
   ofstream debug_log;
   debug_log.open("debug", std::ios_base::app);
   debug_log << "writesteps() difficulty:" << difficulty << " n_arrows:" << n_arrows << endl;
   debug_log.close();
+  #endif
 	if(n_arrows)
   {
+    #ifdef LOG_IMPORT
     debug_log.open("debug", std::ios_base::app);
     debug_log << "writing difficulty" << endl;
     debug_log.close();
+    #endif
     
     if(difficulty == 0) outdata << "<startbeginner>" << endl;
     if(difficulty == 1) outdata << "<starteasy>" << endl;
@@ -42,9 +49,11 @@ void writesteps(ofstream &outdata)
     if(difficulty == 3) outdata << "<starthard>" << endl;
     if(difficulty == 4) outdata << "<startchallenge>" << endl;
 
+    #ifdef LOG_IMPORT
     debug_log.open("debug", std::ios_base::app);
     debug_log << "processing " << n_arrows << " arrows." << endl;
     debug_log.close();
+    #endif
     for(int a = 0; a < n_arrows; a++)
     {
       outdata << arrows[a]->direction << endl;
@@ -54,19 +63,28 @@ void writesteps(ofstream &outdata)
     }
     outdata << "<stop>" << endl;
     
+    #ifdef LOG_IMPORT
     debug_log.open("debug", std::ios_base::app);
     debug_log << "deleting arrows" << endl;
     debug_log.close();
+    #endif
     while(n_arrows) deletearrow(0);
 	}
 }
 
 void Game_menu_stepimport_sm(char* filename)
 {
+  #ifdef LOG_IMPORT
   ofstream debug_log;
   debug_log.open("debug", std::ios_base::trunc);
   debug_log << "beginning Game_menu_stepimport_sm(" << filename << ")" << endl;
   debug_log.close();
+  #endif
+  #ifdef LOG_ERRORS
+  ofstream error_log;
+  error_log.open("error", std::ios_base::trunc);
+  error_log.close();
+  #endif
 
   ofstream outdata;
 #ifdef WII
@@ -81,13 +99,6 @@ void Game_menu_stepimport_sm(char* filename)
   char* newtemp = 0;
   char** lastlines;
   
-  // stack size is possibly a problem.  how much stack space is available?
-	//#char temptext[maxlinelength + 10];
-	//#char newtemp[maxlinelength + 10];
-	//#char lastlines[20][maxlinelength + 10];
-  // using the heap has solved one crash.  previously the code crashed
-  // during the lastlines maintenance loop (was sprintf)
-
  	double tempBPMS = 0;
 	double tempoffset = 0;
 	double currenttime = 0;
@@ -96,22 +107,28 @@ void Game_menu_stepimport_sm(char* filename)
 	int tempint2 = 0;
 	bool placeingnotes = 0;
 
+  #ifdef LOG_IMPORT
   debug_log.open("debug", std::ios_base::app);
   debug_log << "wiping working mem..." << endl;
   debug_log << "temptext..." << endl;
   debug_log.close();
+  #endif
   temptext = (char*)malloc(maxlinelength + 10);
   memset(temptext, 0, sizeof(temptext));
 
+  #ifdef LOG_IMPORT
   debug_log.open("debug", std::ios_base::app);
   debug_log << "newtemp..." << endl;
   debug_log.close();
+  #endif
   newtemp = (char*)malloc(maxlinelength + 10);
   memset(newtemp, 0, maxlinelength + 10);
 
+  #ifdef LOG_IMPORT
   debug_log.open("debug", std::ios_base::app);
   debug_log << "lastlines array..." << endl;
   debug_log.close();
+  #endif
   lastlines = (char **) malloc(20 * sizeof(char *));
   for (int i = 0; i < 20; i++)
   {
@@ -119,14 +136,18 @@ void Game_menu_stepimport_sm(char* filename)
     memset(lastlines[i], 0, sizeof(lastlines[i]));
   }
 
+  #ifdef LOG_IMPORT
   debug_log.open("debug", std::ios_base::app);
   debug_log << "done" << endl;
   debug_log.close();
+  #endif
 
 	sprintf(temptext, "%s%s%s", "Music/", songfilename, ".dc");
+  #ifdef LOG_IMPORT
   debug_log.open("debug", std::ios_base::app);
   debug_log << "outdata.open(" << temptext << ")" << endl;
   debug_log.close();
+  #endif
 	outdata.open(temptext);
 	
 	sprintf(temptext, "%s%s", "Music/", filename);
@@ -134,9 +155,11 @@ void Game_menu_stepimport_sm(char* filename)
 	indata = fopen(temptext, "r");
 #endif
 #ifdef WII
+  #ifdef LOG_IMPORT
   debug_log.open("debug", std::ios_base::app);
   debug_log << "indata.open(" << temptext << ")" << endl;
   debug_log.close();
+  #endif
 	indata.open(temptext);
 #endif
 	
@@ -156,15 +179,8 @@ void Game_menu_stepimport_sm(char* filename)
     {
       lastlines[a] = lastlines[a+1];
     }
-    lastlines[19] = temp; // saved pointer back at other end
+    lastlines[19] = temp; // put saved pointer back at other end
     
-    /*
-		for(int a = 20-1; a > 0; a--)
-    {
-      strncpy(lastlines[a], lastlines[a-1], sizeof(lastlines[a]));
-      lastlines[a][sizeof(lastlines[a])-1] = 0;
-    }
-    */
 #ifdef WIN
 		newtemp[strlen(newtemp) - 1] = '\0';
 #endif
@@ -172,10 +188,8 @@ void Game_menu_stepimport_sm(char* filename)
 		indata >> newtemp;
 #endif
 		sprintf(lastlines[0],"%s",newtemp);
-		//outdata << newtemp << endl;
 
 		if(charmatchstart(lastlines[0],(char*)"#BPMS:")){
-      // check self for n00bness
 			tempint1=-1;tempint2=-1;
 			for(unsigned int a=0; a<strlen(lastlines[0]); a++){
 				if(lastlines[0][a]=='=')tempint1=a+1;}
@@ -185,27 +199,34 @@ void Game_menu_stepimport_sm(char* filename)
       {
 				for(int a=0; a<tempint2-tempint1; a++){
 					temptext[a]=lastlines[0][a+tempint1];
-					//#temptext[a+1]='\n';}   // original code
 					temptext[a+1]=0;}
+          
+        tempBPMS=atof(temptext);
+        #ifdef LOG_IMPORT
+        debug_log.open("debug", std::ios_base::app);
+        debug_log << "extracted tempBPMS:" << tempBPMS << " from text " << temptext << endl;
+        debug_log.close();
+        #endif
       }
-      tempBPMS=atoi(temptext);
-      debug_log.open("debug", std::ios_base::app);
-      debug_log << "extracted tempBPMS:" << tempBPMS << " from text " << temptext << endl;
-      debug_log.close();
-      tempBPMS=atof(temptext);
-      debug_log.open("debug", std::ios_base::app);
-      debug_log << "overwrote tempBPMS:" << tempBPMS << endl;
-      debug_log.close();
+      else
+      {
+        #ifdef LOG_ERRORS
+        error_log.open("errors", std::ios_base::app);
+        error_log << "ERROR: failed to extract BPM!" << endl;
+        error_log.close();
+        #endif
+      }
 		}
 		if(charmatchstart(lastlines[0],(char*)"#OFFSET:")){
+      #ifdef LOG_IMPORT
       debug_log.open("debug", std::ios_base::app);
       debug_log << "charmatchstart on lastlines[0].  found #OFFSET:" << endl;
       debug_log << "lastlines[0]=(" << lastlines[0] << ")" << endl;
       debug_log.close();
+      #endif
       
 			tempint1=-1;tempint2=-1;
 			for(unsigned int a=0; a<strlen(lastlines[0]); a++){
-//				if(lastlines[0][a]=='=')tempint1=a+1;}  // current stepmania format is #OFFSET:-9.98333;
 				if(lastlines[0][a]==':')tempint1=a+1;}
 			for(unsigned int a=0; a<strlen(lastlines[0]); a++){
 				if(lastlines[0][a]==';')tempint2=a+0;}
@@ -215,63 +236,75 @@ void Game_menu_stepimport_sm(char* filename)
 					temptext[a]=lastlines[0][a+tempint1];
 					temptext[a+1]='\n';}
 
-        tempoffset=atoi(temptext)*1000;
+        tempoffset=(long)(atof(temptext)*1000.0);
+        if (tempoffset < 0) tempoffset = -tempoffset; // current stepmania format is negative float offset in seconds
+        #ifdef LOG_IMPORT
         debug_log.open("debug", std::ios_base::app);
         debug_log << "extracted offset:" << tempoffset << " from text " << temptext << endl;
         debug_log.close();
-        tempoffset=(long)(atof(temptext)*1000.0);
-        if (tempoffset < 0) tempoffset = -tempoffset; // current stepmania format is negative float offset in seconds
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "overwriting offset with new value:" << tempoffset << endl;
-        debug_log.close();
+        #endif
       }
       else
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "ERROR: failed to extract offset!" << endl;
-        debug_log.close();
+        #ifdef LOG_ERRORS
+        error_log.open("errors", std::ios_base::app);
+        error_log << "ERROR: failed to extract offset!" << endl;
+        error_log.close();
+        #endif
       }
 		}
 		if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Beginner:")){
+      #ifdef LOG_IMPORT
       debug_log.open("debug", std::ios_base::app);
       debug_log << "charmatchend on lastlines[0].  found Beginner" << endl;
       debug_log.close();
+      #endif
 			while(n_arrows)deletearrow(0);
 			placeingnotes=1;difficulty=0;
 			currenttime=tempoffset;}
 		if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Easy:")){
+      #ifdef LOG_IMPORT
       debug_log.open("debug", std::ios_base::app);
       debug_log << "charmatchend on lastlines[0].  found Easy" << endl;
       debug_log.close();
+      #endif
 			while(n_arrows)deletearrow(0);
 			placeingnotes=1;difficulty=1;
 			currenttime=tempoffset;}
 		if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Medium:")){
+      #ifdef LOG_IMPORT
       debug_log.open("debug", std::ios_base::app);
       debug_log << "charmatchend on lastlines[0].  found Medium" << endl;
       debug_log.close();
+      #endif
 			while(n_arrows)deletearrow(0);
 			placeingnotes=1;difficulty=2;
 			currenttime=tempoffset;}
 		if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Hard:")){
+      #ifdef LOG_IMPORT
       debug_log.open("debug", std::ios_base::app);
       debug_log << "charmatchend on lastlines[0].  found Hard" << endl;
       debug_log.close();
+      #endif
 			while(n_arrows)deletearrow(0);
 			placeingnotes=1;difficulty=3;
 			currenttime=tempoffset;}
 		if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Challenge:")){
+      #ifdef LOG_IMPORT
       debug_log.open("debug", std::ios_base::app);
       debug_log << "charmatchend on lastlines[0].  found Challenge" << endl;
       debug_log.close();
+      #endif
 			while(n_arrows)deletearrow(0);
 			placeingnotes=1;difficulty=4;
 			currenttime=tempoffset;}
 		if(placeingnotes){
 			if((lastlines[0][0]==','||lastlines[0][0]==';') && strlen(lastlines[1])==4){
+        #ifdef LOG_IMPORT
         debug_log.open("debug", std::ios_base::app);
         debug_log << "detected note end separator" << endl;
         debug_log.close();
+        #endif
         
         //QUESTION: what does notetimevalue represent?
         //ANSWER: stepmania outputs steps in blocks of varying lengths depending
@@ -293,15 +326,19 @@ void Game_menu_stepimport_sm(char* filename)
 						notetimevalue=1/(double)(a-1)*4;
 						a=500;}
 				}
+        #ifdef LOG_IMPORT
         debug_log.open("debug", std::ios_base::app);
         debug_log << "calculated note time value: " << notetimevalue << endl;
         debug_log.close();
+        #endif
 				for(int a=(int)(1/notetimevalue*4); a>0; a--){
 					currenttime=currenttime+notetimevalue*1000*60/tempBPMS;
+          #ifdef LOG_IMPORT
           debug_log.open("debug", std::ios_base::app);
           debug_log << "currenttime is now " << currenttime << endl;
           debug_log << "looking in lastlines[a][0]: " << lastlines[a][0] << " for a 1 and using n_arrows and maxarrows " << n_arrows << " and " << maxarrows << endl;
           debug_log.close();
+          #endif
 					if(lastlines[a][0]=='1' && n_arrows<maxarrows){
 						arrows[n_arrows] = new arrow(0,(int)(currenttime),0);
 						n_arrows++;}
@@ -339,27 +376,30 @@ void Game_menu_stepimport_sm(char* filename)
 						for(int b=n_arrows-1; b>0; b--)if(arrows[b]->direction==3){
 							arrows[b]->length=(int)currenttime-arrows[b]->time;b=0;}
               
-					currenttime=currenttime+1;  // ??? this doesn't seem to fit with currenttime calc above: currenttime=currenttime+notetimevalue*1000*60/tempBPMS;
-          //why add 1 ms to the currenttime?
-          
+          #ifdef LOG_IMPORT
           debug_log.open("debug", std::ios_base::app);
           debug_log << "incremented currenttime ???? currenttime is now " << currenttime << endl;
           debug_log.close();
+          #endif
 				}
 			}
 			if(lastlines[0][0]==';')
       {
         placeingnotes = 0;
+        #ifdef LOG_IMPORT
         debug_log.open("debug", std::ios_base::app);
         debug_log << "writesteps(outdata) in while" << endl;
         debug_log.close();
+        #endif
         writesteps(outdata);
       }
 		}
 	}
+  #ifdef LOG_IMPORT
   debug_log.open("debug", std::ios_base::app);
   debug_log << "writesteps(outdata)" << endl;
   debug_log.close();
+  #endif
 	writesteps(outdata);
 	#ifdef WII
 	indata.close();
@@ -374,7 +414,9 @@ void Game_menu_stepimport_sm(char* filename)
   }
   free(lastlines);
   
+  #ifdef LOG_IMPORT
   debug_log.open("debug", std::ios_base::app);
   debug_log << "leaving step import" << endl;
   debug_log.close();
+  #endif
 }
