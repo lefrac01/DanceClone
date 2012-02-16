@@ -174,12 +174,12 @@ void Game_menu_stepimport_sm(char* filename)
     // instead of copying contents, now that the lastlines buffer
     // is on the heap, just shift the pointers in the first dimension
     // of the array
-    char* temp = lastlines[0]; // shifting onto this one
-    for (int a = 0; a < 20; a++)
+    char* temp = lastlines[19]; // shifting onto this one
+    for (int a = 20-1; a > 0; a--)
     {
-      lastlines[a] = lastlines[a+1];
+      lastlines[a] = lastlines[a-1];
     }
-    lastlines[19] = temp; // put saved pointer back at other end
+    lastlines[0] = temp; // put saved pointer back at other end
     
 #ifdef WIN
 		newtemp[strlen(newtemp) - 1] = '\0';
