@@ -1,0 +1,216 @@
+//NOTE: the following from http://code.google.com/p/sm-ssc/source/browse/src/NoteDataUtil.cpp
+// is to document the extended file format supported by stepmania (5?)  a proper 
+// reader will permit all the extras (mines, drunk attacks, etc) without
+// a fancy black screen of death...
+
+
+/*
+static void LoadFromSMNoteDataStringWithPlayer( NoteData& out, const RString &sSMNoteData, int start,
+                                                int len, PlayerNumber pn, int iNumTracks )
+{
+        /* Don't allocate memory for the entire string, nor per measure. Instead, use the in-place
+         * partial string split twice. By maintaining begin and end pointers to each measure line
+         * we can perform this without copying the string at all. */
+        int size = -1;
+        const int end = start + len;
+        vector<pair<const char *, const char *> > aMeasureLines;
+        for( unsigned m = 0; true; ++m )
+        {
+                /* XXX Ignoring empty seems wrong for measures. It means that ",,," is treated as
+                 * "," where I would expect most people would want 2 empty measures. ",\n,\n,"
+                 * would do as I would expect. */
+                split( sSMNoteData, ",", start, size, end, true ); // Ignore empty is important.
+                if( start == end )
+                        break;
+
+                // Partial string split.
+                int measureLineStart = start, measureLineSize = -1;
+                const int measureEnd = start + size;
+
+                aMeasureLines.clear();
+                while( true )
+                {
+                        // Ignore empty is clearly important here.
+                        split( sSMNoteData, "\n", measureLineStart, measureLineSize, measureEnd, true );
+                        if( measureLineStart == measureEnd )
+                                break;
+                        //RString &line = sSMNoteData.substr( measureLineStart, measureLineSize );
+                        const char *beginLine = sSMNoteData.data() + measureLineStart;
+                        const char *endLine = beginLine + measureLineSize;
+
+                        while( beginLine < endLine && strchr("\r\n\t ", *beginLine) )
+                                ++beginLine;
+                        while( endLine > beginLine && strchr("\r\n\t ", *(endLine - 1)) )
+                                --endLine;
+                        if( beginLine < endLine ) // nonempty
+                                aMeasureLines.push_back( pair<const char *, const char *>(beginLine, endLine) );
+                }
+
+                for( unsigned l=0; l<aMeasureLines.size(); l++ )
+                {
+                        const char *p = aMeasureLines[l].first;
+                        const char *const beginLine = p;
+                        const char *const endLine = aMeasureLines[l].second;
+
+                        const float fPercentIntoMeasure = l/(float)aMeasureLines.size();
+                        const float fBeat = (m + fPercentIntoMeasure) * BEATS_PER_MEASURE;
+                        const int iIndex = BeatToNoteRow( fBeat );
+
+                        int iTrack = 0;
+                        while( iTrack < iNumTracks && p < endLine )
+                        {
+                                TapNote tn;
+                                char ch = *p;
+
+                                switch( ch )
+                                {
+                                case '0': tn = TAP_EMPTY;                               break;
+                                case '1': tn = TAP_ORIGINAL_TAP;                        break;
+                                case '2':
+                                case '4':
+                                // case 'N': // minefield
+                                        tn = ch == '2' ? TAP_ORIGINAL_HOLD_HEAD : TAP_ORIGINAL_ROLL_HEAD;
+                                        /*
+                                        // upcoming code for minefields -aj
+                                        switch(ch)
+                                        {
+                                        case '2': tn = TAP_ORIGINAL_HOLD_HEAD; break;
+                                        case '4': tn = TAP_ORIGINAL_ROLL_HEAD; break;
+                                        case 'N': tn = TAP_ORIGINAL_MINE_HEAD; break;
+                                        }
+                                        */
+
+                                        /* Set the hold note to have infinite length. We'll clamp
+                                         * it when we hit the tail. */
+                                        tn.iDuration = MAX_NOTE_ROW;
+                                        break;
+                                case '3':
+                                {
+                                        // This is the end of a hold. Search for the beginning.
+                                        int iHeadRow;
+                                        if( !out.IsHoldNoteAtRow( iTrack, iIndex, &iHeadRow ) )
+                                        {
+                                                int n = intptr_t(endLine) - intptr_t(beginLine);
+                                                LOG->Warn( "Unmatched 3 in \"%.*s\"", n, beginLine );
+                                        }
+                                        else
+                                        {
+                                                out.FindTapNote( iTrack, iHeadRow )->second.iDuration = iIndex - iHeadRow;
+                                        }
+
+                                        // This won't write tn, but keep parsing normally anyway.
+                                        break;
+                                }
+                                //                              case 'm':
+                                // Don't be loose with the definition.  Use only 'M' since
+                                // that's what we've been writing to disk.  -Chris
+                                case 'M': tn = TAP_ORIGINAL_MINE;                       break;
+                                // case 'A': tn = TAP_ORIGINAL_ATTACK;                  break;
+                                case 'K': tn = TAP_ORIGINAL_AUTO_KEYSOUND;              break;
+                                case 'L': tn = TAP_ORIGINAL_LIFT;                       break;
+                                case 'F': tn = TAP_ORIGINAL_FAKE;                       break;
+                                // case 'I': tn = TAP_ORIGINAL_ITEM;                    break;
+                                default: 
+                                        /* Invalid data. We don't want to assert, since there might
+                                         * simply be invalid data in an .SM, and we don't want to die
+                                         * due to invalid data. We should probably check for this when
+                                         * we load SM data for the first time ... */
+                                        // ASSERT(0); 
+                                        tn = TAP_EMPTY;
+                                        break;
+                                }
+
+                                p++;
+                                // We won't scan past the end of the line so these are safe to do.
+#if 0
+                                // look for optional attack info (e.g. "{tipsy,50% drunk:15.2}")
+                                if( *p == '{' )
+                                {
+                                        p++;
+
+                                        char szModifiers[256] = "";
+                                        float fDurationSeconds = 0;
+                                        if( sscanf( p, "%255[^:]:%f}", szModifiers, &fDurationSeconds ) == 2 )  // not fatal if this fails due to malformed data
+                                        {
+                                                tn.type = TapNote::attack;
+                                                tn.sAttackModifiers = szModifiers;
+                                                tn.fAttackDurationSeconds = fDurationSeconds;
+                                        }
+
+                                        // skip past the '}'
+                                        while( p < endLine )
+                                        {
+                                                if( *(p++) == '}' )
+                                                        break;
+                                        }
+                                }
+#endif
+
+                                // look for optional keysound index (e.g. "[123]")
+                                if( *p == '[' )
+                                {
+                                        p++;
+                                        int iKeysoundIndex = 0;
+                                        if( 1 == sscanf( p, "%d]", &iKeysoundIndex ) )  // not fatal if this fails due to malformed data
+                                                tn.iKeysoundIndex = iKeysoundIndex;
+
+                                        // skip past the ']'
+                                        while( p < endLine )
+                                        {
+                                                if( *(p++) == ']' )
+                                                        break;
+                                        }
+                                }
+
+#if 0
+                                // look for optional item name (e.g. "<potion>"),
+                                // where the name in the <> is a Lua function defined elsewhere
+                                // (Data/ItemTypes.lua, perhaps?) -aj
+                                if( *p == '<' )
+                                {
+                                        p++;
+
+                                        // skip past the '>'
+                                        while( p < endLine )
+                                        {
+                                                if( *(p++) == '>' )
+                                                        break;
+                                        }
+                                }
+#endif
+
+                                /* Optimization: if we pass TAP_EMPTY, NoteData will do a search
+                                 * to remove anything in this position.  We know that there's nothing
+                                 * there, so avoid the search. */
+                                if( tn.type != TapNote::empty && ch != '3' )
+                                {
+                                        tn.pn = pn;
+                                        out.SetTapNote( iTrack, iIndex, tn );
+                                }
+
+                                iTrack++;
+                        }
+                }
+        }
+
+        // Make sure we don't have any hold notes that didn't find a tail.
+        for( int t=0; t<out.GetNumTracks(); t++ )
+        {
+                NoteData::iterator begin = out.begin( t );
+                NoteData::iterator lEnd = out.end( t );
+                while( begin != lEnd )
+                {
+                        NoteData::iterator next = Increment( begin );
+                        const TapNote &tn = begin->second;
+                        if( tn.type == TapNote::hold_head && tn.iDuration == MAX_NOTE_ROW )
+                        {
+                                int iRow = begin->first;
+                                LOG->UserLog( "", "", "While loading .sm/.ssc note data, there was an unmatched 2 at beat %f", NoteRowToBeat(iRow) );
+                                out.RemoveTapNote( t, begin );
+                        }
+
+                        begin = next;
+                }
+        }
+}
+*/

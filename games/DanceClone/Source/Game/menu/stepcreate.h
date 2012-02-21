@@ -2,9 +2,9 @@
 //
 
 //NOTE: these two depend on pre-existing BPM data.
-//TODO: support real-time stepping that gathers data and saves to file
+//TODO: (WISHLIST) support real-time stepping that gathers data and saves to file
 //
-//TODO: support beat by beat modification
+//TODO: (WISHLIST) support beat by beat modification
 
 
 int songbpm=115;
@@ -17,32 +17,32 @@ void Game_menu_stepcreate(){
   
   WiiDash_spritetext(40,55+1*40,(char*)"How fast is the song?",1);
   
-  if(WiiDash_button(640/2-250-42+75,55+2*40,60,10,1,1,(char*)"")){songbpm=songbpm-1;}
-  apply_surface(640/2-250-42-15/2-1+75,55+2*40-16/2-1,WDarrowsimage,screen,&WDarrowsframes[1]);
-  if(WiiDash_button(640/2+250+42-75,55+2*40,60,10,1,1,(char*)"")){songbpm=songbpm+1;}
-  apply_surface(640/2+250+42-15/2-1-75,55+2*40-16/2-1,WDarrowsimage,screen,&WDarrowsframes[3]);
+  if(WiiDash_button(rmode->viWidth/2-250-42+75,55+2*40,60,10,1,1,(char*)"")){songbpm=songbpm-1;}
+  apply_surface(rmode->viWidth/2-250-42-15/2-1+75,55+2*40-16/2-1,WDarrowsimage,screen,&WDarrowsframes[1]);
+  if(WiiDash_button(rmode->viWidth/2+250+42-75,55+2*40,60,10,1,1,(char*)"")){songbpm=songbpm+1;}
+  apply_surface(rmode->viWidth/2+250+42-15/2-1-75,55+2*40-16/2-1,WDarrowsimage,screen,&WDarrowsframes[3]);
   sprintf(temptext,"%d%s",songbpm," BPM");
-  if(WiiDash_button(640/2,55+2*40,300,10,1,0,temptext)){}
+  if(WiiDash_button(rmode->viWidth/2,55+2*40,300,10,1,0,temptext)){}
   
   WiiDash_spritetext(40,55+3*40,(char*)"When does the first beat occur?",1);
   
-  if(WiiDash_button(640/2-250-42+75,55+4*40,60,10,1,1,(char*)"")){songdelay=songdelay-1;}
-  apply_surface(640/2-250-42-15/2-1+75,55+4*40-16/2-1,WDarrowsimage,screen,&WDarrowsframes[1]);
-  if(WiiDash_button(640/2+250+42-75,55+4*40,60,10,1,1,(char*)"")){songdelay=songdelay+1;}
-  apply_surface(640/2+250+42-15/2-1-75,55+4*40-16/2-1,WDarrowsimage,screen,&WDarrowsframes[3]);
+  if(WiiDash_button(rmode->viWidth/2-250-42+75,55+4*40,60,10,1,1,(char*)"")){songdelay=songdelay-1;}
+  apply_surface(rmode->viWidth/2-250-42-15/2-1+75,55+4*40-16/2-1,WDarrowsimage,screen,&WDarrowsframes[1]);
+  if(WiiDash_button(rmode->viWidth/2+250+42-75,55+4*40,60,10,1,1,(char*)"")){songdelay=songdelay+1;}
+  apply_surface(rmode->viWidth/2+250+42-15/2-1-75,55+4*40-16/2-1,WDarrowsimage,screen,&WDarrowsframes[3]);
   sprintf(temptext,"%d%s",songdelay," millisecond delay");
-  if(WiiDash_button(640/2,55+4*40,300,10,1,0,temptext)){}
+  if(WiiDash_button(rmode->viWidth/2,55+4*40,300,10,1,0,temptext)){}
   
   WiiDash_spritetext(40,55+5*40,(char*)"How many beats are there before the song ends?",1);
   
-  if(WiiDash_button(640/2-250-42+75,55+6*40,60,10,1,1,(char*)"")){numarrowstocreate=numarrowstocreate-1;}
-  apply_surface(640/2-250-42-15/2-1+75,55+6*40-16/2-1,WDarrowsimage,screen,&WDarrowsframes[1]);
-  if(WiiDash_button(640/2+250+42-75,55+6*40,60,10,1,1,(char*)"")){numarrowstocreate=numarrowstocreate+1;}
-  apply_surface(640/2+250+42-15/2-1-75,55+6*40-16/2-1,WDarrowsimage,screen,&WDarrowsframes[3]);
+  if(WiiDash_button(rmode->viWidth/2-250-42+75,55+6*40,60,10,1,1,(char*)"")){numarrowstocreate=numarrowstocreate-1;}
+  apply_surface(rmode->viWidth/2-250-42-15/2-1+75,55+6*40-16/2-1,WDarrowsimage,screen,&WDarrowsframes[1]);
+  if(WiiDash_button(rmode->viWidth/2+250+42-75,55+6*40,60,10,1,1,(char*)"")){numarrowstocreate=numarrowstocreate+1;}
+  apply_surface(rmode->viWidth/2+250+42-15/2-1-75,55+6*40-16/2-1,WDarrowsimage,screen,&WDarrowsframes[3]);
   sprintf(temptext,"%d%s",numarrowstocreate," arrows");
-  if(WiiDash_button(640/2,55+6*40,300,10,1,0,temptext)){}
+  if(WiiDash_button(rmode->viWidth/2,55+6*40,300,10,1,0,temptext)){}
   
-  if(WiiDash_button(320,55+8*40,600,10,1,1,(char*)"Accept")){
+  if(WiiDash_button(rmode->viWidth/2,55+8*40,600,10,1,1,(char*)"Accept")){
     sprintf(temptext,"%s%s%s","Music/",songfilename,".dc");
     ofstream outdata;outdata.open(temptext);
     outdata << "<startbeginner>" << endl;
@@ -88,5 +88,5 @@ void Game_menu_stepcreate(){
     gamestate=4;
   }
   
-  if(WiiDash_button(640-100-40,480-10-40,100,10,0,1,(char*)"Back"))gamestate=4;
+  if(WiiDash_button(rmode->viWidth-100-40,rmode->viHeight-10-40,100,10,0,1,(char*)"Back"))gamestate=4;
 }

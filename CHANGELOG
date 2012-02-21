@@ -1,9 +1,9 @@
 changelog
 --
 v0.53
--nothing yet lolwut
--too tired! wtf am I doing up after 3 hours of sleep?
--damned sun
+-logging levels
+-BPM info written to DC step file during stepmania import
+-fixed arrow timestamp generation
 
 v0.52
 -fixed import of multiple BPMS

@@ -93,9 +93,9 @@ void updatecontrolinput(){
     if(ir[3].valid){cursorx[3]=ir[3].x*1.25-80;cursory[3]=ir[3].y*1.25-60;}
     for(int a=0;a<4;a++){
       if(cursorx[a]<0)cursorx[a]=0;
-      if(cursorx[a]>640)cursorx[a]=640;
+      if(cursorx[a]>rmode->viWidth)cursorx[a]=rmode->viWidth;
       if(cursory[a]<0)cursory[a]=0;
-      if(cursory[a]>480)cursory[a]=480;
+      if(cursory[a]>rmode->viHeight)cursory[a]=rmode->viHeight;
     }
   #endif
   

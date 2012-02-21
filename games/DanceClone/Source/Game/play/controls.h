@@ -1,4 +1,7 @@
-//TODO implement 2nd player
+//TODO: implement 2nd player
+//
+//TODO: implement separate rating for succesfully held arrows 
+// currently this adds one perfect
 
 void Game_play_controls(){
 
@@ -9,6 +12,8 @@ void Game_play_controls(){
     debug_log.close();
   }
 
+  // update player controls
+  
   u32 WiiButtons1Held = WiiButtonsHeld[0];
   u32 WiiButtons1Down = WiiButtonsDown[0];
   u16 GCButtons1Held = GCButtonsHeld[0];
@@ -67,20 +72,23 @@ void Game_play_controls(){
   }
   #endif
 
+
+  // rate arrows
+  // this should be in a separate function or in Game_play()
+
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
     debug_log.open("debug", std::ios_base::app);
     debug_log << "checking for boo" << endl;
     debug_log.close();
   }
-  //#for(int a=0;a<playerarrowcount;a++)if(playerarrows[a]->time-songtime<-1000/8){
-  for(int a=playerbasearrow;a<playerarrowcount;a++)if(playerarrows[a].time-songtime<-1000/8)
+  //TODO: recode using current bpm to calculate a max distance.
+  //TODO: if arrow has flowed past, consider it still the next ratable
+  // arrow until either the max distance(boo rating) or until the next
+  // arrow is closer.  this is too allow excluding old arrows before the
+  // normal timeout if a stream of closely-placed arrows arrives.
+  for(int a=playerbasearrow;a<playerarrowcount;a++)if(playerarrows[a].ypos-songtime<-1000/8)
   {
-    //#ratearrow(a,0);combo=0;boo=boo+1;a-=1;   // HANG  because orig code
-                                                // destroyed arrows in ratearrow()
-                                                // a was left pointing too far
-                                                // and had to be brought back
-                                                // now it is too much adjustment...
     ratearrow(a,0);combo=0;boo=boo+1;
   }
 
@@ -90,17 +98,28 @@ void Game_play_controls(){
     debug_log << "checking for perfect / good" << endl;
     debug_log.close();
   }
+  
+  //TODO: record rating.  each direction has a "current ratable arrow" 
+  // whose y position is analysed relative to a scale calculated based on 
+  // current BPM.  separate each control's hit detection statement to 
+  // use the current ratable arrow for each column.
+  
   for(int b=0;b<4;b++)
   if((b==0 && leftcontrol==125)||(b==1 && downcontrol==125)||(b==2 && upcontrol==125)||(b==3 && rightcontrol==125))
-  //#for(int a=playerbasearrow;a<playerarrowcount;a++)if(playerarrows[a]->length==0)if(playerarrows[a]->direction==b){
-  for(int a=playerbasearrow;a<playerarrowcount;a++)if(playerarrows[a].length==0)if(playerarrows[a].direction==b){
-    if(playerarrows[a].time-songtime>-1000/15 && playerarrows[a].time-songtime<1000/15){
-      ratearrow(a,2);combo=combo+1;perfect=perfect+1;a=playerarrowcount;
-    }else if(playerarrows[a].time-songtime>-1000/5 && playerarrows[a].time-songtime<1000/5){
-      ratearrow(a,1);combo=combo+1;good=good+1;a=playerarrowcount;
+  {
+    for(int a=playerbasearrow;a<playerarrowcount;a++)if(playerarrows[a].length==0)if(playerarrows[a].direction==b)
+    {
+      if(playerarrows[a].ypos-songtime>-1000/15 && playerarrows[a].ypos-songtime<1000/15)
+      {
+        ratearrow(a,2);combo=combo+1;perfect=perfect+1;a=playerarrowcount;
+      }
+      else if(playerarrows[a].ypos-songtime>-1000/5 && playerarrows[a].ypos-songtime<1000/5)
+      {
+        ratearrow(a,1);combo=combo+1;good=good+1;a=playerarrowcount;
+      }
     }
   }
-
+  
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
     debug_log.open("debug", std::ios_base::app);
@@ -109,13 +128,17 @@ void Game_play_controls(){
   }
   for(int b=0;b<4;b++)
   if((b==0 && leftcontrol)||(b==1 && downcontrol)||(b==2 && upcontrol)||(b==3 && rightcontrol))
-  //#for(int a=0;a<playerarrowcount;a++)if(playerarrows[a]->length!=0)if(playerarrows[a]->direction==b){
-  for(int a=playerbasearrow;a<playerarrowcount;a++)if(playerarrows[a].length!=0)if(playerarrows[a].direction==b){
-    if(playerarrows[a].time-songtime>-1000/5 && playerarrows[a].time-songtime<1000/5){
-      playerarrows[a].time+=timehaspast;
-      playerarrows[a].length-=timehaspast;
-      if(playerarrows[a].length<=0){
-        ratearrow(a,2);combo=combo+1;perfect=perfect+1;
+  {
+    for(int a=playerbasearrow;a<playerarrowcount;a++)if(playerarrows[a].length!=0)if(playerarrows[a].direction==b)
+    {
+      if(playerarrows[a].ypos-songtime>-1000/5 && playerarrows[a].ypos-songtime<1000/5)
+      {
+        playerarrows[a].ypos+=timehaspast;
+        playerarrows[a].length-=timehaspast;
+        if(playerarrows[a].length<=0)
+        {
+          ratearrow(a,2);combo=combo+1;perfect=perfect+1;
+        }
       }
     }
   }

@@ -68,6 +68,7 @@ int main(int argc, char* argv[])
         SDL_Delay((1000/60)-fps.get_ticks());
         */
   }
-  cleanup();
+  game_cleanup();
+  generic_cleanup();
   return 0;
 }

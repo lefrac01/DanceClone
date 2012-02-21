@@ -1,5 +1,3 @@
-//TODO: dirlist() fails with buffer overflow if filename > 200 (including path, some mp3 names are long)
-
 class direntry
 {
 public:

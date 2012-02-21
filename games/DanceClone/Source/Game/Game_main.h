@@ -1,17 +1,9 @@
 //TODO: worth it to optimize bg by not always redrawing?
 //TODO: replace static bg by video
 
-#define GAMEVERSIONSTRING "DanceClone v0.53"
-#define DEBUG_OFF 0
-#define DEBUG_BASIC 1
-#define DEBUG_MINOR 2
-#define DEBUG_DETAIL 3
-#define DEBUG_GUTS 4
-#define DEBUG_LEVEL DEBUG_MINOR
-//#define LOG_IMPORT
-#define LOG_ERRORS
-ofstream debug_log;
-ofstream error_log;
+#define NOTE_TYPE_QUARTER 1
+#define NOTE_TYPE_EIGHTH 2
+#define NOTE_TYPE_HOLD 3
 
 int gamestate = 0;
 bool gamestatechange = 0;
@@ -50,4 +42,9 @@ void Game_run()
     }
   }
 
+}
+
+void game_cleanup()
+{
+  freesongdatastructures();
 }

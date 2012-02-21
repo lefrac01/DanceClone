@@ -1,5 +1,3 @@
-//TODO: use SDL "unsigned int" since this is SDL code.  rename SDL "unsigned int" to something else and adjust code 
-
 Uint32 getpixel(SDL_Surface *surface,int x,int y){
   int bpp = surface->format->BytesPerPixel;
   Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
@@ -48,5 +46,5 @@ void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel){
 }
 
 void putpixel16(SDL_Surface *surface, int x, int y, Uint32 pixel){
-	*((Uint16 *)surface->pixels+y*surface->pitch/2+x)=pixel;
+  *((Uint16 *)surface->pixels+y*surface->pitch/2+x)=pixel;
 }

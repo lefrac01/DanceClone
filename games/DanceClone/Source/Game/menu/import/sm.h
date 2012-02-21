@@ -1,30 +1,54 @@
 //NOTE: stepmania file format at http://www.stepmania.com/wiki/The_.SM_file_format
 //
-//TODO: output variable BPM.  currently BPMS are read and processed but the
-// playback speed stays constant since BPM data is not present in the .DC format
-//
 //TODO: implement #STOPS:
 //
-//TODO: if the log is going to stay it has to support logging levels
+//TODO: put #BPMS; at top of file because it doesn't make sense to
+// repeat it for each of the difficulties.
+// it can just be a copy of the one from the SM file.
+// reading the SM file directly just seems easier and easier
 //
+//TODO: rip out concept of max line length.  
 
 
-//#define LOG_IMPORT in Game_main.h
-//include "../../../../../../Generic/log_console_globbed.h"
 
+// maxlinelength is 10000 chars.  one BPM definition requires
+// about 10 chars so max ~1000 definitions.  
+const int maxBPMS = 1000;
+int*  BPMSindices = 0;
+float* BPMS = 0;
+long*  BPMchangepositions = 0;
+int   current_BPM_index = 0;
+int   numBPMS = 0;
+int   BPM_output_index = 0;
+
+
+//NOTE:
+// awwww crap.  the whole original algo is step-based
+// and I am trying to immitate the SM beat-based format
+// by adding bpm changes at specific timestamps.
+// time might be saved here by seriously reconsidering the
+// entire file format question of SM vs DC...
 void writesteps(ofstream &outdata)
 {
   #ifdef LOG_IMPORT
-  debug_log.open("debug", std::ios_base::app);
-  debug_log << "writesteps() difficulty:" << difficulty << " number of arrows:" << songarrowcount[difficulty] << endl;
-  debug_log.close();
+  if (DEBUG_LEVEL >= DEBUG_MINOR)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "writesteps() difficulty:" << difficulty << " number of arrows:" << songarrowcount[difficulty] << endl;
+    debug_log.close();
+  }
   #endif
+
+  
   if(songarrowcount[difficulty])
   {
     #ifdef LOG_IMPORT
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "writing difficulty" << endl;
-    debug_log.close();
+    if (DEBUG_LEVEL >= DEBUG_MINOR)
+    {
+      debug_log.open("debug", std::ios_base::app);
+      debug_log << "writing difficulty" << endl;
+      debug_log.close();
+    }
     #endif
     
     if(difficulty == 0) outdata << "<startbeginner>" << endl;
@@ -34,34 +58,66 @@ void writesteps(ofstream &outdata)
     if(difficulty == 4) outdata << "<startchallenge>" << endl;
 
     #ifdef LOG_IMPORT
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "processing " << songarrowcount[difficulty] << " arrows." << endl;
-    debug_log.close();
+    if (DEBUG_LEVEL >= DEBUG_MINOR)
+    {
+      debug_log.open("debug", std::ios_base::app);
+      debug_log << "processing " << songarrowcount[difficulty] << " arrows." << endl;
+      debug_log.close();
+    }
     #endif
+    
     for(int a = 0; a < songarrowcount[difficulty]; a++)
     {
+      // check if there is a bpm block to insert before the current arrow
+      if (  BPM_output_index < numBPMS 
+        &&  BPMchangepositions[BPM_output_index] <=  songarrows[difficulty][a].ypos)
+      {
+        outdata << "<bpm>" << endl;
+        outdata << BPMchangepositions[BPM_output_index] << endl;
+        outdata << BPMS[BPM_output_index] << endl;
+        outdata << "----" << endl;
+        #ifdef LOG_IMPORT
+        if (DEBUG_LEVEL >= DEBUG_MINOR)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "wrote bpm block for timestamp, beat: " \
+            << BPMchangepositions[BPM_output_index] << "," \
+            << BPMS[BPM_output_index] << endl;
+          debug_log.close();
+        }
+        #endif
+        BPM_output_index++;
+      }
+      
       outdata << songarrows[difficulty][a].direction << endl;
-      outdata << songarrows[difficulty][a].time << endl;
+      outdata << songarrows[difficulty][a].ypos << endl;
       outdata << songarrows[difficulty][a].length << endl;
+      outdata << songarrows[difficulty][a].type << endl;
       outdata << "----" << endl;
     }
     outdata << "<stop>" << endl;
     
     #ifdef LOG_IMPORT
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "deleting arrows" << endl;
-    debug_log.close();
+    if (DEBUG_LEVEL >= DEBUG_MINOR)
+    {
+      debug_log.open("debug", std::ios_base::app);
+      debug_log << "deleting arrows" << endl;
+      debug_log.close();
+    }
     #endif
-    initarrowstructures();
+    initsongdatastructures();
   }
 }
 
 void Game_menu_stepimport_sm(char* filename)
 {
   #ifdef LOG_IMPORT
-  debug_log.open("debug", std::ios_base::app);
-  debug_log << "beginning Game_menu_stepimport_sm(" << filename << ")" << endl;
-  debug_log.close();
+  if (DEBUG_LEVEL >= DEBUG_BASIC)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "beginning Game_menu_stepimport_sm(" << filename << ")" << endl;
+    debug_log.close();
+  }
   #endif
 
   ofstream outdata;
@@ -78,17 +134,13 @@ void Game_menu_stepimport_sm(char* filename)
   const int lastlineslength = 70;
   char** lastlines;
 
-  // maxlinelength is 10000 chars.  one BPM definition requires
-  // about 10 chars so max ~1000 definitions.  
-  const int maxBPMS = 1000;
-  int*  BPMSindices = 0;
-  float* BPMS = 0;
   int   current_beat = 0;
-  int   current_BPM_index = 0;
-  int   numBPMS = 0;
   double tempBPMS = 0;
-  double tempoffset = 0;
-  double currenttime = 0;
+  
+//  double tempoffset = 0;
+//  double currenttime = 0;   // this concept is replaced with current pos
+  long beat0offset = 0;
+  long currentpos = 0;
   double notetimevalue = 0;
   int tempint1 = 0;
   int tempint2 = 0;
@@ -96,26 +148,35 @@ void Game_menu_stepimport_sm(char* filename)
   bool in_dance_single_block = 0;
 
   #ifdef LOG_IMPORT
-  debug_log.open("debug", std::ios_base::app);
-  debug_log << "wiping working mem..." << endl;
-  debug_log << "temptext..." << endl;
-  debug_log.close();
+  if (DEBUG_LEVEL >= DEBUG_GUTS)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "wiping working mem..." << endl;
+    debug_log << "temptext..." << endl;
+    debug_log.close();
+  }
   #endif
   temptext = (char*)malloc(maxlinelength + 10);
   memset(temptext, 0, sizeof(temptext));
 
   #ifdef LOG_IMPORT
-  debug_log.open("debug", std::ios_base::app);
-  debug_log << "newtemp..." << endl;
-  debug_log.close();
+  if (DEBUG_LEVEL >= DEBUG_GUTS)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "newtemp..." << endl;
+    debug_log.close();
+  }
   #endif
   newtemp = (char*)malloc(maxlinelength + 10);
   memset(newtemp, 0, maxlinelength + 10);
 
   #ifdef LOG_IMPORT
-  debug_log.open("debug", std::ios_base::app);
-  debug_log << "lastlines array..." << endl;
-  debug_log.close();
+  if (DEBUG_LEVEL >= DEBUG_GUTS)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "lastlines array..." << endl;
+    debug_log.close();
+  }
   #endif
   lastlines = (char **) malloc(lastlineslength * sizeof(char *));
   for (int i = 0; i < lastlineslength; i++)
@@ -125,25 +186,35 @@ void Game_menu_stepimport_sm(char* filename)
   }
 
   BPMSindices = (int*)malloc(maxBPMS * sizeof(int));
+  BPMchangepositions = (long*)malloc(maxBPMS * sizeof(long));
   BPMS = (float*)malloc(maxBPMS * sizeof(float));
   
   #ifdef LOG_IMPORT
-  debug_log.open("debug", std::ios_base::app);
-  debug_log << "BPMS arrays..." << endl;
-  debug_log.close();
+  if (DEBUG_LEVEL >= DEBUG_GUTS)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "BPMS arrays..." << endl;
+    debug_log.close();
+  }
   #endif
 
   #ifdef LOG_IMPORT
-  debug_log.open("debug", std::ios_base::app);
-  debug_log << "done" << endl;
-  debug_log.close();
+  if (DEBUG_LEVEL >= DEBUG_GUTS)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "done" << endl;
+    debug_log.close();
+  }
   #endif
 
   sprintf(temptext, "%s%s%s", "Music/", songfilename, ".dc");
   #ifdef LOG_IMPORT
-  debug_log.open("debug", std::ios_base::app);
-  debug_log << "outdata.open(" << temptext << ")" << endl;
-  debug_log.close();
+  if (DEBUG_LEVEL >= DEBUG_BASIC)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "outdata.open(" << temptext << ")" << endl;
+    debug_log.close();
+  }
   #endif
   outdata.open(temptext);
   
@@ -153,9 +224,12 @@ void Game_menu_stepimport_sm(char* filename)
 #endif
 #ifdef WII
   #ifdef LOG_IMPORT
-  debug_log.open("debug", std::ios_base::app);
-  debug_log << "indata.open(" << temptext << ")" << endl;
-  debug_log.close();
+  if (DEBUG_LEVEL >= DEBUG_BASIC)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "indata.open(" << temptext << ")" << endl;
+    debug_log.close();
+  }
   #endif
   indata.open(temptext);
 #endif
@@ -217,9 +291,12 @@ void Game_menu_stepimport_sm(char* filename)
             int temp_beat = atoi(temptext);
 
             #ifdef LOG_IMPORT
-            debug_log.open("debug", std::ios_base::app);
-            debug_log << "extracted int beat: " << temp_beat << " from text (" << temptext << ")" << endl;
-            debug_log.close();
+            if (DEBUG_LEVEL >= DEBUG_DETAIL)
+            {
+              debug_log.open("debug", std::ios_base::app);
+              debug_log << "extracted int beat: " << temp_beat << " from text (" << temptext << ")" << endl;
+              debug_log.close();
+            }
             #endif
             
             // continue past '=' looking for BPM data
@@ -242,9 +319,12 @@ void Game_menu_stepimport_sm(char* filename)
               float temp_BPM = atof(temptext);
               
               #ifdef LOG_IMPORT
-              debug_log.open("debug", std::ios_base::app);
-              debug_log << "extracted float BPM: " << temp_BPM << " from text (" << temptext << ")" << endl;
-              debug_log.close();
+              if (DEBUG_LEVEL >= DEBUG_DETAIL)
+              {
+                debug_log.open("debug", std::ios_base::app);
+                debug_log << "extracted float BPM: " << temp_BPM << " from text (" << temptext << ")" << endl;
+                debug_log.close();
+              }
               #endif
               
               if (numBPMS < maxBPMS)
@@ -292,10 +372,13 @@ void Game_menu_stepimport_sm(char* filename)
     }
     if(charmatchstart(lastlines[0],(char*)"#OFFSET:")){
       #ifdef LOG_IMPORT
-      debug_log.open("debug", std::ios_base::app);
-      debug_log << "charmatchstart on lastlines[0].  found #OFFSET:" << endl;
-      debug_log << "lastlines[0]=(" << lastlines[0] << ")" << endl;
-      debug_log.close();
+      if (DEBUG_LEVEL >= DEBUG_MINOR)
+      {
+        debug_log.open("debug", std::ios_base::app);
+        debug_log << "charmatchstart on lastlines[0].  found #OFFSET:" << endl;
+        debug_log << "lastlines[0]=(" << lastlines[0] << ")" << endl;
+        debug_log.close();
+      }
       #endif
       
       tempint1=-1;tempint2=-1;
@@ -309,12 +392,15 @@ void Game_menu_stepimport_sm(char* filename)
           temptext[a]=lastlines[0][a+tempint1];
           temptext[a+1]='\n';}
 
-        tempoffset=(long)(atof(temptext)*1000.0);
-        if (tempoffset < 0) tempoffset = -tempoffset; // current stepmania format is negative float offset in seconds
+        beat0offset=(long)(atof(temptext)*1000.0);
+        if (beat0offset < 0) beat0offset = -beat0offset; // current stepmania format is negative float offset in seconds
         #ifdef LOG_IMPORT
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "extracted offset:" << tempoffset << " from text " << temptext << endl;
-        debug_log.close();
+        if (DEBUG_LEVEL >= DEBUG_MINOR)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "extracted beat 0 offset:" << beat0offset << " from text " << temptext << endl;
+          debug_log.close();
+        }
         #endif
       }
       else
@@ -328,9 +414,12 @@ void Game_menu_stepimport_sm(char* filename)
     }
     if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"dance-single:")){
       #ifdef LOG_IMPORT
-      debug_log.open("debug", std::ios_base::app);
-      debug_log << "detected dance-single block" << endl;
-      debug_log.close();
+      if (DEBUG_LEVEL >= DEBUG_MINOR)
+      {
+        debug_log.open("debug", std::ios_base::app);
+        debug_log << "detected dance-single block" << endl;
+        debug_log.close();
+      }
       #endif
       in_dance_single_block=1;
     }
@@ -338,64 +427,111 @@ void Game_menu_stepimport_sm(char* filename)
     {
       if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Beginner:")){
         #ifdef LOG_IMPORT
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "charmatchend on lastlines[0].  found Beginner" << endl;
-        debug_log.close();
+        if (DEBUG_LEVEL >= DEBUG_MINOR)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "charmatchend on lastlines[0].  found Beginner" << endl;
+          debug_log.close();
+        }
         #endif
-        initarrowstructures();
+        initsongdatastructures();
         placeingnotes=1;difficulty=0;
-        currenttime=tempoffset;}
+        currentpos=beat0offset;}  //TODO: oops.  these y values are virtual, not what will be used at anim time
       if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Easy:")){
         #ifdef LOG_IMPORT
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "charmatchend on lastlines[0].  found Easy" << endl;
-        debug_log.close();
+        if (DEBUG_LEVEL >= DEBUG_MINOR)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "charmatchend on lastlines[0].  found Easy" << endl;
+          debug_log.close();
+        }
         #endif
-        initarrowstructures();
+        initsongdatastructures();
         placeingnotes=1;difficulty=1;
-        currenttime=tempoffset;}
+        currentpos=beat0offset;}  //TODO: oops.  these y values are virtual, not what will be used at anim time
       if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Medium:")){
         #ifdef LOG_IMPORT
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "charmatchend on lastlines[0].  found Medium" << endl;
-        debug_log.close();
+        if (DEBUG_LEVEL >= DEBUG_MINOR)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "charmatchend on lastlines[0].  found Medium" << endl;
+          debug_log.close();
+        }
         #endif
-        initarrowstructures();
+        initsongdatastructures();
         placeingnotes=1;difficulty=2;
-        currenttime=tempoffset;}
+        currentpos=beat0offset;}  //TODO: oops.  these y values are virtual, not what will be used at anim time
       if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Hard:")){
         #ifdef LOG_IMPORT
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "charmatchend on lastlines[0].  found Hard" << endl;
-        debug_log.close();
+        if (DEBUG_LEVEL >= DEBUG_MINOR)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "charmatchend on lastlines[0].  found Hard" << endl;
+          debug_log.close();
+        }
         #endif
-        initarrowstructures();
+        initsongdatastructures();
         placeingnotes=1;difficulty=3;
-        currenttime=tempoffset;}
+        currentpos=beat0offset;}  //TODO: oops.  these y values are virtual, not what will be used at anim time
       if(placeingnotes==0 && charmatchend(lastlines[0],(char*)"Challenge:")){
         #ifdef LOG_IMPORT
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "charmatchend on lastlines[0].  found Challenge" << endl;
-        debug_log.close();
+        if (DEBUG_LEVEL >= DEBUG_MINOR)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "charmatchend on lastlines[0].  found Challenge" << endl;
+          debug_log.close();
+        }
         #endif
-        initarrowstructures();
+        initsongdatastructures();
         placeingnotes=1;difficulty=4;
-        currenttime=tempoffset;}
+        currentpos=beat0offset;}  //TODO: oops.  these y values are virtual, not what will be used at anim time
     }
     if(placeingnotes){
+      #ifdef LOG_IMPORT
+      if (DEBUG_LEVEL >= DEBUG_GUTS)
+      {
+        debug_log.open("debug", std::ios_base::app);
+        debug_log << "placing notes..." << endl;
+        debug_log.close();
+      }
+      #endif
       if((lastlines[0][0]==','||lastlines[0][0]==';') && strlen(lastlines[1])==4){
         #ifdef LOG_IMPORT
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "detected note end separator" << endl;
-        debug_log.close();
+        if (DEBUG_LEVEL >= DEBUG_MINOR)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "detected beat separator (" << lastlines[0][0] << ")" << endl;
+          debug_log.close();
+        }
         #endif
         
         // set BPM according to current beat and list of BPMs that apply to each beat
         if (BPMSindices[current_BPM_index] == current_beat)
         {
+          #ifdef LOG_IMPORT
+          if (DEBUG_LEVEL >= DEBUG_DETAIL)
+          {
+            debug_log.open("debug", std::ios_base::app);
+            debug_log << "beat change detected on beat " << current_beat << " new bpm is at index " << current_BPM_index << endl;
+            debug_log.close();
+          }
+          #endif
+          
           // there is a BPM change on this beat.
           tempBPMS = BPMS[current_BPM_index];
           
+          // now that the songtime of the current beat is calculated,
+          // save it for output of bpm data
+          BPMchangepositions[current_BPM_index] = currentpos;
+          #ifdef LOG_IMPORT
+          if (DEBUG_LEVEL >= DEBUG_DETAIL)
+          {
+            debug_log.open("debug", std::ios_base::app);
+            debug_log << "using currentpos " << currentpos << " for position of bpm change on beat " << current_beat << endl;
+            debug_log.close();
+          }
+          #endif
+
           // move index to next index (if there is one!)
           if (current_BPM_index < maxBPMS)
           {
@@ -406,44 +542,92 @@ void Game_menu_stepimport_sm(char* filename)
         notetimevalue=0;
         for(int a=1; a<lastlineslength; a++){
           if(strlen(lastlines[a])!=4){  // could start for at a=2 since strlen(lastlines[1])==4
-            notetimevalue=1/(double)(a-1)*4;
+            notetimevalue=1/(double)(a-1);  // x4 ?
+            #ifdef LOG_IMPORT
+            if (DEBUG_LEVEL >= DEBUG_DETAIL)
+            {
+              debug_log.open("debug", std::ios_base::app);
+              debug_log << "calculated note time value: " << notetimevalue \
+                << " by searching back " << a << " rows" << endl;
+              debug_log.close();
+            }
+            #endif
             a=500;}
         }
-        #ifdef LOG_IMPORT
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "calculated note time value: " << notetimevalue << endl;
-        debug_log.close();
-        #endif
-        for(int a=(int)(1/notetimevalue*4); a>0; a--){
-          currenttime=currenttime+notetimevalue*1000*60/tempBPMS;
 
+        int current_ticks_per_beat = (int)(1/notetimevalue);
+        for(int a=current_ticks_per_beat; a>0; a--){   
+          // no, no.. do this after assigning values to the current notes!
+          //#currenttime=currenttime+notetimevalue*1000*60/tempBPMS;
+
+          #ifdef LOG_IMPORT
+          if (DEBUG_LEVEL >= DEBUG_DETAIL)
+          {
+            debug_log.open("debug", std::ios_base::app);
+            debug_log << "reading note data in block of size: " << 1/notetimevalue << endl;
+            debug_log.close();
+          }
+          #endif
 
           //NOTE: this logic moves away from a beat-based data block
           //format to an arrow-based data block format.  implications??
+          int note_type = -1;
+          if (current_ticks_per_beat == 4)
+          {
+            note_type = NOTE_TYPE_QUARTER;
+          }
+          //else if (current_ticks_per_beat == 8)
+          //MEGAAAAHSIMPUULLLLL
+          else 
+          {
+            note_type = NOTE_TYPE_EIGHTH;
+          }
           
-          if(lastlines[a][0]=='1')assignsongarrow(difficulty,0,currenttime,0,0);
-          if(lastlines[a][1]=='1')assignsongarrow(difficulty,1,currenttime,0,0);
-          if(lastlines[a][2]=='1')assignsongarrow(difficulty,2,currenttime,0,0);
-          if(lastlines[a][3]=='1')assignsongarrow(difficulty,3,currenttime,0,0);
-          if(lastlines[a][0]=='2')assignsongarrow(difficulty,0,currenttime,0,1);
-          if(lastlines[a][1]=='2')assignsongarrow(difficulty,1,currenttime,0,1);
-          if(lastlines[a][2]=='2')assignsongarrow(difficulty,2,currenttime,0,1);
-          if(lastlines[a][3]=='2')assignsongarrow(difficulty,3,currenttime,0,1);
+          if(lastlines[a][0]=='1')assignsongarrow(difficulty,0,currentpos,0,note_type);
+          if(lastlines[a][1]=='1')assignsongarrow(difficulty,1,currentpos,0,note_type);
+          if(lastlines[a][2]=='1')assignsongarrow(difficulty,2,currentpos,0,note_type);
+          if(lastlines[a][3]=='1')assignsongarrow(difficulty,3,currentpos,0,note_type);
+          if(lastlines[a][0]=='2')assignsongarrow(difficulty,0,currentpos,0,NOTE_TYPE_HOLD);
+          if(lastlines[a][1]=='2')assignsongarrow(difficulty,1,currentpos,0,NOTE_TYPE_HOLD);
+          if(lastlines[a][2]=='2')assignsongarrow(difficulty,2,currentpos,0,NOTE_TYPE_HOLD);
+          if(lastlines[a][3]=='2')assignsongarrow(difficulty,3,currentpos,0,NOTE_TYPE_HOLD);
           
           if(lastlines[a][0]=='3' && songarrowcount[difficulty]<maxarrows)
             for(int b=songarrowcount[difficulty]-1; b>0; b--)if(songarrows[difficulty][b].direction==0){
-              songarrows[difficulty][b].length=(int)currenttime-songarrows[difficulty][b].time;b=0;}
+              songarrows[difficulty][b].length=(int)currentpos-songarrows[difficulty][b].ypos;b=0;}
           if(lastlines[a][1]=='3' && songarrowcount[difficulty]<maxarrows)
             for(int b=songarrowcount[difficulty]-1; b>0; b--)if(songarrows[difficulty][b].direction==1){
-              songarrows[difficulty][b].length=(int)currenttime-songarrows[difficulty][b].time;b=0;}
+              songarrows[difficulty][b].length=(int)currentpos-songarrows[difficulty][b].ypos;b=0;}
           if(lastlines[a][2]=='3' && songarrowcount[difficulty]<maxarrows)
             for(int b=songarrowcount[difficulty]-1; b>0; b--)if(songarrows[difficulty][b].direction==2){
-              songarrows[difficulty][b].length=(int)currenttime-songarrows[difficulty][b].time;b=0;}
+              songarrows[difficulty][b].length=(int)currentpos-songarrows[difficulty][b].ypos;b=0;}
           if(lastlines[a][3]=='3' && songarrowcount[difficulty]<maxarrows)
             for(int b=songarrowcount[difficulty]-1; b>0; b--)if(songarrows[difficulty][b].direction==3){
-              songarrows[difficulty][b].length=(int)currenttime-songarrows[difficulty][b].time;b=0;}
+              songarrows[difficulty][b].length=(int)currentpos-songarrows[difficulty][b].ypos;b=0;}
+
+          
+          #ifdef LOG_IMPORT
+          if (DEBUG_LEVEL >= DEBUG_DETAIL)
+          {
+            debug_log.open("debug", std::ios_base::app);
+            debug_log << "updating current pos " << currentpos << " to " << currentpos+notetimevalue*1000*60/tempBPMS << " on beat " << current_beat << endl;
+            debug_log.close();
+          }
+          #endif
+          
+          //TODO: redo position based on a static rate of seconds / virtual unit
+          // the current calc is the same as 1 ms / virtual unit.
+          currentpos+=notetimevalue*1000*60/tempBPMS;
         }
         
+        #ifdef LOG_IMPORT
+        if (DEBUG_LEVEL >= DEBUG_DETAIL)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "done processing beat " << current_beat << endl;
+          debug_log.close();
+        }
+        #endif
         // the beat has been processed.
         current_beat++;
       }
@@ -451,20 +635,10 @@ void Game_menu_stepimport_sm(char* filename)
       {
         placeingnotes = 0;
         in_dance_single_block = 0;
-        #ifdef LOG_IMPORT
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "writesteps(outdata) in while" << endl;
-        debug_log.close();
-        #endif
         writesteps(outdata);
       }
     }
   }
-  #ifdef LOG_IMPORT
-  debug_log.open("debug", std::ios_base::app);
-  debug_log << "writesteps(outdata)" << endl;
-  debug_log.close();
-  #endif
   writesteps(outdata);
   #ifdef WII
   indata.close();
@@ -481,11 +655,15 @@ void Game_menu_stepimport_sm(char* filename)
   free(lastlines);
   
   free(BPMSindices);
+  free(BPMchangepositions);
   free(BPMS);
   
   #ifdef LOG_IMPORT
-  debug_log.open("debug", std::ios_base::app);
-  debug_log << "leaving step import" << endl;
-  debug_log.close();
+  if (DEBUG_LEVEL >= DEBUG_MINOR)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "leaving step import" << endl;
+    debug_log.close();
+  }
   #endif
 }
