@@ -2,7 +2,7 @@
 //
 
 
-//TODO: home arrow animations so they pulse on the beat
+//TODO: home arrow animations so they pulse on the quarter notes of each beat
 //
 //TODO: add second player arrows with player-specific difficulty
 //
@@ -39,9 +39,98 @@ void Game_play(){
   timehaspast=songtime-timehaspast;
   
   
+  // which beat are we on?
+  
+  
+  // update current bpm
+  
+  
+  // scroll speed per current bpm
+
+
+  // sample song @ 126 BPM
+  // scrolls about 120 pixels per second
+  // 1000 / 120 ~= 8.333
+  // 
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  // how many pixels does the view window move down over the arrow 
+  // field in one millisecond?  this depends on a base rate adjusted by
+  // the beat 0 BPM.
+  // also, the #OFFSET; value must be put back at the tope ofe thee filee
+  // you loosser because you fooked the one you calced for the first arrow
+  // by *= some funky rate. hmm
+  
+// this is currently used to create DC file:
+//   currentpos+=notetimevalue*1000*60/tempBPMS;
+
+// soooo, if BPM = 60, 1 beat = 1000 ms.  with a virtual to screen factor
+// of 1, that is also 1000 pixels, so a bit more than two screen heights
+// per second at 60 BPM.  this means the factor must be modified.  at
+// 140 BPM the arrows are on-screen for nearly a second before covering 
+// two thirds of the screen.  ~360 px
+
+// if BPM = 120, 1 beat = 500 ms, 500 px.
+ 
+  // set song ms per pixel based on beat 0 BPM
+  song_ms_per_pixel = base_ms_per_pixel / bpm_changes[current_bpm_index].bpm;
+  
+  // rating distances are pixel distances based on current BPM and screen
+  // dimensions
+  // boo = number of pixels scrolled after 200 ms 
+  boo_rating_distance = 180/song_ms_per_pixel;
+  good_rating_distance = 135/song_ms_per_pixel;
+  great_rating_distance = 90/song_ms_per_pixel;
+  perfect_rating_distance = 45/song_ms_per_pixel;
+  marvellous_rating_distance = 23/song_ms_per_pixel;
+  
+  
+  //     ~ 400px / second @ 140 BPM
+  //
+  //   = ~ 171px / second @ 60 BPM
+  //
+  //   = ~ 171px / 1000ms @ 60 BPM
+  //   = ~ 0.171px/ms @ 60 BPM
+  //   = ~ 6 ms/px @ 60 BPM
+  //   = ~ 350 ms / px @ 1 BPM
+  
+  // another way: beats per screen height, screen heights per second at given BPM
+  // given a screen height y this gives how many y per second at given BPM
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  // scroll
   
   frame_offset = timehaspast / song_ms_per_pixel;
   viewport_offset += frame_offset;  // right now?
+    
+  
+  
+  
+  
+  
+  
+  
+
+
 
 
   // read player controls
@@ -111,18 +200,18 @@ void Game_play(){
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
     debug_log.open("debug", std::ios_base::app);
-    debug_log << "beginning main arrow animation loop with playerbasearrow=" << playerbasearrow << " and playerarrowcount=" << playerarrowcount << endl;
+    debug_log << "beginning main arrow animation loop with playerbasearrow=" << player_base_arrow << " and playerarrowcount=" << player_arrows.size() << endl;
     debug_log.close();
   }    
   
   // starting from the first unconsumed arrow,
   //TODO: fix goalline vs goaloffset
-  for(int a = playerbasearrow; a < playerarrowcount; a++)
+  for(unsigned int a = player_base_arrow; a < player_arrows.size(); a++)
   {
     // calculate its y position based on songtime
     // this calculation must not take into account the BPM because when
     // BPM changes, the distance between the arrows stays the same
-    int posy = (int)(goaloffset + ((playerarrows[a].ypos - songtime)) /5.0);
+    int posy = (int)(goaloffset + ((player_arrows[a].time - songtime)) /5.0);
     
     // posy is based on goaloffset, there at posy = 0, the arrow is not yet
     // at the top of the screen.  
@@ -130,43 +219,43 @@ void Game_play(){
     // the arrows must scroll completely off the screen, so the
     // minimum y position will be 0 - goalline - arrow sprite height
     if(posy>0-70 && posy<rmode->viHeight){
-      if(playerarrows[a].length){
-        if(playerarrows[a].direction==0){
+      if(player_arrows[a].length){
+        if(player_arrows[a].direction==0){
           apply_surface(185+10,posy,holdimage,screen,&holdframes[0]);
-          for(int b=0;b<floor((double)playerarrows[a].length/5/35);b++)
+          for(int b=0;b<floor((double)player_arrows[a].length/5/35);b++)
             apply_surface(185+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-          temprect.h = (Uint16)(playerarrows[a].length/5-floor((double)playerarrows[a].length/5/35)*35);
-          apply_surface(185+10,posy+(int)floor((double)playerarrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
-          apply_surface(185+10,posy+playerarrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
-        if(playerarrows[a].direction==1){
+          temprect.h = (Uint16)(player_arrows[a].length/5-floor((double)player_arrows[a].length/5/35)*35);
+          apply_surface(185+10,posy+(int)floor((double)player_arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
+          apply_surface(185+10,posy+player_arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
+        if(player_arrows[a].direction==1){
           apply_surface(250+10,posy,holdimage,screen,&holdframes[0]);
-          for(int b=0;b<floor((double)playerarrows[a].length/5/35);b++)
+          for(int b=0;b<floor((double)player_arrows[a].length/5/35);b++)
             apply_surface(250+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-          temprect.h = (Uint16)(playerarrows[a].length/5-floor((double)playerarrows[a].length/5/35)*35);
-          apply_surface(250+10,posy+(int)floor((double)playerarrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
-          apply_surface(250+10,posy+playerarrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
-        if(playerarrows[a].direction==2){
+          temprect.h = (Uint16)(player_arrows[a].length/5-floor((double)player_arrows[a].length/5/35)*35);
+          apply_surface(250+10,posy+(int)floor((double)player_arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
+          apply_surface(250+10,posy+player_arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
+        if(player_arrows[a].direction==2){
           apply_surface(rmode->viWidth/2+10,posy,holdimage,screen,&holdframes[0]);
-          for(int b=0;b<floor((double)playerarrows[a].length/5/35);b++)
+          for(int b=0;b<floor((double)player_arrows[a].length/5/35);b++)
             apply_surface(rmode->viWidth/2+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-          temprect.h = (Uint16)(playerarrows[a].length/5-floor((double)playerarrows[a].length/5/35)*35);
-          apply_surface(rmode->viWidth/2+10,posy+(int)floor((double)playerarrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
-          apply_surface(rmode->viWidth/2+10,posy+playerarrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
-        if(playerarrows[a].direction==3){
+          temprect.h = (Uint16)(player_arrows[a].length/5-floor((double)player_arrows[a].length/5/35)*35);
+          apply_surface(rmode->viWidth/2+10,posy+(int)floor((double)player_arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
+          apply_surface(rmode->viWidth/2+10,posy+player_arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
+        if(player_arrows[a].direction==3){
           apply_surface(385+10,posy,holdimage,screen,&holdframes[0]);
-          for(int b=0;b<floor((double)playerarrows[a].length/5/35);b++)
+          for(int b=0;b<floor((double)player_arrows[a].length/5/35);b++)
             apply_surface(385+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-          temprect.h = (Uint16)(playerarrows[a].length/5-floor((double)playerarrows[a].length/5/35)*35);
-          apply_surface(385+10,posy+(int)floor((double)playerarrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
-          apply_surface(385+10,posy+playerarrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
+          temprect.h = (Uint16)(player_arrows[a].length/5-floor((double)player_arrows[a].length/5/35)*35);
+          apply_surface(385+10,posy+(int)floor((double)player_arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
+          apply_surface(385+10,posy+player_arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
       }
-      if(playerarrows[a].direction==0)
+      if(player_arrows[a].direction==0)
         apply_surface(185,posy,arrowsimage,screen,&arrowsframes[12]);
-      if(playerarrows[a].direction==1)
+      if(player_arrows[a].direction==1)
         apply_surface(250,posy,arrowsimage,screen,&arrowsframes[13]);
-      if(playerarrows[a].direction==2)
+      if(player_arrows[a].direction==2)
         apply_surface(rmode->viWidth/2,posy,arrowsimage,screen,&arrowsframes[14]);
-      if(playerarrows[a].direction==3)
+      if(player_arrows[a].direction==3)
         apply_surface(385,posy,arrowsimage,screen,&arrowsframes[15]);
     }
   }

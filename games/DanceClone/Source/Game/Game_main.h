@@ -8,6 +8,7 @@
 int gamestate = 0;
 bool gamestatechange = 0;
 int difficulty = 0;
+#include "Game_common.h"
 #include "Game_setup.h"
 #include "Game_menu.h"
 #include "Game_playprep.h"
@@ -46,5 +47,5 @@ void Game_run()
 
 void game_cleanup()
 {
-  freesongdatastructures();
+  //#free_song_data_structures();
 }

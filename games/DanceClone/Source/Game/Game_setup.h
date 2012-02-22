@@ -47,15 +47,12 @@ int downcontrol = 0;
 int leftcontrol = 0;
 int rightcontrol = 0;
 
-int goaloffset = 0;
-
-char songfilename[MAXPATHLEN];
 
 #ifdef WIN
 Mix_Music* music = NULL;
 #endif
 
-#include "setup/classes.h"
+//#include "setup/classes.h"
 #include "setup/sprites.h"
 
 void Game_init()
@@ -69,5 +66,5 @@ void Game_init()
 
   Game_setup_sprites();
   
-  goaloffset = rmode->viHeight / 4; // copying a well-known program...  
+  goaloffset = rmode->viHeight / 4; // Immitate DDR2 on Wii
 }

@@ -45,10 +45,10 @@ using std::ifstream;
 #define DEBUG_MINOR 2
 #define DEBUG_DETAIL 3
 #define DEBUG_GUTS 4
-#define DEBUG_LEVEL DEBUG_DETAIL
+#define DEBUG_LEVEL DEBUG_GUTS
 #define LOG_DEBUG
-//#define LOG_IMPORT
-//#define LOG_ERRORS
+#define LOG_IMPORT
+#define LOG_ERRORS
 ofstream debug_log;
 ofstream error_log;
 

@@ -87,7 +87,7 @@ void Game_play_controls(){
   // arrow until either the max distance(boo rating) or until the next
   // arrow is closer.  this is too allow excluding old arrows before the
   // normal timeout if a stream of closely-placed arrows arrives.
-  for(int a=playerbasearrow;a<playerarrowcount;a++)if(playerarrows[a].ypos-songtime<-1000/8)
+  for(unsigned int a=player_base_arrow;a<player_arrows.size();a++)if(player_arrows[a].time-songtime<-1000/8)
   {
     ratearrow(a,0);combo=0;boo=boo+1;
   }
@@ -107,15 +107,15 @@ void Game_play_controls(){
   for(int b=0;b<4;b++)
   if((b==0 && leftcontrol==125)||(b==1 && downcontrol==125)||(b==2 && upcontrol==125)||(b==3 && rightcontrol==125))
   {
-    for(int a=playerbasearrow;a<playerarrowcount;a++)if(playerarrows[a].length==0)if(playerarrows[a].direction==b)
+    for(unsigned int a=player_base_arrow;a<player_arrows.size();a++)if(player_arrows[a].length==0)if(player_arrows[a].direction==b)
     {
-      if(playerarrows[a].ypos-songtime>-1000/15 && playerarrows[a].ypos-songtime<1000/15)
+      if(player_arrows[a].time-songtime>-1000/15 && player_arrows[a].time-songtime<1000/15)
       {
-        ratearrow(a,2);combo=combo+1;perfect=perfect+1;a=playerarrowcount;
+        ratearrow(a,2);combo=combo+1;perfect=perfect+1;break;
       }
-      else if(playerarrows[a].ypos-songtime>-1000/5 && playerarrows[a].ypos-songtime<1000/5)
+      else if(player_arrows[a].time-songtime>-1000/5 && player_arrows[a].time-songtime<1000/5)
       {
-        ratearrow(a,1);combo=combo+1;good=good+1;a=playerarrowcount;
+        ratearrow(a,1);combo=combo+1;good=good+1;break;
       }
     }
   }
@@ -129,13 +129,13 @@ void Game_play_controls(){
   for(int b=0;b<4;b++)
   if((b==0 && leftcontrol)||(b==1 && downcontrol)||(b==2 && upcontrol)||(b==3 && rightcontrol))
   {
-    for(int a=playerbasearrow;a<playerarrowcount;a++)if(playerarrows[a].length!=0)if(playerarrows[a].direction==b)
+    for(unsigned int a=player_base_arrow;a<player_arrows.size();a++)if(player_arrows[a].length!=0)if(player_arrows[a].direction==b)
     {
-      if(playerarrows[a].ypos-songtime>-1000/5 && playerarrows[a].ypos-songtime<1000/5)
+      if(player_arrows[a].time-songtime>-1000/5 && player_arrows[a].time-songtime<1000/5)
       {
-        playerarrows[a].ypos+=timehaspast;
-        playerarrows[a].length-=timehaspast;
-        if(playerarrows[a].length<=0)
+        player_arrows[a].ypos+=timehaspast;
+        player_arrows[a].length-=timehaspast;
+        if(player_arrows[a].length<=0)
         {
           ratearrow(a,2);combo=combo+1;perfect=perfect+1;
         }

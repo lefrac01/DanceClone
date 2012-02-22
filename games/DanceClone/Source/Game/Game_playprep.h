@@ -18,8 +18,12 @@ void Game_playprep(){
 
   // Initialise music
   
-  char temptext[100]; 
-  sprintf(temptext,"%s%s","Music/",songfilename); 
+  //char temptext[100];     //oohh.. buh-bye
+  string file_line = "";
+  
+  //sprintf(temptext,"%s%s","Music/",songfilename); 
+  string file_path = "Music/";
+  file_path += songfilename;
 
   #ifdef WIN
     music = Mix_LoadMUS(temptext);
@@ -31,7 +35,8 @@ void Game_playprep(){
     long lSize;
     char * buffer;
     //size_t result;
-    BGM = fopen(temptext, "rb");
+    //BGM = fopen(temptext, "rb");
+    BGM = fopen(file_path.c_str(), "rb");
     fseek(BGM, 0, SEEK_END);
     lSize = ftell (BGM);
     rewind(BGM);
@@ -48,15 +53,17 @@ void Game_playprep(){
   // calculate the ration between the y position in virtual coordinates
   // as loaded from the file and actual y positions to be used on-screen
   // based on virtual coordinates of 1ms per pixel
-  float virtual_to_screen_ratio = 1.0;
+  //float virtual_to_screen_ratio = 1.0;
 
 
   
-  initsongdatastructures();
+  init_song_data_structures();
   while(n_ratings)deleterating(0);
   
-  sprintf(temptext,"%s%s%s","Music/",songfilename,".dc");
-  ifstream indata;indata.open(temptext);
+  //sprintf(temptext,"%s%s%s","Music/",songfilename,".dc");
+  file_path += ".dc";
+  //ifstream indata;indata.open(temptext);
+  ifstream indata;indata.open(file_path.c_str());
   int currentdifficulty=-1;
   
   // SM file declares BPM must be defined for beat 0
@@ -64,23 +71,57 @@ void Game_playprep(){
       // appears in each difficulty section even though BPM changes must
       // by the same for all difficulties.  therefore only read BPM changes
       // once
+  string bpm_tag = "#BPMS:";
+  
   if (DEBUG_LEVEL >= DEBUG_MINOR)
   {
     debug_log.open("debug", std::ios_base::app);
-    debug_log << "reading arrow information from indata(" << temptext << ")..." << endl;
+    debug_log << "reading arrow information from indata(" << file_path << ")..." << endl;
     debug_log.close();
   }
-  for(int a=0; indata.good() && strcmp(temptext, "<end>") != 0; a++)
+//  for(int a=0; indata.good() && strcmp(temptext, "<end>") != 0; a++)
+  while (indata && file_line.compare("<end>") != 0)
   {
-    indata >> temptext; // must peek
+    //indata >> temptext; // must peek
+    getline(indata, file_line); // peek
+
+    if (DEBUG_LEVEL >= DEBUG_GUTS)
+    {
+      debug_log.open("debug", std::ios_base::app);
+      debug_log << "getline:" << endl << file_line << endl;
+      debug_log.close();
+    }
+
+    if(need_bpm_data && file_line.substr(0, bpm_tag.size()) == bpm_tag)
+    {
+      if (DEBUG_LEVEL >= DEBUG_DETAIL)
+      {
+        debug_log.open("debug", std::ios_base::app);
+        debug_log << "found #BPMS tag, parsing" << endl;
+        debug_log.close();
+      }
+      
+      if (parse_bpms(file_line))
+      {
+        need_bpm_data = 0;
+        
+        if (DEBUG_LEVEL >= DEBUG_DETAIL)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "beat 0 bpm: " << bpm_changes[0].bpm << endl;
+          debug_log.close();
+        }
+      }
+    }
+    
     if(currentdifficulty == -1)
     {
-      if(difficulty==0 && charmatchstart((char*)temptext,(char*)"<startbeginner>"))currentdifficulty=0;
-      if(difficulty==1 && charmatchstart((char*)temptext,(char*)"<starteasy>"))currentdifficulty=1;
-      if(difficulty==2 && charmatchstart((char*)temptext,(char*)"<startmedium>"))currentdifficulty=2;
-      if(difficulty==3 && charmatchstart((char*)temptext,(char*)"<starthard>"))currentdifficulty=3;
-      if(difficulty==4 && charmatchstart((char*)temptext,(char*)"<startchallenge>"))currentdifficulty=4;
-      
+      if(difficulty==0 && file_line.compare("<startbeginner>")==0)currentdifficulty=0;
+      if(difficulty==1 && file_line.compare("<starteasy>")==0)currentdifficulty=1;
+      if(difficulty==2 && file_line.compare("<startmedium>")==0)currentdifficulty=2;
+      if(difficulty==3 && file_line.compare("<starthard>")==0)currentdifficulty=3;
+      if(difficulty==4 && file_line.compare("<startchallenge>")==0)currentdifficulty=4;
+
       if (DEBUG_LEVEL >= DEBUG_DETAIL && currentdifficulty != -1)
       {
         debug_log.open("debug", std::ios_base::app);
@@ -88,41 +129,9 @@ void Game_playprep(){
         debug_log.close();
       }
     }
-    else if(temptext[0]=='<')
+    else if(file_line[0] == '<')
     {
-      if(need_bpm_data && charmatchstart((char*)temptext,(char*)"<bpm>"))
-      {
-        // WHAT IS NECESSARY HERE?
-        // this is incoming from the step data source file
-        // there will be many of these
-        // must load them all ahead of time
-        // to know when to use each, the songtime at which
-        // each is applicable must also exist
-        // format:
-        // <bpm:ms_offset=float_bpm>
-        //
-        // err.. can better be done?  think simple you fool
-        // <bpm>EOL
-        // ms_offsetEOL
-        // float_bpmEOL
-        // ----
-        //
-        // this is a way to cease failing.  think first!!! concept alert!
-        indata >> bpm_changes[number_bpm_changes].ypos;
-        bpm_changes[number_bpm_changes].ypos *= virtual_to_screen_ratio;
-        indata >> bpm_changes[number_bpm_changes].bpm;
-        if (DEBUG_LEVEL >= DEBUG_DETAIL)
-        {
-          debug_log.open("debug", std::ios_base::app);
-          debug_log << "found bpm change indication number " << number_bpm_changes << " to " << bpm_changes[number_bpm_changes].bpm << " BPM at position " << bpm_changes[number_bpm_changes].ypos << endl;
-          debug_log.close();
-        }
-        number_bpm_changes++;
-        
-        // discard closing ---- line
-        indata >> temptext; // will be overwritten by read at loop start
-      }
-      else if(charmatchstart((char*)temptext,(char*)"<stop>"))
+      if(file_line.compare("<stop>") == 0)
       {
         if (DEBUG_LEVEL >= DEBUG_DETAIL)
         {
@@ -131,66 +140,76 @@ void Game_playprep(){
           debug_log.close();
         }
         currentdifficulty = -1;
-        if (need_bpm_data)
-        {
-          if (number_bpm_changes == 0)
-          {
-            #ifdef LOG_ERRORS
-            error_log.open("errors", std::ios_base::app);
-            error_log << "ERROR: missing BPM data" << endl;
-            error_log.close();
-            #endif
-          }
-          else
-          {
-            // found our required BPM data.  don't look for other BPM
-            // data.  it's there but should be identical
-            need_bpm_data = false;
-          }
-        }
-        number_bpm_changes = 0;
       }
     }
     else
     {
-      if (need_bpm_data && number_bpm_changes == 0)
+      if (need_bpm_data && bpm_changes.size() == 0)
       {
         #ifdef LOG_ERRORS
         error_log.open("errors", std::ios_base::app);
-        error_log << "ERROR: missing BPM marker for beat 0" << endl;
+        error_log << "ERROR: missing BPM for beat 0" << endl;
         error_log.close();
         #endif
       }
-      else if (songarrowcount[currentdifficulty]<maxarrows)
+      else
       {
-        //peeking now
-        //indata >> (songarrows[currentdifficulty][songarrowcount[currentdifficulty]].direction);
-        songarrows[currentdifficulty][songarrowcount[currentdifficulty]].direction = atoi(temptext);
+        int direction = atoi(file_line.c_str());
+        long time;
+        indata >> time;
+        int length;
+        indata >> length;
+        int type;
+        indata >> type;
         
-        indata >> (songarrows[currentdifficulty][songarrowcount[currentdifficulty]].ypos);
-        songarrows[currentdifficulty][songarrowcount[currentdifficulty]].ypos = 
-          songarrows[currentdifficulty][songarrowcount[currentdifficulty]].ypos * virtual_to_screen_ratio;
-          
-        indata >> (songarrows[currentdifficulty][songarrowcount[currentdifficulty]].length);
-        songarrows[currentdifficulty][songarrowcount[currentdifficulty]].length *= virtual_to_screen_ratio;
-        
-        indata >> (songarrows[currentdifficulty][songarrowcount[currentdifficulty]].type);
+        //TODO: calculate ypos from time here
+        long ypos = time; //TEMP
         if (DEBUG_LEVEL >= DEBUG_GUTS)
         {
           debug_log.open("debug", std::ios_base::app);
-          debug_log << "reading arrow # " << songarrowcount[currentdifficulty] << " d=" \
-            << songarrows[currentdifficulty][songarrowcount[currentdifficulty]].direction << " y="\
-            << songarrows[currentdifficulty][songarrowcount[currentdifficulty]].ypos << " l="\
-            << songarrows[currentdifficulty][songarrowcount[currentdifficulty]].length \
-            << songarrows[currentdifficulty][songarrowcount[currentdifficulty]].type \
+          debug_log << "accessing song_arrows[3]..." << endl;
+          debug_log.close();
+        }
+        song_arrows[currentdifficulty].push_back(arrow(direction, time, ypos, length, type));
+        if (DEBUG_LEVEL >= DEBUG_GUTS)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "looks good simona" << endl;
+          debug_log.close();
+        }
+        
+        if (DEBUG_LEVEL >= DEBUG_GUTS)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "reading arrow # " << song_arrows[currentdifficulty].size() << " d=" \
+            << song_arrows[currentdifficulty].back().direction << " t="\
+            << song_arrows[currentdifficulty].back().time << " y="\
+            << song_arrows[currentdifficulty].back().ypos << " l="\
+            << song_arrows[currentdifficulty].back().length << " ty="\
+            << song_arrows[currentdifficulty].back().type \
             << endl;
           debug_log.close();
         }
-        songarrowcount[currentdifficulty]++;
         
         // discard closing ---- line
-        indata >> temptext; // will be overwritten by read at loop start
+//        indata >> temptext; // will be overwritten by read at loop start
+        getline(indata, file_line); // will be overwritten by read at loop start
+        if (DEBUG_LEVEL >= DEBUG_GUTS)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "discarded line:" << endl << file_line << endl;
+          debug_log.close();
+        }
         // consider discarding the discard ;)
+        getline(indata, file_line); // peek
+
+        if (DEBUG_LEVEL >= DEBUG_GUTS)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "really discarded:" << endl << file_line << endl;
+          debug_log.close();
+        }
+        
       }
     }
   }
@@ -212,7 +231,7 @@ void Game_playprep(){
   // initialise player's copy of the song arrows
   // according to player difficulty
   
-  setupplayerarrows(playerarrows, difficulty);
+  setup_player_arrows(player_arrows, difficulty);
 
 
   // start playing music
@@ -236,6 +255,17 @@ void Game_playprep(){
 
   songstarttime=WDgametime+(SDL_GetTicks()-WDruntime);
   songtime=0;
+  current_bpm = 0;
+  current_bpm_index = 0;
+  if (bpm_changes.size() > 0)
+  {
+    current_bpm = bpm_changes.front().bpm;
+  }
+  else
+  {
+    // game state should not be moving forward.  time to go back to the menu!
+  }
+  
   upcontrol=0;
   downcontrol=0;
   leftcontrol=0;
@@ -250,50 +280,7 @@ void Game_playprep(){
   current_ratable_arrow[0]=current_ratable_arrow[1]=current_ratable_arrow[2]=current_ratable_arrow[3]=0;
   next_ratable_arrow[0]=next_ratable_arrow[1]=next_ratable_arrow[2]=next_ratable_arrow[3]=0;
   
-  // how many pixels does the view window move down over the arrow 
-  // field in one millisecond?  this depends on a base rate adjusted by
-  // the beat 0 BPM.
-  // also, the #OFFSET; value must be put back at the tope ofe thee filee
-  // you loosser because you fooked the one you calced for the first arrow
-  // by *= some funky rate. hmm
-  
-// this is currently used to create DC file:
-//   currentpos+=notetimevalue*1000*60/tempBPMS;
 
-// soooo, if BPM = 60, 1 beat = 1000 ms.  with a virtual to screen factor
-// of 1, that is also 1000 pixels, so a bit more than two screen heights
-// per second at 60 BPM.  this means the factor must be modified.  at
-// 140 BPM the arrows are on-screen for nearly a second before covering 
-// two thirds of the screen.  ~360 px
-
-// if BPM = 120, 1 beat = 500 ms, 500 px.
- 
-  // set song ms per pixel based on beat 0 BPM
-  song_ms_per_pixel = base_ms_per_pixel / bpm_changes[0].bpm;
-  
-  // rating distances are pixel distances based on current BPM and screen
-  // dimensions
-  // boo = number of pixels scrolled after 200 ms 
-  boo_rating_distance = 180/song_ms_per_pixel;
-  good_rating_distance = 135/song_ms_per_pixel;
-  great_rating_distance = 90/song_ms_per_pixel;
-  perfect_rating_distance = 45/song_ms_per_pixel;
-  marvellous_rating_distance = 23/song_ms_per_pixel;
-  
-  
-  //     ~ 400px / second @ 140 BPM
-  //
-  //   = ~ 171px / second @ 60 BPM
-  //
-  //   = ~ 171px / 1000ms @ 60 BPM
-  //   = ~ 0.171px/ms @ 60 BPM
-  //   = ~ 6 ms/px @ 60 BPM
-  //   = ~ 350 ms / px @ 1 BPM
-  
-  // another way: beats per screen height, screen heights per second at given BPM
-  // given a screen height y this gives how many y per second at given BPM
-  
-  
   
   // switch to play state
   gamestate=8;
