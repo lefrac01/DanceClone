@@ -1,18 +1,26 @@
 //TODO: worth it to optimize bg by not always redrawing?
 //TODO: replace static bg by video
 
-#define NOTE_TYPE_QUARTER 1
-#define NOTE_TYPE_EIGHTH 2
-#define NOTE_TYPE_HOLD 3
+#define NOTE_TYPE_HOLD 1
+#define NOTE_TYPE_QUARTER 2
+#define NOTE_TYPE_EIGHTH 3
+#define NOTE_TYPE_TWELFTH 4
+#define NOTE_TYPE_SIXTEENTH 5
+
+#define NUM_DIFFICULTIES 5
 
 int gamestate = 0;
 bool gamestatechange = 0;
 int difficulty = 0;
+#include "setup/play_logic.h"
 #include "Game_common.h"
 #include "Game_setup.h"
 #include "Game_menu.h"
 #include "Game_playprep.h"
 #include "Game_play.h"
+
+song current_song;
+play_data current_play_data;
 
 void Game_run()
 {

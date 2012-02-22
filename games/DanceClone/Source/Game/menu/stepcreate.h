@@ -12,7 +12,7 @@ int songdelay=3075;
 int numarrowstocreate=216;
 
 void Game_menu_stepcreate(){
-  
+  /*
   char temptext[100];
   
   WiiDash_spritetext(40,55+1*40,(char*)"How fast is the song?",1);
@@ -87,6 +87,6 @@ void Game_menu_stepcreate(){
     outdata.close();
     gamestate=4;
   }
-  
+  */
   if(WiiDash_button(rmode->viWidth-100-40,rmode->viHeight-10-40,100,10,0,1,(char*)"Back"))gamestate=4;
 }

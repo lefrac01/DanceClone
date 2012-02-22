@@ -1,4 +1,5 @@
 int songmenuscroll = 0;
+extern song current_song;
 
 void Game_menu_songselectp1()
 {
@@ -47,7 +48,7 @@ void Game_menu_songselectp1()
           sprintf(temptext, "%s", charpartial(temptext, 0, lownumber(strlen(temptext)-4, 50)));
           if(WiiDash_button(rmode->viWidth/2, 55 + (a-songmenuscroll+1)*40, 600, 10, 1, 1, (char*)temptext))
           {
-            sprintf(songfilename, "%s", direntries[b]->filename);
+            current_song.init(direntries[b]->filename);
             gamestate = 4;
           }
         }

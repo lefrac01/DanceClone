@@ -87,11 +87,13 @@ void Game_play_controls(){
   // arrow until either the max distance(boo rating) or until the next
   // arrow is closer.  this is too allow excluding old arrows before the
   // normal timeout if a stream of closely-placed arrows arrives.
+  detect_missed_arrows(0);
+  /*
   for(unsigned int a=player_base_arrow;a<player_arrows.size();a++)if(player_arrows[a].time-songtime<-1000/8)
   {
     ratearrow(a,0);combo=0;boo=boo+1;
   }
-
+*/
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
     debug_log.open("debug", std::ios_base::app);
@@ -104,6 +106,11 @@ void Game_play_controls(){
   // current BPM.  separate each control's hit detection statement to 
   // use the current ratable arrow for each column.
   
+  
+  
+  //TODO: fix this.
+//  detect_perfect_arrows(0);
+/*
   for(int b=0;b<4;b++)
   if((b==0 && leftcontrol==125)||(b==1 && downcontrol==125)||(b==2 && upcontrol==125)||(b==3 && rightcontrol==125))
   {
@@ -142,7 +149,7 @@ void Game_play_controls(){
       }
     }
   }
-
+*/
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
     debug_log.open("debug", std::ios_base::app);

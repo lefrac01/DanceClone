@@ -21,6 +21,38 @@ Uint64 get_tick_count()
 //#define WIN
 #define WII
 //#define USEACCELEROMETER
+
+
+
+
+
+
+#include <iostream>
+using std::cerr;
+using std::cout;
+using std::endl;
+#include <fstream>
+using std::ofstream;
+using std::ifstream;
+#include <cstdlib>
+
+
+#define GAMEVERSIONSTRING "DanceClone v0.53"
+#define DEBUG_OFF 0
+#define DEBUG_BASIC 1
+#define DEBUG_MINOR 2
+#define DEBUG_DETAIL 3
+#define DEBUG_GUTS 4
+#define DEBUG_LEVEL DEBUG_DETAIL
+#define LOG_DEBUG
+#define LOG_ERRORS
+ofstream debug_log;
+ofstream error_log;
+
+
+
+
+
 bool done = false;
 #include "../../../Generic/generic.h"
 #include "../../../Generic/WiiDash/WiiDash_main.h"

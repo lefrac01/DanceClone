@@ -1,3 +1,4 @@
+/*
 class arrow
 {
 public:
@@ -18,3 +19,4 @@ public:
   float bpm;
   bpm_change(int b, float t, float bp) {beat = b; timestamp = t; bpm = bp;};
 };
+*/

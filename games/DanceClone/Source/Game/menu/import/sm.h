@@ -14,6 +14,7 @@
 //NOTE:
 // time might be saved here by seriously reconsidering the
 // entire file format question of SM vs DC...
+/*
 void writesteps(ofstream &outdata)
 {
   #ifdef LOG_IMPORT
@@ -73,9 +74,10 @@ void writesteps(ofstream &outdata)
     init_arrow_data_structures();
   }
 }
-
+*/
 void Game_menu_stepimport_sm(char* filename)
 {
+  /*
   #ifdef LOG_IMPORT
   if (DEBUG_LEVEL >= DEBUG_BASIC)
   {
@@ -444,16 +446,7 @@ void Game_menu_stepimport_sm(char* filename)
           if(lastlines[a][1]=='2')song_arrows[difficulty].push_back(arrow(1,(long)currenttime,0,0,NOTE_TYPE_HOLD));
           if(lastlines[a][2]=='2')song_arrows[difficulty].push_back(arrow(2,(long)currenttime,0,0,NOTE_TYPE_HOLD));
           if(lastlines[a][3]=='2')song_arrows[difficulty].push_back(arrow(3,(long)currenttime,0,0,NOTE_TYPE_HOLD));
-          /*
-          if(lastlines[a][0]=='1')assignsongarrow(difficulty,0,currenttime,0,note_type);
-          if(lastlines[a][1]=='1')assignsongarrow(difficulty,1,currenttime,0,note_type);
-          if(lastlines[a][2]=='1')assignsongarrow(difficulty,2,currenttime,0,note_type);
-          if(lastlines[a][3]=='1')assignsongarrow(difficulty,3,currenttime,0,note_type);
-          if(lastlines[a][0]=='2')assignsongarrow(difficulty,0,currenttime,0,NOTE_TYPE_HOLD);
-          if(lastlines[a][1]=='2')assignsongarrow(difficulty,1,currenttime,0,NOTE_TYPE_HOLD);
-          if(lastlines[a][2]=='2')assignsongarrow(difficulty,2,currenttime,0,NOTE_TYPE_HOLD);
-          if(lastlines[a][3]=='2')assignsongarrow(difficulty,3,currenttime,0,NOTE_TYPE_HOLD);
-          */
+
           if(lastlines[a][0]=='3')
             for(int b=song_arrows[difficulty].size()-1; b>0; b--)if(song_arrows[difficulty][b].direction==0){
               song_arrows[difficulty][b].length=(int)currenttime-song_arrows[difficulty][b].ypos;b=0;}
@@ -523,4 +516,5 @@ void Game_menu_stepimport_sm(char* filename)
     debug_log.close();
   }
   #endif
+  */
 }

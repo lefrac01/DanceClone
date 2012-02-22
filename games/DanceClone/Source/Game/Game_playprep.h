@@ -7,6 +7,9 @@
 // data in the DC format and then maintaining this, or just code 
 // stepmania support directly
 
+extern song current_song;
+extern play_data current_play_data;
+
 void Game_playprep(){
   if (DEBUG_LEVEL >= DEBUG_BASIC)
   {
@@ -18,15 +21,10 @@ void Game_playprep(){
 
   // Initialise music
   
-  //char temptext[100];     //oohh.. buh-bye
   string file_line = "";
   
-  //sprintf(temptext,"%s%s","Music/",songfilename); 
-  string file_path = "Music/";
-  file_path += songfilename;
-
   #ifdef WIN
-    music = Mix_LoadMUS(temptext);
+    music = Mix_LoadMUS(current_song.path());
   #endif
   #ifdef WII
     ASND_Init();
@@ -36,7 +34,7 @@ void Game_playprep(){
     char * buffer;
     //size_t result;
     //BGM = fopen(temptext, "rb");
-    BGM = fopen(file_path.c_str(), "rb");
+    BGM = fopen(current_song.path().c_str(), "rb");
     fseek(BGM, 0, SEEK_END);
     lSize = ftell (BGM);
     rewind(BGM);
@@ -57,15 +55,12 @@ void Game_playprep(){
 
 
   
-  init_song_data_structures();
+  //init_song_data_structures();
   while(n_ratings)deleterating(0);
   
-  //sprintf(temptext,"%s%s%s","Music/",songfilename,".dc");
-  file_path += ".dc";
-  //ifstream indata;indata.open(temptext);
-  ifstream indata;indata.open(file_path.c_str());
-  int currentdifficulty=-1;
-  
+  //TODO: move to play data
+  //int currentdifficulty=-1;
+  /*
   // SM file declares BPM must be defined for beat 0
   bool need_bpm_data = true;  // unfortunately, in DC format BPM logically
       // appears in each difficulty section even though BPM changes must
@@ -79,7 +74,10 @@ void Game_playprep(){
     debug_log << "reading arrow information from indata(" << file_path << ")..." << endl;
     debug_log.close();
   }
-//  for(int a=0; indata.good() && strcmp(temptext, "<end>") != 0; a++)
+
+
+//NONE OF THIS WILL EXIST...
+
   while (indata && file_line.compare("<end>") != 0)
   {
     //indata >> temptext; // must peek
@@ -160,9 +158,27 @@ void Game_playprep(){
         int length;
         indata >> length;
         int type;
-        indata >> type;
+        indata >> type; // this reads up to the whitespace (EOL) following
+        // the type value.
         
         //TODO: calculate ypos from time here
+        // the ypos from time calculation depends on two factors:
+        // base time to scroll one screen height 
+        // screen height in pixels
+        
+        //QUESTION: can ypos be calculated without knowing BPM?
+        // NO.
+        
+        //WHY?
+        // during import, if BPM were to double, subsequent quarter
+        // notes would be twice as close together, time-wise.  however
+        // for animation, the arrows must be twice as far apart.
+        
+        //THEREFORE
+        // the same math that is done in the SM import function is needed
+        // and the same beat-based data consumption must take place.
+        // directly using SM files is the only logical step forward
+        
         long ypos = time; //TEMP
         if (DEBUG_LEVEL >= DEBUG_GUTS)
         {
@@ -191,25 +207,17 @@ void Game_playprep(){
           debug_log.close();
         }
         
-        // discard closing ---- line
-//        indata >> temptext; // will be overwritten by read at loop start
-        getline(indata, file_line); // will be overwritten by read at loop start
-        if (DEBUG_LEVEL >= DEBUG_GUTS)
-        {
-          debug_log.open("debug", std::ios_base::app);
-          debug_log << "discarded line:" << endl << file_line << endl;
-          debug_log.close();
-        }
-        // consider discarding the discard ;)
-        getline(indata, file_line); // peek
-
-        if (DEBUG_LEVEL >= DEBUG_GUTS)
-        {
-          debug_log.open("debug", std::ios_base::app);
-          debug_log << "really discarded:" << endl << file_line << endl;
-          debug_log.close();
-        }
         
+        // discard closing ---- line
+        // file_line is overwritten at loops start
+        // two calls to getline() are needed.  the last read from the file
+        // was with >> which stops at the whitespace following data.  the
+        // file pointer is there just before the EOL for the last
+        // line of data.  the first getline() will stop after this EOL
+        // leaving the file pointer at the start of the separator line
+        // which the second getline reads.
+        getline(indata, file_line);
+        getline(indata, file_line); 
       }
     }
   }
@@ -226,12 +234,14 @@ void Game_playprep(){
     debug_log << "closed input file" << endl;
     debug_log.close();
   }
-
+*/
 
   // initialise player's copy of the song arrows
   // according to player difficulty
   
-  setup_player_arrows(player_arrows, difficulty);
+  
+  //TODO: move to play data
+  //setup_player_arrows(player_arrows, difficulty);
 
 
   // start playing music
@@ -246,7 +256,7 @@ void Game_playprep(){
 
 
   // initialise per-song play data 
-  
+/*  
   longestcombo=0;
   combo=0;
   boo=0;
@@ -261,7 +271,8 @@ void Game_playprep(){
   {
     current_bpm = bpm_changes.front().bpm;
   }
-  else
+  */
+  if (!current_play_data.init(current_song))
   {
     // game state should not be moving forward.  time to go back to the menu!
   }
