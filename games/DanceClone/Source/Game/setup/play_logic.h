@@ -2,6 +2,14 @@
 //
 #include "play_data.h"
 
+//TODO: .ini for rating times
+#define BOO_MS 180
+#define GOOD_MS 135
+#define GREAT_MS 90
+#define PERFECT_MS 45
+#define MARVELLOUS_MS 23
+ 
+
 extern play_data current_play_data;
 
 void rate_arrow(int p, int arrownum, int rate)

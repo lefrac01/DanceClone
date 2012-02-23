@@ -9,6 +9,9 @@
 
 #define NUM_DIFFICULTIES 5
 
+int goaloffset = 0;
+int ms_per_screen_scroll = 1;
+
 int gamestate = 0;
 bool gamestatechange = 0;
 int difficulty = 0;
@@ -19,7 +22,6 @@ int difficulty = 0;
 #include "Game_playprep.h"
 #include "Game_play.h"
 
-song current_song;
 play_data current_play_data;
 
 void Game_run()
@@ -34,7 +36,6 @@ void Game_run()
   else if(gamestate==3)Game_menu_songselectp1();
   else if(gamestate==4)Game_menu_songselectp2();
   else if(gamestate==5)Game_menu_stepcreate();
-  else if(gamestate==6)Game_menu_stepimport();
   else if(gamestate==7)Game_playprep();
   else if(gamestate==8)Game_play();
   else if(gamestate==9)Game_menu_score();

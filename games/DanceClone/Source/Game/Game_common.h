@@ -4,15 +4,8 @@
 //
 // Game_common
 
-#include <string>
-using std::string;
-#include <vector>
-using std::vector;
-
 // functions and variables that apply at game scope
 
-int goaloffset = 0;
-int ms_per_screen_scroll = 1;
 // based on observation:
 // 4 seconds for a quarter note at 120 BPM to traverse a 480 high screen
 

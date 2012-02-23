@@ -5,16 +5,16 @@ int highscore3;
 int highscore4;
 int highscore;
 
-extern song current_song;
+extern play_data current_play_data;
 
 void Game_menu_score(){
-
+// +1 for kiss ;)  
+/*
   string temp_text;
   int y=45;
   int points=boo*0+good*7+perfect*10+longestcombo*1;
   int maxpoints=(boo+good+perfect)*11;
   int score=(int)((double)points/(double)maxpoints*100);
-  
   if(gamestatechange){
     highscore=0;
     if(difficulty==0){highscore=highscore0;if(score>highscore0)highscore0=score;}
@@ -81,5 +81,8 @@ void Game_menu_score(){
   sprintf(buf,"%d%s",highscore,"%");
   WiiDash_spritetext(425,y,buf,3);
 
-  if(WiiDash_button(rmode->viWidth-100-40,rmode->viHeight-10-40,100,10,0,1,(char*)"Back"))gamestate=4;
+  if(WiiDash_button(rmode->viWidth-100-40,rmode->viHeight-10-40,100,10,0,1,(char*)"temp no score - Back"))gamestate=4;
+*/
+
+  if(WiiDash_button(rmode->viWidth-300-40,rmode->viHeight-10-40,100,10,0,1,(char*)"temp no score - Back"))gamestate=4;
 }

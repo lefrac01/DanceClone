@@ -2,13 +2,6 @@
 //
 //TODO: implement #STOPS:
 //
-//TDOO: bpm_changes access is messy.  it uses current_bpm_index but this 
-// is incremented indiscriminately.  either check current_bpm_index against
-// size before incrementing or store a sentinel value at the end of vector
-// (or use iterators.. hmm)
-//
-//TODO: reset current difficulty var while parsing step file!
-//
 #ifndef SONG_H
 
 #include <string>
@@ -52,7 +45,8 @@ public:
   vector<bool> difficulty_available;
 
   song();
-  void init(string f);
+  void init();
+  bool load(string f);
   string path();
   string name();
   string step_file_path();
@@ -69,20 +63,34 @@ difficulty_available (NUM_DIFFICULTIES, false)
 {
 }
 
-void song::init(string f)
+void song::init()
 {
-  filename = f;
-
   // init song data
+  filename = "";
   std::fill(difficulty_available.begin(), difficulty_available.end(), false);
   song_arrows.clear();
   bpm_changes.clear();
+  initialised = false;
+}
 
+bool song::load(string f)
+{
+  if (initialised)
+  {
+    init();
+  }
+  
   // prepare song data
+  filename = f;
   if (read_step_data())
   {
     initialised = true;
   }
+  else
+  {
+    initialised = false;
+  }
+  return initialised;
 }
 
 string song::path()
@@ -381,16 +389,16 @@ bool song::read_step_data()
                         note_type = NOTE_TYPE_QUARTER;
                       break;
                       case 8:
-                        if (beat_line_index-note_line_index % 2 == 0) note_type = NOTE_TYPE_QUARTER;
+                        if ((beat_line_index-note_line_index) % 2 == 0) note_type = NOTE_TYPE_QUARTER;
                         else note_type = NOTE_TYPE_EIGHTH;
                       break;
                       case 12:
-                        if (beat_line_index-note_line_index % 3 == 0) note_type = NOTE_TYPE_QUARTER;
+                        if ((beat_line_index-note_line_index) % 3 == 0) note_type = NOTE_TYPE_QUARTER;
                         else note_type = NOTE_TYPE_TWELFTH;
                       break;
                       case 16:
-                        if (beat_line_index-note_line_index % 4 == 0) note_type = NOTE_TYPE_QUARTER;
-                        else if (beat_line_index-note_line_index % 2 == 0) note_type = NOTE_TYPE_EIGHTH;
+                        if ((beat_line_index-note_line_index) % 4 == 0) note_type = NOTE_TYPE_QUARTER;
+                        else if ((beat_line_index-note_line_index) % 2 == 0) note_type = NOTE_TYPE_EIGHTH;
                         else note_type = NOTE_TYPE_SIXTEENTH;
                       break;
                       default:
@@ -401,7 +409,7 @@ bool song::read_step_data()
                     if (DEBUG_LEVEL >= DEBUG_DETAIL)
                     {
                       debug_log.open("debug", std::ios_base::app);
-                      debug_log << "detected note type " << note_type << endl;
+                      debug_log << "detected note type " << note_type << " on tick " << beat_line_index-note_line_index << " at line " << beat_line_index << endl;
                       debug_log.close();
                     }
                     
@@ -417,13 +425,15 @@ bool song::read_step_data()
                       }
                       else
                       {
-                        if (DEBUG_LEVEL >= DEBUG_GUTS)
+                        if (DEBUG_LEVEL >= DEBUG_DETAIL)
                         {
                           debug_log.open("debug", std::ios_base::app);
-                          debug_log << "detecting note class and direction on line " << beat_line_index << endl;
+                          debug_log << "detecting note class and direction on line " << beat_line_index << endl << " line is: (" << file_lines[beat_line_index] << ") " << endl;
                           debug_log.close();
                         }
                         
+                        
+                        //TODO: ypos!
                         if (file_lines[beat_line_index][0] == '2') {hold_found = true; song_arrows[current_difficulty].push_back(arrow(0, (long)current_time, 0, 0, NOTE_TYPE_HOLD));}
                         if (file_lines[beat_line_index][1] == '2') {hold_found = true; song_arrows[current_difficulty].push_back(arrow(1, (long)current_time, 0, 0, NOTE_TYPE_HOLD));}
                         if (file_lines[beat_line_index][2] == '2') {hold_found = true; song_arrows[current_difficulty].push_back(arrow(2, (long)current_time, 0, 0, NOTE_TYPE_HOLD));}
@@ -470,7 +480,7 @@ bool song::read_step_data()
                     if (DEBUG_LEVEL >= DEBUG_DETAIL)
                     {
                       debug_log.open("debug", std::ios_base::app);
-                      debug_log << "done processing beat line.  current_time: " << current_time << " beat_line_index: " << beat_line_index << endl;
+                      debug_log << "done processing beat line.  current_time: " << current_time << " beat_line_index: " << beat_line_index << endl << " arrow count: " << song_arrows[current_difficulty].size() << endl;
                       debug_log.close();
                     }
                   }
@@ -669,6 +679,7 @@ long song::parse_offset(const string& s)
       string offset_long = s.substr(start_pos, end_pos-start_pos);
         
       offset_data = (long)(atof(offset_long.c_str())*1000.0);
+      if (offset_data < 0) offset_data *= -1;
       
       if (DEBUG_LEVEL >= DEBUG_DETAIL)
       {

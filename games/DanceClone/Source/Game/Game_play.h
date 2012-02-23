@@ -23,8 +23,9 @@ int timehaspast;
 
 #include "play/controls.h"
 
-void Game_play(){
-  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+void Game_play()
+{
+  if (DEBUG_LEVEL >= DEBUG_GUTS)
   {
     debug_log.open("debug", std::ios_base::app);
     debug_log << "Game_play() begins" << endl;
@@ -32,103 +33,25 @@ void Game_play(){
   }
 
 
-  // update synchronisation variables
+  // update 
+  current_play_data.update();
 
-  timehaspast=songtime;
-  songtime=WDgametime-songstarttime;
-  timehaspast=songtime-timehaspast;
   
-  
-  // which beat are we on?
-  
-  
-  // update current bpm
-  
-  
-  // scroll speed per current bpm
-
-
-  // sample song @ 126 BPM
-  // scrolls about 120 pixels per second
-  // 1000 / 120 ~= 8.333
-  // 
-  
-  // 4 screen heights per second for a quarter note at 120 BPM
-  
-
-
-
-
-
-
-
-
-
-
-
-
-  // how many pixels does the view window move down over the arrow 
-  // field in one millisecond?  this depends on a base rate adjusted by
-  // the beat 0 BPM.
-  // also, the #OFFSET; value must be put back at the tope ofe thee filee
-  // you loosser because you fooked the one you calced for the first arrow
-  // by *= some funky rate. hmm
-  
-// this is currently used to create DC file:
-//   currentpos+=notetimevalue*1000*60/tempBPMS;
-
-// soooo, if BPM = 60, 1 beat = 1000 ms.  with a virtual to screen factor
-// of 1, that is also 1000 pixels, so a bit more than two screen heights
-// per second at 60 BPM.  this means the factor must be modified.  at
-// 140 BPM the arrows are on-screen for nearly a second before covering 
-// two thirds of the screen.  ~360 px
-
-// if BPM = 120, 1 beat = 500 ms, 500 px.
- 
-  // set song ms per pixel based on beat 0 BPM
-  song_ms_per_pixel = base_ms_per_pixel / current_play_data.get_current_bpm();
-  
-  // rating distances are pixel distances based on current BPM and screen
-  // dimensions
-  // boo = number of pixels scrolled after 200 ms 
-  boo_rating_distance = 180/song_ms_per_pixel;
-  good_rating_distance = 135/song_ms_per_pixel;
-  great_rating_distance = 90/song_ms_per_pixel;
-  perfect_rating_distance = 45/song_ms_per_pixel;
-  marvellous_rating_distance = 23/song_ms_per_pixel;
-  
-  
-  //     ~ 400px / second @ 140 BPM
-  //
-  //   = ~ 171px / second @ 60 BPM
-  //
-  //   = ~ 171px / 1000ms @ 60 BPM
-  //   = ~ 0.171px/ms @ 60 BPM
-  //   = ~ 6 ms/px @ 60 BPM
-  //   = ~ 350 ms / px @ 1 BPM
-  
-  // another way: beats per screen height, screen heights per second at given BPM
-  // given a screen height y this gives how many y per second at given BPM
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  // scroll
-  
-  frame_offset = timehaspast / song_ms_per_pixel;
-  viewport_offset += frame_offset;  // right now?
     
   
   
   
-  
-  
+//NOTE: the following scheme is used to display arrows.  all arrows are
+// placed in y positions according to their position in the song so that
+// they fill a virtual area as wide as the screen and high enough
+// to contain all arrows.  as the song plays the screen is scrolled 
+// down this area at a rate determined by the current BPM.  the 
+// viewport_offset variable retains the current offset from the start of
+// the area.  to determine each arrow's screen y position, subtract this
+// offset from its virtual y position.  to do this we track the last
+// and first arrows visible on screen, updating these each cycle as
+// necessary.
+
   
   
 
@@ -145,7 +68,7 @@ void Game_play(){
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
     debug_log.open("debug", std::ios_base::app);
-    debug_log << "applying surface ratings" << endl;
+    debug_log << "applying ratings surfaces" << endl;
     debug_log.close();
   }
   for(int a=0;a<n_ratings;a++){
@@ -162,6 +85,8 @@ void Game_play(){
   
   // animate home arrows per user input
   
+  
+  
   //TODO: fix goalline vs goaloffset
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
@@ -169,27 +94,32 @@ void Game_play(){
     debug_log << "lighting home arrows according to pad presses" << endl;
     debug_log.close();
   }
-  if(leftcontrol==0)
+  
+  
+  //TODO: multiplayer
+  player_data& pd = current_play_data.current_player_data[0];  
+  
+  if(pd.left_control==0)
     apply_surface(185,goaloffset,arrowsimage,screen,&arrowsframes[4]);
-  else if(leftcontrol==1)
+  else if(pd.left_control==1)
     apply_surface(185,goaloffset,arrowsimage,screen,&arrowsframes[8]);
   else
     apply_surface(185,goaloffset,arrowsimage,screen,&arrowsframes[0]);
-  if(downcontrol==0)
+  if(pd.down_control==0)
     apply_surface(250,goaloffset,arrowsimage,screen,&arrowsframes[5]);
-  else if(downcontrol==1)
+  else if(pd.down_control==1)
     apply_surface(250,goaloffset,arrowsimage,screen,&arrowsframes[9]);
   else
     apply_surface(250,goaloffset,arrowsimage,screen,&arrowsframes[1]);
-  if(upcontrol==0)
+  if(pd.up_control==0)
     apply_surface(rmode->viWidth/2,goaloffset,arrowsimage,screen,&arrowsframes[6]);
-  else if(upcontrol==1)
+  else if(pd.up_control==1)
     apply_surface(rmode->viWidth/2,goaloffset,arrowsimage,screen,&arrowsframes[10]);
   else
     apply_surface(rmode->viWidth/2,goaloffset,arrowsimage,screen,&arrowsframes[2]);
-  if(rightcontrol==0)
+  if(pd.right_control==0)
     apply_surface(385,goaloffset,arrowsimage,screen,&arrowsframes[7]);
-  else if(rightcontrol==1)
+  else if(pd.right_control==1)
     apply_surface(385,goaloffset,arrowsimage,screen,&arrowsframes[11]);
   else
     apply_surface(385,goaloffset,arrowsimage,screen,&arrowsframes[3]);
@@ -216,9 +146,11 @@ void Game_play(){
     for(unsigned int a = pd.player_base_arrow; a < pd.player_arrows.size(); a++)
     {
       // calculate its y position based on songtime
-      // this calculation must not take into account the BPM because when
-      // BPM changes, the distance between the arrows stays the same
-      int posy = (int)(goaloffset + ((pd.player_arrows[a].time - songtime)));
+      //int posy = (int)(goaloffset + ((pd.player_arrows[a].time - current_play_data.song_time)));
+      
+      // y position is now fixed in the arrow data and for rendering the
+      // viewport offset is used
+      int posy = pd.player_arrows[a].ypos - current_play_data.viewport_offset;
       
       // posy is based on goaloffset, there at posy = 0, the arrow is not yet
       // at the top of the screen.  
@@ -274,17 +206,17 @@ void Game_play(){
     }    
   }
   
-  if(combo>longestcombo)longestcombo=combo;
+  if(pd.combo>pd.longest_combo)pd.longest_combo=pd.combo;
 
   char temptext[100];
-  sprintf(temptext,"%d%s",boo," BOO");
+  sprintf(temptext,"%d%s",pd.boo," BOO");
   WiiDash_spritetext(rmode->viWidth/2,440-18*3,temptext,2);
-  sprintf(temptext,"%d%s",good," GOOD");
+  sprintf(temptext,"%d%s",pd.good," GOOD");
   WiiDash_spritetext(rmode->viWidth/2,440-18*2,temptext,2);
-  sprintf(temptext,"%d%s",perfect," PERFECT");
+  sprintf(temptext,"%d%s",pd.perfect," PERFECT");
   WiiDash_spritetext(rmode->viWidth/2,440-18*1,temptext,2);
-  if(combo>2){
-    sprintf(temptext,"%d%s",combo," COMBO");
+  if(pd.combo>2){
+    sprintf(temptext,"%d%s",pd.combo," COMBO");
     WiiDash_spritetext(rmode->viWidth/2,440-18*0,temptext,2);
   }
   
