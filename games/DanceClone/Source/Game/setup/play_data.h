@@ -17,8 +17,6 @@ public:
   int num_beat_ticks;
   int current_bpm_change;
   int num_bpm_changes;
-  int player_base_arrow;
-  vector<arrow> player_arrows;
   long song_start_time;
   long song_time;
   long frame_time; //TEMP
@@ -34,6 +32,8 @@ public:
   void initial_frame();
   void frame();
   void partial_frame(long begin, long end);
+  void read_player_controls(int p);
+  void rate_arrows(int p);
 };
 
 play_data::play_data() :
@@ -51,8 +51,6 @@ bool play_data::init()
   }
   current_beat_tick = -1;
   current_bpm_change = -1;
-  player_arrows.clear();
-  player_base_arrow = -1;
   song_start_time = WDgametime+(SDL_GetTicks()-WDruntime);
   song_time = 0;
   ms_per_pixel_at_1_bpm = 120.0*4000.0/rmode->viHeight;
@@ -66,16 +64,17 @@ bool play_data::init()
   
   //TODO: receive players vector and use to augment this:
   player_data& pd = current_player_data[0];
-  pd.player_arrows = current_song.song_arrows[difficulty];
+  pd.arrows = current_song.song_arrows[difficulty];
   if (DEBUG_LEVEL >= DEBUG_MINOR)
   {
     debug_log.open("debug", std::ios_base::app);
-    debug_log << "copied " << current_player_data[0].player_arrows.size() << " arrows" << " for difficulty " << difficulty << endl;
+    debug_log << "copied " << current_player_data[0].arrows.size() << " arrows" << " for difficulty " << difficulty << endl;
     debug_log.close();
   }
-  if (pd.player_arrows.size() > 0)
+  pd.num_arrows = pd.arrows.size();
+  if (pd.num_arrows)
   {
-    pd.first_visible_arrow = 0;
+    pd.next_offscreen_arrow = 0;
     //pd.current_ratable_arrow[0] = 
     //pd.current_ratable_arrow[1] = 
     // ...
@@ -255,6 +254,11 @@ void play_data::frame()
   
   //TEMP:
   frame_time = song_time - old_song_time;
+  
+  // detect player input
+  read_player_controls(0);
+  
+  rate_arrows(0);
 }
 
 void play_data::partial_frame(long begin, long end)
@@ -279,5 +283,185 @@ void play_data::partial_frame(long begin, long end)
       << endl << "viewport_offset: " << viewport_offset \
       << endl << "---------------" << endl;
     debug_log.close();
+  }
+}
+
+void play_data::read_player_controls(int p)
+{
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "Game_play_controls() begins" << endl;
+    debug_log.close();
+  }
+
+  // update player controls
+  
+  u32 WiiButtons1Held = WiiButtonsHeld[0];
+  u32 WiiButtons1Down = WiiButtonsDown[0];
+  u16 GCButtons1Held = GCButtonsHeld[0];
+  u16 GCButtons1Down = GCButtonsDown[0];
+  expansion_t WPAD_Expansion1 = expans[0];
+
+  //TODO: multiplayer
+  //TODO: leaving in reference to frame_time but 
+  // this is to move to a function called from frame() where
+  // it will receive frame time there
+  player_data& pd = current_player_data[p];
+  pd.up_control = pd.up_control - frame_time;
+  pd.down_control = pd.down_control - frame_time;
+  pd.left_control = pd.left_control - frame_time;
+  pd.right_control = pd.right_control - frame_time;
+
+
+  if(pd.up_control<0)pd.up_control=0;
+  if(pd.down_control<0)pd.down_control=0;
+  if(pd.left_control<0)pd.left_control=0;
+  if(pd.right_control<0)pd.right_control=0;
+
+  #ifdef WIN
+  if(keystate[SDLK_UP] && pd.up_control==0){pd.up_control=1;}
+  if(keystate[SDLK_DOWN] && pd.down_control==0){pd.down_control=1;}
+  if(keystate[SDLK_LEFT] && pd.left_control==0){pd.left_control=1;}
+  if(keystate[SDLK_RIGHT] && pd.right_control==0){pd.right_control=1;}
+  if(keystate[SDLK_UP]==2)pd.up_control=125;
+  if(keystate[SDLK_DOWN]==2)pd.down_control=125;
+  if(keystate[SDLK_LEFT]==2)pd.left_control=125;
+  if(keystate[SDLK_RIGHT]==2)pd.right_control=125;
+  #endif
+  
+  #ifdef WII
+
+  if(pd.up_control==0 && WiiButtons1Held & WPAD_BUTTON_UP)pd.up_control=1;
+  if(pd.down_control==0 && WiiButtons1Held & WPAD_BUTTON_DOWN)pd.down_control=1;
+  if(pd.left_control==0 && WiiButtons1Held & WPAD_BUTTON_LEFT)pd.left_control=1;
+  if(pd.right_control==0 && WiiButtons1Held & WPAD_BUTTON_RIGHT)pd.right_control=1;
+  if(WiiButtons1Down & WPAD_BUTTON_UP)pd.up_control=125;
+  if(WiiButtons1Down & WPAD_BUTTON_DOWN)pd.down_control=125;
+  if(WiiButtons1Down & WPAD_BUTTON_LEFT)pd.left_control=125;
+  if(WiiButtons1Down & WPAD_BUTTON_RIGHT)pd.right_control=125;
+
+
+
+  if(pd.up_control==0 && GCButtons1Held & PAD_BUTTON_UP)pd.up_control=1;
+  if(pd.down_control==0 && GCButtons1Held & PAD_BUTTON_DOWN)pd.down_control=1;
+  if(pd.left_control==0 && GCButtons1Held & PAD_BUTTON_LEFT)pd.left_control=1;
+  if(pd.right_control==0 && GCButtons1Held & PAD_BUTTON_RIGHT)pd.right_control=1;
+  if(GCButtons1Down & PAD_BUTTON_UP)pd.up_control=125;
+  if(GCButtons1Down & PAD_BUTTON_DOWN)pd.down_control=125;
+  if(GCButtons1Down & PAD_BUTTON_LEFT)pd.left_control=125;
+  if(GCButtons1Down & PAD_BUTTON_RIGHT)pd.right_control=125;
+
+
+
+  if(WPAD_Expansion1.type == WPAD_EXP_CLASSIC){
+    if(pd.up_control==0 && WiiButtons1Held & WPAD_CLASSIC_BUTTON_UP)pd.up_control=1;
+    if(pd.down_control==0 && WiiButtons1Held & WPAD_CLASSIC_BUTTON_DOWN)pd.down_control=1;
+    if(pd.left_control==0 && WiiButtons1Held & WPAD_CLASSIC_BUTTON_LEFT)pd.left_control=1;
+    if(pd.right_control==0 && WiiButtons1Held & WPAD_CLASSIC_BUTTON_RIGHT)pd.right_control=1;
+    if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_UP)pd.up_control=125;
+    if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_DOWN)pd.down_control=125;
+    if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_LEFT)pd.left_control=125;
+    if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_RIGHT)pd.right_control=125;    
+  }
+
+  #endif
+}
+
+void play_data::rate_arrows(int p)
+{
+  player_data& pd = current_player_data[p];
+
+  // rate arrows
+
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "checking for boo" << endl;
+    debug_log.close();
+  }
+  //TODO: if arrow has flowed past, consider it still the next ratable
+  // arrow until either the max time(boo rating) or until the next
+  // arrow is sooner.  this is too allow excluding old arrows before the
+  // normal timeout if a stream of closely-placed arrows arrives.
+  //detect_missed_arrows(0);
+  for(int a=pd.first_visible_arrow;a<pd.last_visible_arrow;a++)if(pd.arrows[a].time-song_time<-BOO_MS)
+  {
+    if (pd.arrows[a].rated == false)
+    {
+      pd.arrows[a].hit = true;
+      pd.arrows[a].rated = true;
+      //ratearrow(a,0);
+      pd.combo=0;++pd.boo;
+    }
+  }
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "checking for perfect / good" << endl;
+    debug_log.close();
+  }
+  
+  //TODO: record rating.  each direction has a "current ratable arrow" 
+  // whose y position is analysed relative to a scale calculated based on 
+  // current BPM.  separate each control's hit detection statement to 
+  // use the current ratable arrow for each column.
+  
+  
+  //TODO: fix this.
+//  detect_perfect_arrows(0);
+
+  for(int b=0;b<4;b++)
+  if((b==0 && pd.left_control==125)||(b==1 && pd.down_control==125)||(b==2 && pd.up_control==125)||(b==3 && pd.right_control==125))
+  {
+    for(int a=pd.first_visible_arrow;a<pd.last_visible_arrow;a++)if(pd.arrows[a].length==0)if(pd.arrows[a].direction==b)
+    {
+      if(pd.arrows[a].time-song_time>-PERFECT_MS && pd.arrows[a].time-song_time<PERFECT_MS)
+      {
+        if (pd.arrows[a].rated == false)
+        {
+          pd.arrows[a].hit = true;
+          pd.arrows[a].rated = true;
+  //        ratearrow(a,2);
+          ++pd.combo;++pd.perfect;break;
+        }
+      }
+      else if(pd.arrows[a].time-song_time>-GOOD_MS && pd.arrows[a].time-song_time<GOOD_MS)
+      {
+        if (pd.arrows[a].rated == false)
+        {
+          pd.arrows[a].hit = true;
+          pd.arrows[a].rated = true;
+  //        ratearrow(a,1);
+          ++pd.combo;++pd.good;break;
+        }
+      }
+    }
+  }
+  
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "checking for perfect on held arrow" << endl;
+    debug_log.close();
+  }
+  for(int b=0;b<4;b++)
+  if((b==0 && pd.left_control)||(b==1 && pd.down_control)||(b==2 && pd.up_control)||(b==3 && pd.right_control))
+  {
+    for(unsigned int a=pd.base_arrow;a<pd.arrows.size();a++)if(pd.arrows[a].length!=0)if(pd.arrows[a].direction==b)
+    {
+      if(pd.arrows[a].time-song_time>-1000/5 && pd.arrows[a].time-song_time<1000/5)
+      {
+//        pd.arrows[a].ypos+=timehaspast;
+//        pd.arrows[a].length-=timehaspast;
+//        if(pd.arrows[a].length<=0)
+//        {
+//          ratearrow(a,2);
+//        }
+
+        //TODO: fix length check
+        //combo=combo+1;perfect=perfect+1;
+      }
+    }
   }
 }

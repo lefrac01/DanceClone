@@ -21,7 +21,9 @@ public:
   long ypos;
   int length;
   int type; // for drawing based on note value
-  arrow(int d, long t, long y, int l, int ty) {direction = d; time = t; ypos = y; length = l; type = ty;};
+  bool hit;
+  bool rated;
+  arrow(int d, long t, long y, int l, int ty) : direction(d),time(t),ypos(y),length(l),type(ty),hit(false),rated(false){};
 };
 
 class bpm_change
@@ -30,7 +32,7 @@ public:
   float beat;
   float timestamp;
   float bpm;
-  bpm_change(float b, float t, float bp) {beat = b; timestamp = t; bpm = bp;};
+  bpm_change(float b, float t, float bp) : beat(b),timestamp(t),bpm(bp){};
 };
 
 class beat_tick
@@ -39,7 +41,7 @@ public:
   long  ypos;
   float timestamp;
   float beat; // easier considering ticks per measure can vary
-  beat_tick(long y, float t, float o) {ypos = y; timestamp = t; beat = o;};
+  beat_tick(long y, float t, float o) : ypos(y),timestamp(t),beat(o){};
 };
 
 class song

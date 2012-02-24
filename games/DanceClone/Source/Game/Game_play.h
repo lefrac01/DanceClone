@@ -36,31 +36,11 @@ void Game_play()
   // update 
   current_play_data.frame();
 
-  
-    
-  
-  
-  
-//NOTE: the following scheme is used to display arrows.  all arrows are
-// placed in y positions according to their position in the song so that
-// they fill a virtual area as wide as the screen and high enough
-// to contain all arrows.  as the song plays the screen is scrolled 
-// down this area at a rate determined by the current BPM.  the 
-// viewport_offset variable retains the current offset from the start of
-// the area.  to determine each arrow's screen y position, subtract this
-// offset from its virtual y position.  to do this we track the last
-// and first arrows visible on screen, updating these each cycle as
-// necessary.
-
-  
-  
-
-
-
 
   // read player controls
   // this function also rates arrows
-  Game_play_controls();
+  //current_play_data.read_player_controls();
+//  Game_play_controls();
 
 
   // display ratings
@@ -127,81 +107,103 @@ void Game_play()
 
 
   // animate arrows
-
-  // HMMMMMMMM...
+  long offscreen_high = current_play_data.viewport_offset + rmode->viHeight - goal_offset;
+  long offscreen_low = current_play_data.viewport_offset - arrow_height - goal_offset;
   for (int p = 0; p < current_play_data.num_players; p++)
   {
     player_data& pd = current_play_data.current_player_data[p];
       
-    //SDL_Rect temprect={50,0,50,35};   // X,Y,W,H
     if (DEBUG_LEVEL >= DEBUG_DETAIL)
     {
       debug_log.open("debug", std::ios_base::app);
-      debug_log << "beginning main arrow animation loop with playerbasearrow=" << pd.player_base_arrow << " and playerarrowcount=" << pd.player_arrows.size() << endl;
+      debug_log << "beginning main arrow animation loop with playerbasearrow=" << pd.base_arrow << " and playerarrowcount=" << pd.arrows.size() << endl;
       debug_log.close();
     }    
     
+    // update first and last visible arrows
+    while (pd.next_offscreen_arrow != -1 && pd.arrows[pd.next_offscreen_arrow].ypos < offscreen_high)
+    {
+      pd.last_visible_arrow = pd.next_offscreen_arrow;
+      if (pd.first_visible_arrow == -1)
+      {
+        pd.first_visible_arrow = pd.last_visible_arrow;
+      }
+      ++pd.next_offscreen_arrow;
+      if (pd.next_offscreen_arrow == pd.num_arrows)
+      {
+        pd.next_offscreen_arrow = -1;
+      }
+    }
+
+    
+    // draw arrows from last to first, updating first if it is offscreen
     if (pd.first_visible_arrow != -1)
     {
-      for(unsigned int a = pd.first_visible_arrow; a < pd.player_arrows.size(); a++)
+      for (int a = pd.last_visible_arrow; a >= pd.first_visible_arrow; a--)
       {
-        arrow& ar = pd.player_arrows[a];
-        int screen_ypos = ar.ypos - current_play_data.viewport_offset + goal_offset;
-        if ((int)a==pd.first_visible_arrow && screen_ypos < (0-goal_offset-arrow_height))
+        arrow& ar = pd.arrows[a];
+        if (ar.ypos <= offscreen_low)
         {
-          if (pd.first_visible_arrow+1 < (int)pd.player_arrows.size())
+          if (pd.first_visible_arrow == pd.last_visible_arrow)
           {
-            pd.first_visible_arrow++;
+            pd.first_visible_arrow = -1;
+            pd.last_visible_arrow = -1;
+            break;
           }
           else
           {
-            // no more arrows
-            pd.first_visible_arrow = -1;
-            break;
+            ++pd.first_visible_arrow;
           }
         }
-
-        int arrows_frames_index = -1;
-        int xpos = -1;
-        switch (ar.direction)
+        else
         {
-          case 0: xpos = 185; arrows_frames_index = 12; break;
-          case 1: xpos = 250; arrows_frames_index = 13; break;
-          case 2: xpos = 320; arrows_frames_index = 14; break;
-          case 3: xpos = 385; arrows_frames_index = 15; break;
-          default: break;
+          int screen_ypos = ar.ypos - current_play_data.viewport_offset + goal_offset;
+          
+          int arrows_frames_index = -1;
+          int xpos = -1;
+          switch (ar.direction)
+          {
+            case 0: xpos = 185; arrows_frames_index = 12; break;
+            case 1: xpos = 250; arrows_frames_index = 13; break;
+            case 2: xpos = 320; arrows_frames_index = 14; break;
+            case 3: xpos = 385; arrows_frames_index = 15; break;
+            default: break;
+          }
+          
+          //TODO: add index for type of arrow (quarter, eighth, hold, etc)
+          apply_surface(xpos, screen_ypos, arrowsimage, screen, &arrowsframes[arrows_frames_index]);
+          
+          /*
+          if(posy>0-70 && posy<rmode->viHeight){
+            if(pd.arrows[a].length){
+              if(pd.arrows[a].direction==0){
+                apply_surface(185+10,posy,holdimage,screen,&holdframes[0]);
+                for(int b=0;b<floor((double)pd.arrows[a].length/5/35);b++)
+                  apply_surface(185+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
+                temprect.h = (Uint16)(pd.arrows[a].length/5-floor((double)pd.arrows[a].length/5/35)*35);
+                apply_surface(185+10,posy+(int)floor((double)pd.arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
+                apply_surface(185+10,posy+pd.arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
+              if(pd.arrows[a].direction==1){
+                ...
+          }
+          */
         }
-        
-        //TODO: add index for type of arrow (quarter, eighth, hold, etc)
-        apply_surface(xpos, screen_ypos, arrowsimage, screen, &arrowsframes[arrows_frames_index]);
-        
-        /*
-        if(posy>0-70 && posy<rmode->viHeight){
-          if(pd.player_arrows[a].length){
-            if(pd.player_arrows[a].direction==0){
-              apply_surface(185+10,posy,holdimage,screen,&holdframes[0]);
-              for(int b=0;b<floor((double)pd.player_arrows[a].length/5/35);b++)
-                apply_surface(185+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-              temprect.h = (Uint16)(pd.player_arrows[a].length/5-floor((double)pd.player_arrows[a].length/5/35)*35);
-              apply_surface(185+10,posy+(int)floor((double)pd.player_arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
-              apply_surface(185+10,posy+pd.player_arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
-            if(pd.player_arrows[a].direction==1){
-              ...
-        }
-        */
+        if (DEBUG_LEVEL >= DEBUG_DETAIL)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "done" << endl;
+          debug_log.close();
+        }    
       }
-      if (DEBUG_LEVEL >= DEBUG_DETAIL)
-      {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "done" << endl;
-        debug_log.close();
-      }    
     }
   }
   
   
   //TODO: rating stuff here
-  /*
+  
+  
+  
+  
   if(pd.combo>pd.longest_combo)pd.longest_combo=pd.combo;
 
   char temptext[100];
@@ -215,7 +217,7 @@ void Game_play()
     sprintf(temptext,"%d%s",pd.combo," COMBO");
     WiiDash_spritetext(rmode->viWidth/2,440-18*0,temptext,2);
   }
-  */
+  
   
   #ifdef WII
   if(!MP3Player_IsPlaying()){
@@ -240,9 +242,15 @@ void Game_play()
   #endif
 
   #ifdef WII
-  if(WiiDash_button(rmode->viWidth-100-40,rmode->viHeight-10-40,100,10,0,1,(char*)"Back")){
+  if(
+      WiiButtonsDown[0] & WPAD_BUTTON_HOME
+  ||  WiiButtonsDown[0] & WPAD_BUTTON_B
+  ||  WiiDash_button(rmode->viWidth-100-40,rmode->viHeight-10-40,100,10,0,1,(char*)"Back")
+  ){
     MP3Player_Stop();
     gamestate=4;
+    
+debug_log.close();    
   }
   #endif
 

@@ -2,10 +2,9 @@
 //
 //TODO: implement separate rating for succesfully held arrows 
 // currently this adds one perfect
-extern play_data current_play_data;
 
 void Game_play_controls(){
-
+/*
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
     debug_log.open("debug", std::ios_base::app);
@@ -30,24 +29,13 @@ void Game_play_controls(){
   pd.down_control = pd.down_control - current_play_data.frame_time;
   pd.left_control = pd.left_control - current_play_data.frame_time;
   pd.right_control = pd.right_control - current_play_data.frame_time;
-  /*
-  upcontrol=upcontrol-timehaspast;
-  downcontrol=downcontrol-timehaspast;
-  leftcontrol=leftcontrol-timehaspast;
-  rightcontrol=rightcontrol-timehaspast;
-  */
+
 
   if(pd.up_control<0)pd.up_control=0;
   if(pd.down_control<0)pd.down_control=0;
   if(pd.left_control<0)pd.left_control=0;
   if(pd.right_control<0)pd.right_control=0;
 
-/*  
-  if(upcontrol<0)upcontrol=0;
-  if(downcontrol<0)downcontrol=0;
-  if(leftcontrol<0)leftcontrol=0;
-  if(rightcontrol<0)rightcontrol=0;
-  */
   #ifdef WIN
   if(keystate[SDLK_UP] && upcontrol==0){upcontrol=1;}
   if(keystate[SDLK_DOWN] && downcontrol==0){downcontrol=1;}
@@ -70,16 +58,7 @@ void Game_play_controls(){
   if(WiiButtons1Down & WPAD_BUTTON_LEFT)pd.left_control=125;
   if(WiiButtons1Down & WPAD_BUTTON_RIGHT)pd.right_control=125;
 
-  /*
-  if(upcontrol==0 && WiiButtons1Held & WPAD_BUTTON_UP)upcontrol=1;
-  if(downcontrol==0 && WiiButtons1Held & WPAD_BUTTON_DOWN)downcontrol=1;
-  if(leftcontrol==0 && WiiButtons1Held & WPAD_BUTTON_LEFT)leftcontrol=1;
-  if(rightcontrol==0 && WiiButtons1Held & WPAD_BUTTON_RIGHT)rightcontrol=1;
-  if(WiiButtons1Down & WPAD_BUTTON_UP)upcontrol=125;
-  if(WiiButtons1Down & WPAD_BUTTON_DOWN)downcontrol=125;
-  if(WiiButtons1Down & WPAD_BUTTON_LEFT)leftcontrol=125;
-  if(WiiButtons1Down & WPAD_BUTTON_RIGHT)rightcontrol=125;
-  */
+
 
   if(pd.up_control==0 && GCButtons1Held & PAD_BUTTON_UP)pd.up_control=1;
   if(pd.down_control==0 && GCButtons1Held & PAD_BUTTON_DOWN)pd.down_control=1;
@@ -89,16 +68,7 @@ void Game_play_controls(){
   if(GCButtons1Down & PAD_BUTTON_DOWN)pd.down_control=125;
   if(GCButtons1Down & PAD_BUTTON_LEFT)pd.left_control=125;
   if(GCButtons1Down & PAD_BUTTON_RIGHT)pd.right_control=125;
-  /*
-  if(upcontrol==0 && GCButtons1Held & PAD_BUTTON_UP)upcontrol=1;
-  if(downcontrol==0 && GCButtons1Held & PAD_BUTTON_DOWN)downcontrol=1;
-  if(leftcontrol==0 && GCButtons1Held & PAD_BUTTON_LEFT)leftcontrol=1;
-  if(rightcontrol==0 && GCButtons1Held & PAD_BUTTON_RIGHT)rightcontrol=1;
-  if(GCButtons1Down & PAD_BUTTON_UP)upcontrol=125;
-  if(GCButtons1Down & PAD_BUTTON_DOWN)downcontrol=125;
-  if(GCButtons1Down & PAD_BUTTON_LEFT)leftcontrol=125;
-  if(GCButtons1Down & PAD_BUTTON_RIGHT)rightcontrol=125;
-    */
+
 
 
   if(WPAD_Expansion1.type == WPAD_EXP_CLASSIC){
@@ -111,19 +81,7 @@ void Game_play_controls(){
     if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_LEFT)pd.left_control=125;
     if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_RIGHT)pd.right_control=125;    
   }
-    
-    /*
-  if(WPAD_Expansion1.type == WPAD_EXP_CLASSIC){
-    if(upcontrol==0 && WiiButtons1Held & WPAD_CLASSIC_BUTTON_UP)upcontrol=1;
-    if(downcontrol==0 && WiiButtons1Held & WPAD_CLASSIC_BUTTON_DOWN)downcontrol=1;
-    if(leftcontrol==0 && WiiButtons1Held & WPAD_CLASSIC_BUTTON_LEFT)leftcontrol=1;
-    if(rightcontrol==0 && WiiButtons1Held & WPAD_CLASSIC_BUTTON_RIGHT)rightcontrol=1;
-    if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_UP)upcontrol=125;
-    if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_DOWN)downcontrol=125;
-    if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_LEFT)leftcontrol=125;
-    if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_RIGHT)rightcontrol=125;    
-  }
-  */
+
   #endif
 
 
@@ -142,12 +100,10 @@ void Game_play_controls(){
   // arrow is closer.  this is too allow excluding old arrows before the
   // normal timeout if a stream of closely-placed arrows arrives.
   detect_missed_arrows(0);
-  /*
-  for(unsigned int a=player_base_arrow;a<player_arrows.size();a++)if(player_arrows[a].time-songtime<-1000/8)
-  {
-    ratearrow(a,0);combo=0;boo=boo+1;
-  }
-*/
+  //#for(unsigned int a=player_base_arrow;a<player_arrows.size();a++)if(player_arrows[a].time-songtime<-1000/8)
+  //#{
+    //#ratearrow(a,0);combo=0;boo=boo+1;
+  //#}
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
     debug_log.open("debug", std::ios_base::app);
@@ -164,7 +120,7 @@ void Game_play_controls(){
   
   //TODO: fix this.
 //  detect_perfect_arrows(0);
-/*
+
   for(int b=0;b<4;b++)
   if((b==0 && leftcontrol==125)||(b==1 && downcontrol==125)||(b==2 && upcontrol==125)||(b==3 && rightcontrol==125))
   {
@@ -203,7 +159,8 @@ void Game_play_controls(){
       }
     }
   }
-*/
+
+  */
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
     debug_log.open("debug", std::ios_base::app);

@@ -71,5 +71,8 @@ void Game_playprep(){
     
     // switch to play state
     gamestate = 8;
+    
+debug_log.open("debug", std::ios_base::app);
+    
   }
 }

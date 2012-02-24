@@ -1,9 +1,9 @@
 changelog
 --
 v0.53
--logging levels
--BPM info written to DC step file during stepmania import
--fixed arrow timestamp generation
+-internal data structures recoded to STL
+-now using SM format natively
+-multiple BPM changes supported at load and play
 
 v0.52
 -fixed import of multiple BPMS
