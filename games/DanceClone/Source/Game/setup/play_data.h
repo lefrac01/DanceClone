@@ -13,24 +13,27 @@ private:
 
 public:
   song current_song;
-  int current_bpm_index;
-  int current_beat;
+  int current_beat_tick;
+  int num_beat_ticks;
+  int current_bpm_change;
+  int num_bpm_changes;
   int player_base_arrow;
   vector<arrow> player_arrows;
   long song_start_time;
   long song_time;
-  long frame_time;
+  long frame_time; //TEMP
   long viewport_offset;
-  float current_bpm;
-  float scroll_rate;
+  float ms_per_pixel_at_1_bpm;
+  float ms_per_pixel_at_current_bpm;
+  float pixels_left_to_scroll;
   vector<player_data> current_player_data;
   int num_players;
   
   play_data();
   bool init();
-  float get_current_bpm();
-  int get_num_players();
-  void update();
+  void initial_frame();
+  void frame();
+  void partial_frame(long begin, long end);
 };
 
 play_data::play_data() :
@@ -46,161 +49,235 @@ bool play_data::init()
     debug_log << "play_data init() " << endl;
     debug_log.close();
   }
-  current_bpm_index = 0;
-  current_beat = 0;
+  current_beat_tick = -1;
+  current_bpm_change = -1;
   player_arrows.clear();
-  player_base_arrow = 0;
+  player_base_arrow = -1;
   song_start_time = WDgametime+(SDL_GetTicks()-WDruntime);
   song_time = 0;
+  ms_per_pixel_at_1_bpm = 120.0*4000.0/rmode->viHeight;
   viewport_offset = 0;
-  current_bpm_index = 0;
-  
-  if (current_song.initialised && current_song.bpm_changes.size() > 0)
-  {
-    current_bpm = current_song.bpm_changes.front().bpm;
-  }
   num_players = MAX_PLAYERS;
   
   for (int i = 0; i < MAX_PLAYERS; i++)
   {
     current_player_data[i].init();
   }
-  scroll_rate = 23.5;//something based on BPM
   
   //TODO: receive players vector and use to augment this:
-  current_player_data[0].player_arrows = current_song.song_arrows[difficulty];
+  player_data& pd = current_player_data[0];
+  pd.player_arrows = current_song.song_arrows[difficulty];
   if (DEBUG_LEVEL >= DEBUG_MINOR)
   {
     debug_log.open("debug", std::ios_base::app);
     debug_log << "copied " << current_player_data[0].player_arrows.size() << " arrows" << " for difficulty " << difficulty << endl;
     debug_log.close();
   }
+  if (pd.player_arrows.size() > 0)
+  {
+    pd.first_visible_arrow = 0;
+    //pd.current_ratable_arrow[0] = 
+    //pd.current_ratable_arrow[1] = 
+    // ...
+  }
  
+  num_beat_ticks = current_song.beat_ticks.size();
+  if (num_beat_ticks > 0)
+  {
+    current_beat_tick = 0;
+  }
+  num_bpm_changes = current_song.bpm_changes.size();
+  if (num_bpm_changes > 0)
+  {
+    current_bpm_change = 0;
+    ms_per_pixel_at_current_bpm = ms_per_pixel_at_1_bpm / current_song.bpm_changes.front().bpm;
+  }
+  
+  if (current_song.initialised && current_beat_tick == 0 && current_bpm_change == 0)
+  {
+    if (DEBUG_LEVEL >= DEBUG_MINOR)
+    {
+      debug_log.open("debug", std::ios_base::app);
+      debug_log << "play_data init() exiting with initial bpm: " << current_song.bpm_changes.front().bpm << endl;
+      debug_log.close();
+    }
+    return true;
+  }
+  
+  debug_log.open("debug", std::ios_base::app);
+  debug_log << "ERROR: missing BPM" << endl;
+  debug_log.close();
+  return false;
+}
+
+void play_data::initial_frame()
+{
   if (DEBUG_LEVEL >= DEBUG_MINOR)
   {
     debug_log.open("debug", std::ios_base::app);
-    debug_log << "play_data init() exiting with current_bpm " << current_bpm << endl;
+    debug_log << "initial frame" << endl;
     debug_log.close();
   }
-  return current_bpm != 0;
+
+  song_start_time = SDL_GetTicks();
+  pixels_left_to_scroll = 0.0;
 }
 
-float play_data::get_current_bpm()
+void play_data::frame()
 {
-  if (!current_song.initialised || current_song.bpm_changes.size() == 0) return -1;
-  return current_song.bpm_changes.front().bpm;
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "frame" << endl;
+    debug_log.close();
+  }
+  
+  // process song time
+  long old_song_time = song_time;
+  song_time = SDL_GetTicks() - song_start_time;
+
+  // process partial frames
+  long partial_frame_time_begin = old_song_time;
+  long frame_time_end = song_time;
+  
+  // process beat ticks
+  int frame_end_beat_tick = current_beat_tick;
+  while (
+    frame_end_beat_tick+1 < num_beat_ticks 
+    &&  frame_time_end 
+        >= current_song.beat_ticks[frame_end_beat_tick+1].timestamp
+  )
+  {
+    frame_end_beat_tick++;
+  }
+
+  // process bpm changes
+  int frame_end_bpm_change = current_bpm_change;
+  if (frame_end_beat_tick != current_beat_tick)
+  {
+    if (DEBUG_LEVEL >= DEBUG_DETAIL)
+    {
+      debug_log.open("debug", std::ios_base::app);
+      debug_log << "new beat tick(s) before new time: " << song_time << " (curre: " << current_beat_tick << " new: " << frame_end_beat_tick << ")" << endl;
+      debug_log.close();
+    }
+    
+    // a new beat will be encountered.  check for bpm change
+    for (int i = current_beat_tick+1; i <= frame_end_beat_tick; i++)
+    {
+      //NOTE: account for possibility of more than one bpm change per
+      // tick, but only use the last bpm change.
+      // for robustness because I'm unsure of SM file format specs.
+      //NOTE: beat 0 bpm change is not detected.  this is ok, beat 0
+      // bpm is assigned at song init so is not actually a change in bpm.
+      while (
+        frame_end_bpm_change+1 < num_bpm_changes 
+        &&  current_song.beat_ticks[i].beat 
+            >= current_song.bpm_changes[frame_end_bpm_change+1].beat
+      )
+      {
+        if (DEBUG_LEVEL >= DEBUG_DETAIL)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "inc frame_end_bpm_change because " \
+            << endl << "current_song.beat_ticks[i].beat " << current_song.beat_ticks[i].beat \
+            << " >= current_song.bpm_changes[frame_end_bpm_change+1].beat " << current_song.bpm_changes[frame_end_bpm_change+1].beat \
+            << " i=" << i << ", frame_end_bpm_change=" << frame_end_bpm_change << endl;
+          debug_log.close();
+        }
+        frame_end_bpm_change++;
+      }
+      
+      // process bpm change
+      if (frame_end_bpm_change != current_bpm_change)
+      {
+        // update play data with the partial scroll between current
+        // position and the position of the bpm change
+        long partial_frame_time_end = current_song.bpm_changes[frame_end_bpm_change].timestamp;
+        partial_frame(partial_frame_time_begin, partial_frame_time_end);
+        
+        // update variables needed to calculate next partial
+        partial_frame_time_begin = partial_frame_time_end;
+
+        if (DEBUG_LEVEL >= DEBUG_DETAIL)
+        {
+          debug_log.open("debug", std::ios_base::app);
+          debug_log << "partial frame updated, new vars partial_frame_time_begin: " << partial_frame_time_begin << " current_bpm_change: " << current_bpm_change << endl;
+          debug_log.close();
+        }
+
+        // optimise pixels per second scroll calculation
+        if (current_bpm_change != frame_end_bpm_change)
+        {
+          ms_per_pixel_at_current_bpm = 
+              ms_per_pixel_at_1_bpm 
+            / current_song.bpm_changes[frame_end_bpm_change].bpm;
+          if (DEBUG_LEVEL >= DEBUG_DETAIL)
+          {
+            debug_log.open("debug", std::ios_base::app);
+            debug_log << "new ms_per_pixel_at_current_bpm:" << ms_per_pixel_at_current_bpm << endl;
+            debug_log.close();
+          }
+        }
+        current_bpm_change = frame_end_bpm_change;
+      }
+    }
+  }
+  
+  // process final partial frame (entire frame in case where no bpm changes
+  // occurred during frame)
+  if (partial_frame_time_begin < frame_time_end)
+  {
+    partial_frame(partial_frame_time_begin, frame_time_end);
+  }
+
+  // optimise pixels per second scroll calculation
+  if (current_bpm_change != frame_end_bpm_change)
+  {
+    ms_per_pixel_at_current_bpm = 
+        ms_per_pixel_at_1_bpm 
+      / current_song.bpm_changes[frame_end_bpm_change].bpm;
+    if (DEBUG_LEVEL >= DEBUG_DETAIL)
+    {
+      debug_log.open("debug", std::ios_base::app);
+      debug_log << "new ms_per_pixel_at_current_bpm:" << ms_per_pixel_at_current_bpm << endl;
+      debug_log.close();
+    }
+  }
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "frame end, updating current_bpm_change=" << frame_end_bpm_change << " current_beat_tick=" << frame_end_beat_tick << endl;
+    debug_log.close();
+  }
+  current_bpm_change = frame_end_bpm_change;
+  current_beat_tick = frame_end_beat_tick;
+  
+  //TEMP:
+  frame_time = song_time - old_song_time;
 }
 
-void play_data::update()
+void play_data::partial_frame(long begin, long end)
 {
-  long temp = song_time;
-  song_time = WDgametime - song_start_time;
-  frame_time = song_time - temp;
-  //timehaspast=songtime;
-  //songtime=WDgametime-songstarttime;
-  //timehaspast=songtime-timehaspast;
-
-
-
-  //THINK:
-  //
-  // to avoid problems with long-term sync, detect the next beat ms
-  // according to current time and current bpm and last beat.
-  // then split this frame into two sections.
-  // go up to the beat, then process things like bpm changes and stops.
-  // continue processing the remainder of the frame time.
-  // think ahead to save time with the implementation...
-
-
+  // process viewport scroll
+  float pixels_to_scroll = (end-begin) / ms_per_pixel_at_current_bpm;
   
-  // which beat are we on?
+  // add partial pixels left from last scroll's truncation
+  pixels_to_scroll += pixels_left_to_scroll;  
   
-  
-  // update current bpm
-  
-  
-  // scroll speed per current bpm
+  long whole_pixels_to_scroll = (long)pixels_to_scroll;
+  pixels_left_to_scroll = pixels_to_scroll - whole_pixels_to_scroll;
 
+  viewport_offset += whole_pixels_to_scroll;
 
-
-
-
-
-
-
-
-  
-
-
-  // sample song @ 126 BPM
-  // scrolls about 120 pixels per second
-  // 1000 / 120 ~= 8.333
-  // 
-  
-  // 4 screen heights per second for a quarter note at 120 BPM
-  
-
-
-
-
-
-
-
-
-
-
-
-
-  // how many pixels does the view window move down over the arrow 
-  // field in one millisecond?  this depends on a base rate adjusted by
-  // the beat 0 BPM.
-  // also, the #OFFSET; value must be put back at the tope ofe thee filee
-  // you loosser because you fooked the one you calced for the first arrow
-  // by *= some funky rate. hmm
-  
-// this is currently used to create DC file:
-//   currentpos+=notetimevalue*1000*60/tempBPMS;
-
-// soooo, if BPM = 60, 1 beat = 1000 ms.  with a virtual to screen factor
-// of 1, that is also 1000 pixels, so a bit more than two screen heights
-// per second at 60 BPM.  this means the factor must be modified.  at
-// 140 BPM the arrows are on-screen for nearly a second before covering 
-// two thirds of the screen.  ~360 px
-
-// if BPM = 120, 1 beat = 500 ms, 500 px.
- 
-  // set song ms per pixel based on beat 0 BPM
-  //song_ms_per_pixel = base_ms_per_pixel / current_play_data.get_current_bpm();
-  
-  // rating distances are pixel distances based on current BPM and screen
-  // dimensions
-  // boo = number of pixels scrolled after 200 ms 
-
-  
-  //     ~ 400px / second @ 140 BPM
-  //
-  //   = ~ 171px / second @ 60 BPM
-  //
-  //   = ~ 171px / 1000ms @ 60 BPM
-  //   = ~ 0.171px/ms @ 60 BPM
-  //   = ~ 6 ms/px @ 60 BPM
-  //   = ~ 350 ms / px @ 1 BPM
-  
-  // another way: beats per screen height, screen heights per second at given BPM
-  // given a screen height y this gives how many y per second at given BPM
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  // scroll
-  viewport_offset += frame_time / scroll_rate;
-     // right now?
-
-  
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  {
+    debug_log.open("debug", std::ios_base::app);
+    debug_log << "partial_frame(" << begin << ", " << end << ")" \
+      << endl << "whole_pixels_to_scroll: " << whole_pixels_to_scroll \
+      << endl << "pixels_left_to_scroll: " << pixels_left_to_scroll \
+      << endl << "viewport_offset: " << viewport_offset \
+      << endl << "---------------" << endl;
+    debug_log.close();
+  }
 }

@@ -65,6 +65,9 @@ void Game_playprep(){
       free(buffer);
     #endif
 
+    // synchronise play data just after mp3 code has had a chance
+    // to finish beginning play
+    current_play_data.initial_frame();
     
     // switch to play state
     gamestate = 8;

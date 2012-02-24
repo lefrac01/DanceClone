@@ -42,10 +42,10 @@ void player_data::init()
   boo = 0;
   good = 0;
   perfect = 0;
-  current_ratable_arrow[0]=current_ratable_arrow[1]=current_ratable_arrow[2]=current_ratable_arrow[3] = 0;
-  next_ratable_arrow[0]=next_ratable_arrow[1]=next_ratable_arrow[2]=next_ratable_arrow[3] = 0;
-  last_visible_arrow = 0;
-  first_visible_arrow = 0;
+  current_ratable_arrow[0]=current_ratable_arrow[1]=current_ratable_arrow[2]=current_ratable_arrow[3] = -1;
+  next_ratable_arrow[0]=next_ratable_arrow[1]=next_ratable_arrow[2]=next_ratable_arrow[3] = -1;
+  last_visible_arrow = -1;
+  first_visible_arrow = -1;
   
   //TODO: control data in vector?
   up_control = 0;

@@ -9,10 +9,13 @@
 
 #define NUM_DIFFICULTIES 5
 
-int goaloffset = 0;
-int ms_per_screen_scroll = 1;
+float pixels_per_ms_at_1_bpm = 0.0; // calculate once screen height is known
+// based on the observed rate of 4000ms per screen height per quarter note
+// at 120 BPM
 
+int goal_offset = 0;
 int gamestate = 0;
+int arrow_height = 70;
 bool gamestatechange = 0;
 int difficulty = 0;
 #include "setup/play_logic.h"

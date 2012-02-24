@@ -22,6 +22,9 @@ void Game_play_controls(){
   expansion_t WPAD_Expansion1 = expans[0];
 
   //TODO: multiplayer
+  //TODO: leaving in reference to frame_time but 
+  // this is to move to a function called from frame() where
+  // it will receive frame time there
   player_data& pd = current_play_data.current_player_data[0];
   pd.up_control = pd.up_control - current_play_data.frame_time;
   pd.down_control = pd.down_control - current_play_data.frame_time;

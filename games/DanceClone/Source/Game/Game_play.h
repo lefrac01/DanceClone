@@ -19,7 +19,7 @@
 //TODO: support an assist tick like in stepmania.  not necessary but
 // could be really useful for people doing non-synth songs
 
-int timehaspast;
+extern int arrow_height;
 
 #include "play/controls.h"
 
@@ -34,7 +34,7 @@ void Game_play()
 
 
   // update 
-  current_play_data.update();
+  current_play_data.frame();
 
   
     
@@ -64,7 +64,7 @@ void Game_play()
 
 
   // display ratings
-  
+  /*
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
     debug_log.open("debug", std::ios_base::app);
@@ -81,7 +81,7 @@ void Game_play()
       a=a-1;
     }
   }
-  
+  */
   
   // animate home arrows per user input
   
@@ -100,29 +100,29 @@ void Game_play()
   player_data& pd = current_play_data.current_player_data[0];  
   
   if(pd.left_control==0)
-    apply_surface(185,goaloffset,arrowsimage,screen,&arrowsframes[4]);
+    apply_surface(185,goal_offset,arrowsimage,screen,&arrowsframes[4]);
   else if(pd.left_control==1)
-    apply_surface(185,goaloffset,arrowsimage,screen,&arrowsframes[8]);
+    apply_surface(185,goal_offset,arrowsimage,screen,&arrowsframes[8]);
   else
-    apply_surface(185,goaloffset,arrowsimage,screen,&arrowsframes[0]);
+    apply_surface(185,goal_offset,arrowsimage,screen,&arrowsframes[0]);
   if(pd.down_control==0)
-    apply_surface(250,goaloffset,arrowsimage,screen,&arrowsframes[5]);
+    apply_surface(250,goal_offset,arrowsimage,screen,&arrowsframes[5]);
   else if(pd.down_control==1)
-    apply_surface(250,goaloffset,arrowsimage,screen,&arrowsframes[9]);
+    apply_surface(250,goal_offset,arrowsimage,screen,&arrowsframes[9]);
   else
-    apply_surface(250,goaloffset,arrowsimage,screen,&arrowsframes[1]);
+    apply_surface(250,goal_offset,arrowsimage,screen,&arrowsframes[1]);
   if(pd.up_control==0)
-    apply_surface(rmode->viWidth/2,goaloffset,arrowsimage,screen,&arrowsframes[6]);
+    apply_surface(rmode->viWidth/2,goal_offset,arrowsimage,screen,&arrowsframes[6]);
   else if(pd.up_control==1)
-    apply_surface(rmode->viWidth/2,goaloffset,arrowsimage,screen,&arrowsframes[10]);
+    apply_surface(rmode->viWidth/2,goal_offset,arrowsimage,screen,&arrowsframes[10]);
   else
-    apply_surface(rmode->viWidth/2,goaloffset,arrowsimage,screen,&arrowsframes[2]);
+    apply_surface(rmode->viWidth/2,goal_offset,arrowsimage,screen,&arrowsframes[2]);
   if(pd.right_control==0)
-    apply_surface(385,goaloffset,arrowsimage,screen,&arrowsframes[7]);
+    apply_surface(385,goal_offset,arrowsimage,screen,&arrowsframes[7]);
   else if(pd.right_control==1)
-    apply_surface(385,goaloffset,arrowsimage,screen,&arrowsframes[11]);
+    apply_surface(385,goal_offset,arrowsimage,screen,&arrowsframes[11]);
   else
-    apply_surface(385,goaloffset,arrowsimage,screen,&arrowsframes[3]);
+    apply_surface(385,goal_offset,arrowsimage,screen,&arrowsframes[3]);
 
 
 
@@ -133,7 +133,7 @@ void Game_play()
   {
     player_data& pd = current_play_data.current_player_data[p];
       
-    SDL_Rect temprect={50,0,50,35};   // X,Y,W,H
+    //SDL_Rect temprect={50,0,50,35};   // X,Y,W,H
     if (DEBUG_LEVEL >= DEBUG_DETAIL)
     {
       debug_log.open("debug", std::ios_base::app);
@@ -141,71 +141,67 @@ void Game_play()
       debug_log.close();
     }    
     
-    // starting from the first unconsumed arrow,
-    //TODO: fix goalline vs goaloffset
-    for(unsigned int a = pd.player_base_arrow; a < pd.player_arrows.size(); a++)
+    if (pd.first_visible_arrow != -1)
     {
-      // calculate its y position based on songtime
-      //int posy = (int)(goaloffset + ((pd.player_arrows[a].time - current_play_data.song_time)));
-      
-      // y position is now fixed in the arrow data and for rendering the
-      // viewport offset is used
-      int posy = pd.player_arrows[a].ypos - current_play_data.viewport_offset;
-      
-      // posy is based on goaloffset, there at posy = 0, the arrow is not yet
-      // at the top of the screen.  
-      
-      // the arrows must scroll completely off the screen, so the
-      // minimum y position will be 0 - goalline - arrow sprite height
-      if(posy>0-70 && posy<rmode->viHeight){
-        if(pd.player_arrows[a].length){
-          if(pd.player_arrows[a].direction==0){
-            apply_surface(185+10,posy,holdimage,screen,&holdframes[0]);
-            for(int b=0;b<floor((double)pd.player_arrows[a].length/5/35);b++)
-              apply_surface(185+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-            temprect.h = (Uint16)(pd.player_arrows[a].length/5-floor((double)pd.player_arrows[a].length/5/35)*35);
-            apply_surface(185+10,posy+(int)floor((double)pd.player_arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
-            apply_surface(185+10,posy+pd.player_arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
-          if(pd.player_arrows[a].direction==1){
-            apply_surface(250+10,posy,holdimage,screen,&holdframes[0]);
-            for(int b=0;b<floor((double)pd.player_arrows[a].length/5/35);b++)
-              apply_surface(250+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-            temprect.h = (Uint16)(pd.player_arrows[a].length/5-floor((double)pd.player_arrows[a].length/5/35)*35);
-            apply_surface(250+10,posy+(int)floor((double)pd.player_arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
-            apply_surface(250+10,posy+pd.player_arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
-          if(pd.player_arrows[a].direction==2){
-            apply_surface(rmode->viWidth/2+10,posy,holdimage,screen,&holdframes[0]);
-            for(int b=0;b<floor((double)pd.player_arrows[a].length/5/35);b++)
-              apply_surface(rmode->viWidth/2+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-            temprect.h = (Uint16)(pd.player_arrows[a].length/5-floor((double)pd.player_arrows[a].length/5/35)*35);
-            apply_surface(rmode->viWidth/2+10,posy+(int)floor((double)pd.player_arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
-            apply_surface(rmode->viWidth/2+10,posy+pd.player_arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
-          if(pd.player_arrows[a].direction==3){
-            apply_surface(385+10,posy,holdimage,screen,&holdframes[0]);
-            for(int b=0;b<floor((double)pd.player_arrows[a].length/5/35);b++)
-              apply_surface(385+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-            temprect.h = (Uint16)(pd.player_arrows[a].length/5-floor((double)pd.player_arrows[a].length/5/35)*35);
-            apply_surface(385+10,posy+(int)floor((double)pd.player_arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
-            apply_surface(385+10,posy+pd.player_arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
+      for(unsigned int a = pd.first_visible_arrow; a < pd.player_arrows.size(); a++)
+      {
+        arrow& ar = pd.player_arrows[a];
+        int screen_ypos = ar.ypos - current_play_data.viewport_offset + goal_offset;
+        if ((int)a==pd.first_visible_arrow && screen_ypos < (0-goal_offset-arrow_height))
+        {
+          if (pd.first_visible_arrow+1 < (int)pd.player_arrows.size())
+          {
+            pd.first_visible_arrow++;
+          }
+          else
+          {
+            // no more arrows
+            pd.first_visible_arrow = -1;
+            break;
+          }
         }
-        if(pd.player_arrows[a].direction==0)
-          apply_surface(185,posy,arrowsimage,screen,&arrowsframes[12]);
-        if(pd.player_arrows[a].direction==1)
-          apply_surface(250,posy,arrowsimage,screen,&arrowsframes[13]);
-        if(pd.player_arrows[a].direction==2)
-          apply_surface(rmode->viWidth/2,posy,arrowsimage,screen,&arrowsframes[14]);
-        if(pd.player_arrows[a].direction==3)
-          apply_surface(385,posy,arrowsimage,screen,&arrowsframes[15]);
+
+        int arrows_frames_index = -1;
+        int xpos = -1;
+        switch (ar.direction)
+        {
+          case 0: xpos = 185; arrows_frames_index = 12; break;
+          case 1: xpos = 250; arrows_frames_index = 13; break;
+          case 2: xpos = 320; arrows_frames_index = 14; break;
+          case 3: xpos = 385; arrows_frames_index = 15; break;
+          default: break;
+        }
+        
+        //TODO: add index for type of arrow (quarter, eighth, hold, etc)
+        apply_surface(xpos, screen_ypos, arrowsimage, screen, &arrowsframes[arrows_frames_index]);
+        
+        /*
+        if(posy>0-70 && posy<rmode->viHeight){
+          if(pd.player_arrows[a].length){
+            if(pd.player_arrows[a].direction==0){
+              apply_surface(185+10,posy,holdimage,screen,&holdframes[0]);
+              for(int b=0;b<floor((double)pd.player_arrows[a].length/5/35);b++)
+                apply_surface(185+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
+              temprect.h = (Uint16)(pd.player_arrows[a].length/5-floor((double)pd.player_arrows[a].length/5/35)*35);
+              apply_surface(185+10,posy+(int)floor((double)pd.player_arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
+              apply_surface(185+10,posy+pd.player_arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
+            if(pd.player_arrows[a].direction==1){
+              ...
+        }
+        */
       }
+      if (DEBUG_LEVEL >= DEBUG_DETAIL)
+      {
+        debug_log.open("debug", std::ios_base::app);
+        debug_log << "done" << endl;
+        debug_log.close();
+      }    
     }
-    if (DEBUG_LEVEL >= DEBUG_DETAIL)
-    {
-      debug_log.open("debug", std::ios_base::app);
-      debug_log << "done" << endl;
-      debug_log.close();
-    }    
   }
   
+  
+  //TODO: rating stuff here
+  /*
   if(pd.combo>pd.longest_combo)pd.longest_combo=pd.combo;
 
   char temptext[100];
@@ -219,6 +215,7 @@ void Game_play()
     sprintf(temptext,"%d%s",pd.combo," COMBO");
     WiiDash_spritetext(rmode->viWidth/2,440-18*0,temptext,2);
   }
+  */
   
   #ifdef WII
   if(!MP3Player_IsPlaying()){
@@ -226,6 +223,9 @@ void Game_play()
     gamestate=9;
   }
   #endif
+  
+  
+  //TODO: implement song cancel via held button / button combo
   
   #ifdef WIN
   if(WiiDash_button(rmode->viWidth-100-40,rmode->viHeight-10-40,100,10,0,1,(char*)"Back")){
