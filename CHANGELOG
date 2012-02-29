@@ -1,5 +1,11 @@
 changelog
 --
+
+v0.54
+-fix BPM changes were being done on measures instead of beats, so
+ 4 times too slowly
+-fix 100ms offset to synchronise animation with sound
+
 v0.53
 -internal data structures recoded to STL
 -now using SM format natively

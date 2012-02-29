@@ -22,6 +22,7 @@ public:
   int length;
   int type; // for drawing based on note value
   bool hit;
+  bool jump;  // not implemented yet, to assist in rating arrows when more than one on same line.  rules vary slightly
   bool rated;
   arrow(int d, long t, long y, int l, int ty) : direction(d),time(t),ypos(y),length(l),type(ty),hit(false),rated(false){};
 };
@@ -503,7 +504,7 @@ bool song::read_step_data()
 
                     measure_line_index++;
                     
-                    current_beat += 1.0/ticks_per_measure;
+                    current_beat += 1.0/(ticks_per_measure/4);  //ho! ticks per measure is 4x ticks per beat.
                     
                     if (DEBUG_LEVEL >= DEBUG_DETAIL)
                     {

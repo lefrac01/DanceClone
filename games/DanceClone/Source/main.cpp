@@ -17,7 +17,7 @@ using std::ifstream;
 #include <cstdlib>
 
 
-#define GAMEVERSIONSTRING "DanceClone v0.53"
+#define GAMEVERSIONSTRING "DanceClone v0.54"
 #define DEBUG_OFF 0
 #define DEBUG_BASIC 1
 #define DEBUG_MINOR 2

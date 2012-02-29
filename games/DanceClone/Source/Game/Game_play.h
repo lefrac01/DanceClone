@@ -68,7 +68,8 @@ void Game_play()
   
   
   //TODO: fix goalline vs goaloffset
-  if (DEBUG_LEVEL >= DEBUG_DETAIL)
+  
+  if (DEBUG_LEVEL >= DEBUG_GUTS)
   {
     debug_log.open("debug", std::ios_base::app);
     debug_log << "lighting home arrows according to pad presses" << endl;
@@ -116,9 +117,9 @@ void Game_play()
     if (DEBUG_LEVEL >= DEBUG_DETAIL)
     {
       debug_log.open("debug", std::ios_base::app);
-      debug_log << "beginning main arrow animation loop with playerbasearrow=" << pd.base_arrow << " and playerarrowcount=" << pd.arrows.size() << endl;
+      debug_log << "begin animation player " << p << " arrows. base_arrow = " << pd.base_arrow << endl;
       debug_log.close();
-    }    
+    }
     
     // update first and last visible arrows
     while (pd.next_offscreen_arrow != -1 && pd.arrows[pd.next_offscreen_arrow].ypos < offscreen_high)
@@ -135,6 +136,13 @@ void Game_play()
       }
     }
 
+    if (DEBUG_LEVEL >= DEBUG_DETAIL)
+    {
+      debug_log.open("debug", std::ios_base::app);
+      debug_log << "first_visible_arrow: " << pd.first_visible_arrow << " last_visible_arrow: = " << pd.last_visible_arrow << endl;
+      debug_log.close();
+    }
+
     
     // draw arrows from last to first, updating first if it is offscreen
     if (pd.first_visible_arrow != -1)
@@ -146,12 +154,24 @@ void Game_play()
         {
           if (pd.first_visible_arrow == pd.last_visible_arrow)
           {
+            if (DEBUG_LEVEL >= DEBUG_DETAIL)
+            {
+              debug_log.open("debug", std::ios_base::app);
+              debug_log << "clearing last, first visible " << endl;
+              debug_log.close();
+            }
             pd.first_visible_arrow = -1;
             pd.last_visible_arrow = -1;
             break;
           }
           else
           {
+            if (DEBUG_LEVEL >= DEBUG_DETAIL)
+            {
+              debug_log.open("debug", std::ios_base::app);
+              debug_log << "incrementing first visible: " << pd.first_visible_arrow << endl;
+              debug_log.close();
+            }
             ++pd.first_visible_arrow;
           }
         }
@@ -168,6 +188,13 @@ void Game_play()
             case 2: xpos = 320; arrows_frames_index = 14; break;
             case 3: xpos = 385; arrows_frames_index = 15; break;
             default: break;
+          }
+          
+          if (DEBUG_LEVEL >= DEBUG_DETAIL)
+          {
+            debug_log.open("debug", std::ios_base::app);
+            debug_log << "draw arrow index:" << a << " screen_ypos:" << screen_ypos << endl;
+            debug_log.close();
           }
           
           //TODO: add index for type of arrow (quarter, eighth, hold, etc)
