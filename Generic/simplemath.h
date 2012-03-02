@@ -11,9 +11,9 @@ int highnumber(int a,int b){
 if(a>b){return a;}else{return b;}}
 
 Uint8 in8bitrange(int num){
-	if(num<=0) return 0;
-	else if(num>=255) return 255;
-	else return num;
+  if(num<=0) return 0;
+  else if(num>=255) return 255;
+  else return num;
 }
 
 bool boxoverlap(double x1,double y1,double x2,double y2,double size){
@@ -27,9 +27,20 @@ return isitlessthan;
 }
 
 bool ininclusiverange(int num,int low,int high){
-	if(num>=low && num<=high){
-		return 1;
-	}else{
-		return 0;
-	}
+  if(num>=low && num<=high){
+    return 1;
+  }else{
+    return 0;
+  }
 }
+
+bool float_same(float a, float b)
+{
+  return fabs(a - b) < 0.0001;
+}
+
+bool double_ame(double a, double b)
+{
+  return fabs(a - b) < 0.00000001;
+}
+

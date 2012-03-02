@@ -26,9 +26,9 @@ if((WiiButtonsDown[0] & WPAD_BUTTON_HOME) || (WiiButtonsDown[0] & WPAD_CLASSIC_B
       Uint16* pPosition=(Uint16*)screen->pixels;
       if (DEBUG_LEVEL >= DEBUG_GUTS)
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "extracting separate rgb pixels into stash 1" << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "extracting separate rgb pixels into stash 1" << endl;
+        //#log.close();
       }
 
       /*
@@ -64,16 +64,16 @@ if((WiiButtonsDown[0] & WPAD_BUTTON_HOME) || (WiiButtonsDown[0] & WPAD_CLASSIC_B
       #endif
       if (DEBUG_LEVEL >= DEBUG_GUTS)
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "copying stash 2 into stash 1" << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "copying stash 2 into stash 1" << endl;
+        //#log.close();
       }
       memcpy(pWDrgb2,pWDrgb1,rmode->viWidth*rmode->viHeight*3*sizeof(Uint8));
       if (DEBUG_LEVEL >= DEBUG_GUTS)
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "initial blur on stash 2" << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "initial blur on stash 2" << endl;
+        //#log.close();
       }
 
       /*
@@ -131,9 +131,9 @@ if((WiiButtonsDown[0] & WPAD_BUTTON_HOME) || (WiiButtonsDown[0] & WPAD_CLASSIC_B
       
       if (DEBUG_LEVEL >= DEBUG_GUTS)
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "second blur back to stash 1" << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "second blur back to stash 1" << endl;
+        //#log.close();
       }
       /*
       for(int a=0;a<2;a++){
@@ -192,9 +192,9 @@ if((WiiButtonsDown[0] & WPAD_BUTTON_HOME) || (WiiButtonsDown[0] & WPAD_CLASSIC_B
       
       if (DEBUG_LEVEL >= DEBUG_GUTS)
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "finalise blur effect on stash 1" << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "finalise blur effect on stash 1" << endl;
+        //#log.close();
       }
       
       /*
@@ -233,9 +233,9 @@ if((WiiButtonsDown[0] & WPAD_BUTTON_HOME) || (WiiButtonsDown[0] & WPAD_CLASSIC_B
       
       if (DEBUG_LEVEL >= DEBUG_GUTS)
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "recomposing separated RGB values for blur into screen WDbackgroundblurred" << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "recomposing separated RGB values for blur into screen WDbackgroundblurred" << endl;
+        //#log.close();
       }
       #ifdef WIN
       for(int y=0;y<rmode->viHeight;y++)for(int x=0;x<rmode->viWidth;x++)
@@ -272,9 +272,9 @@ if((WiiButtonsDown[0] & WPAD_BUTTON_HOME) || (WiiButtonsDown[0] & WPAD_CLASSIC_B
       
       if (DEBUG_LEVEL >= DEBUG_GUTS)
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "copy WDbackground pixels into stash 2" << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "copy WDbackground pixels into stash 2" << endl;
+        //#log.close();
       }
       /*
       for(int y=0;y<rmode->viHeight;y++)for(int x=0;x<rmode->viWidth;x++)
@@ -322,9 +322,9 @@ if(WDonoffpercent==0){
 
   if (DEBUG_LEVEL >= DEBUG_GUTS)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "perform wiidash open/close animation" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "perform wiidash open/close animation" << endl;
+    //#log.close();
   }
 
   /*

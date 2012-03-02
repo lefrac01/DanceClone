@@ -1,5 +1,9 @@
 //TODO: fix current_song assignment.  not tight enough
 
+//TODO: base class compatible_step_file with derivative sm_file
+// to which vector of string can be passed to various parse functions
+// that fill the passed members.  e.g. find_lines_offset(), parse_offset()
+
 // play_data
 //
 #include "song.h"
@@ -21,7 +25,6 @@ public:
   long song_time;
   long frame_time; //TEMP
   long viewport_offset;
-  long song_start_offset;
   float ms_per_pixel_at_1_bpm;
   float ms_per_pixel_at_current_bpm;
   float pixels_left_to_scroll;
@@ -46,16 +49,14 @@ bool play_data::init()
 {
   if (DEBUG_LEVEL >= DEBUG_MINOR)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "play_data init() " << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "play_data init() " << endl;
+    //#log.close();
   }
   current_beat_tick = -1;
   current_bpm_change = -1;
   song_start_time = WDgametime+(SDL_GetTicks()-WDruntime);
   song_time = 0;
-  song_start_offset = 100; // an offset to handle the delay between mp3 
-    // start request and the time the sound is actually heard
   ms_per_pixel_at_1_bpm = 120.0*4000.0/rmode->viHeight;
   num_players = MAX_PLAYERS;
   
@@ -69,9 +70,9 @@ bool play_data::init()
   pd.arrows = current_song.song_arrows[difficulty];
   if (DEBUG_LEVEL >= DEBUG_MINOR)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "copied " << current_player_data[0].arrows.size() << " arrows" << " for difficulty " << difficulty << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "copied " << current_player_data[0].arrows.size() << " arrows" << " for difficulty " << difficulty << endl;
+    //#log.close();
   }
   pd.num_arrows = pd.arrows.size();
   if (pd.num_arrows)
@@ -95,16 +96,16 @@ bool play_data::init()
   {
     if (DEBUG_LEVEL >= DEBUG_MINOR)
     {
-      debug_log.open("debug", std::ios_base::app);
-      debug_log << "play_data init() exiting with initial bpm: " << current_song.bpm_changes.front().bpm << endl;
-      debug_log.close();
+      //#log.open("debug", std::ios_base::app);
+      log << "play_data init() exiting with initial bpm: " << current_song.bpm_changes.front().bpm << endl;
+      //#log.close();
     }
     return true;
   }
   
-  debug_log.open("debug", std::ios_base::app);
-  debug_log << "ERROR: missing BPM" << endl;
-  debug_log.close();
+  //#log.open("debug", std::ios_base::app);
+  log << "ERROR: missing BPM" << endl;
+  //#log.close();
   return false;
 }
 
@@ -112,20 +113,20 @@ void play_data::initial_frame()
 {
   if (DEBUG_LEVEL >= DEBUG_MINOR)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "initial frame" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "initial frame" << endl;
+    //#log.close();
   }
 
   // add an offset to song start time.  if offset is positive,
   // first frame will calculate a negative current song time, allowing
   // actual song playback to be on sync if it starts a little later
   // than song start function call
-  song_start_time = SDL_GetTicks() + song_start_offset;
+  song_start_time = SDL_GetTicks() + SONG_START_OFFSET + PLAYER_PREP_OFFSET;
   
   // viewport offset starts increasingly negative as song offset goes up,
   // so that after offset time it is at 0.  this synchronises rating and drawing
-  viewport_offset = - (song_start_offset / ms_per_pixel_at_current_bpm);
+  viewport_offset = - ((SONG_START_OFFSET+PLAYER_PREP_OFFSET) / ms_per_pixel_at_current_bpm);
   
   // not taking into account partial pixels for initial offset. 
   // fractional pixels are only important over time
@@ -140,15 +141,17 @@ void play_data::frame()
 
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "frame old_song_time: " << old_song_time << " song_time:" << song_time << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "frame old_song_time: " << old_song_time << " song_time:" << song_time << endl;
+    //#log.close();
   }
-  
+
+ 
   // process partial frames
   long partial_frame_time_begin = old_song_time;
   long frame_time_end = song_time;
   
+log << "fte: " << frame_time_end << endl; //TEMPLOG:
   
   // process beat ticks
   int frame_end_beat_tick = current_beat_tick;
@@ -158,6 +161,7 @@ void play_data::frame()
         >= current_song.beat_ticks[frame_end_beat_tick+1].timestamp
   )
   {
+log << "inc febt " << endl; //TEMPLOG:
     frame_end_beat_tick++;
   }
 
@@ -167,9 +171,9 @@ void play_data::frame()
   {
     if (DEBUG_LEVEL >= DEBUG_DETAIL)
     {
-      debug_log.open("debug", std::ios_base::app);
-      debug_log << "new beat tick(s) before new time: " << song_time << " (curre: " << current_beat_tick << " new: " << frame_end_beat_tick << ")" << endl;
-      debug_log.close();
+      //#log.open("debug", std::ios_base::app);
+      log << "new beat tick(s) before new time: " << song_time << " (curre: " << current_beat_tick << " new: " << frame_end_beat_tick << ")" << endl;
+      //#log.close();
     }
     
     // a new beat will be encountered.  check for bpm change
@@ -188,12 +192,12 @@ void play_data::frame()
       {
         if (DEBUG_LEVEL >= DEBUG_DETAIL)
         {
-          debug_log.open("debug", std::ios_base::app);
-          debug_log << "inc frame_end_bpm_change because " \
+          //#log.open("debug", std::ios_base::app);
+          log << "inc frame_end_bpm_change because " \
             << endl << "current_song.beat_ticks[i].beat " << current_song.beat_ticks[i].beat \
             << " >= current_song.bpm_changes[frame_end_bpm_change+1].beat " << current_song.bpm_changes[frame_end_bpm_change+1].beat \
             << " i=" << i << ", frame_end_bpm_change=" << frame_end_bpm_change << endl;
-          debug_log.close();
+          //#log.close();
         }
         frame_end_bpm_change++;
       }
@@ -211,9 +215,9 @@ void play_data::frame()
 
         if (DEBUG_LEVEL >= DEBUG_DETAIL)
         {
-          debug_log.open("debug", std::ios_base::app);
-          debug_log << "partial frame updated, new vars partial_frame_time_begin: " << partial_frame_time_begin << " current_bpm_change: " << current_bpm_change << endl;
-          debug_log.close();
+          //#log.open("debug", std::ios_base::app);
+          log << "partial frame updated, new vars partial_frame_time_begin: " << partial_frame_time_begin << " current_bpm_change: " << current_bpm_change << endl;
+          //#log.close();
         }
 
         // optimise pixels per second scroll calculation
@@ -224,9 +228,9 @@ void play_data::frame()
             / current_song.bpm_changes[frame_end_bpm_change].bpm;
           if (DEBUG_LEVEL >= DEBUG_DETAIL)
           {
-            debug_log.open("debug", std::ios_base::app);
-            debug_log << "A new ms_per_pixel_at_current_bpm:" << ms_per_pixel_at_current_bpm << endl;
-            debug_log.close();
+            //#log.open("debug", std::ios_base::app);
+            log << "A new ms_per_pixel_at_current_bpm:" << ms_per_pixel_at_current_bpm << endl;
+            //#log.close();
           }
         }
         current_bpm_change = frame_end_bpm_change;
@@ -249,16 +253,16 @@ void play_data::frame()
       / current_song.bpm_changes[frame_end_bpm_change].bpm;
     if (DEBUG_LEVEL >= DEBUG_DETAIL)
     {
-      debug_log.open("debug", std::ios_base::app);
-      debug_log << "B new ms_per_pixel_at_current_bpm:" << ms_per_pixel_at_current_bpm << endl;
-      debug_log.close();
+      //#log.open("debug", std::ios_base::app);
+      log << "B new ms_per_pixel_at_current_bpm:" << ms_per_pixel_at_current_bpm << endl;
+      //#log.close();
     }
   }
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "frame end, updating current_bpm_change=" << frame_end_bpm_change << " current_beat_tick=" << frame_end_beat_tick << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "frame end, updating current_bpm_change=" << frame_end_bpm_change << " current_beat_tick=" << frame_end_beat_tick << endl;
+    //#log.close();
   }
   current_bpm_change = frame_end_bpm_change;
   current_beat_tick = frame_end_beat_tick;
@@ -315,16 +319,9 @@ void play_data::partial_frame(long begin, long end)
 
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "partial_frame(" << begin << ", " << end << ") viewport_offset: " << viewport_offset << endl;
-/*    
-    debug_log << "partial_frame(" << begin << ", " << end << ")" \
-      << endl << "whole_pixels_to_scroll: " << whole_pixels_to_scroll \
-      << endl << "pixels_left_to_scroll: " << pixels_left_to_scroll \
-      << endl << "viewport_offset: " << viewport_offset \
-      << endl << "---------------" << endl;
-      */
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "partial_frame(" << begin << ", " << end << ") viewport_offset: " << viewport_offset << endl;
+    //#log.close();
   }
 }
 
@@ -332,9 +329,9 @@ void play_data::read_player_controls(int p)
 {
   if (DEBUG_LEVEL >= DEBUG_GUTS)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "Game_play_controls() begins" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "Game_play_controls() begins" << endl;
+    //#log.close();
   }
 
   // update player controls
@@ -418,9 +415,9 @@ void play_data::rate_arrows(int p)
 
   if (DEBUG_LEVEL >= DEBUG_GUTS)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "checking for boo" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "checking for boo" << endl;
+    //#log.close();
   }
   //TODO: if arrow has flowed past, consider it still the next ratable
   // arrow until either the max time(boo rating) or until the next
@@ -433,11 +430,10 @@ void play_data::rate_arrows(int p)
     {
       if (DEBUG_LEVEL >= DEBUG_DETAIL)
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "detected boo" << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "detected boo" << endl;
+        //#log.close();
       }
-      pd.arrows[a].hit = true;
       pd.arrows[a].rated = true;
       //ratearrow(a,0);
       pd.combo=0;++pd.boo;
@@ -445,9 +441,9 @@ void play_data::rate_arrows(int p)
   }
   if (DEBUG_LEVEL >= DEBUG_GUTS)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "checking for perfect / good" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "checking for perfect / good" << endl;
+    //#log.close();
   }
   
   //TODO: record rating.  each direction has a "current ratable arrow" 
@@ -470,12 +466,15 @@ void play_data::rate_arrows(int p)
         {
           if (DEBUG_LEVEL >= DEBUG_DETAIL)
           {
-            debug_log.open("debug", std::ios_base::app);
-            debug_log << "detected perfect" << endl;
-            debug_log.close();
+            //#log.open("debug", std::ios_base::app);
+            log << "detected perfect" << endl;
+            //#log.close();
           }
           pd.arrows[a].hit = true;
+          //TODO: rate and hide arrow once hit unless it is part of a jump, then hide if other
+          //arrows in jump are hit.  
           pd.arrows[a].rated = true;
+          pd.arrows[a].hidden = true;
   //        ratearrow(a,2);
           ++pd.combo;++pd.perfect;break;
         }
@@ -486,12 +485,15 @@ void play_data::rate_arrows(int p)
         {
           if (DEBUG_LEVEL >= DEBUG_DETAIL)
           {
-            debug_log.open("debug", std::ios_base::app);
-            debug_log << "detected good" << endl;
-            debug_log.close();
+            //#log.open("debug", std::ios_base::app);
+            log << "detected good" << endl;
+            //#log.close();
           }
           pd.arrows[a].hit = true;
+          //TODO: rate and hide arrow once hit unless it is part of a jump, then hide if other
+          //arrows in jump are hit.  
           pd.arrows[a].rated = true;
+          pd.arrows[a].hidden = true;
   //        ratearrow(a,1);
           ++pd.combo;++pd.good;break;
         }
@@ -501,9 +503,9 @@ void play_data::rate_arrows(int p)
   
   if (DEBUG_LEVEL >= DEBUG_GUTS)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "checking for perfect on held arrow" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "checking for perfect on held arrow" << endl;
+    //#log.close();
   }
   for(int b=0;b<4;b++)
   if((b==0 && pd.left_control)||(b==1 && pd.down_control)||(b==2 && pd.up_control)||(b==3 && pd.right_control))
@@ -514,9 +516,9 @@ void play_data::rate_arrows(int p)
       {
         if (DEBUG_LEVEL >= DEBUG_DETAIL)
         {
-          debug_log.open("debug", std::ios_base::app);
-          debug_log << "detected succesfully held hold arrow" << endl;
-          debug_log.close();
+          //#log.open("debug", std::ios_base::app);
+          log << "detected succesfully held hold arrow" << endl;
+          //#log.close();
         }
 //        pd.arrows[a].ypos+=timehaspast;
 //        pd.arrows[a].length-=timehaspast;

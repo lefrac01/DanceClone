@@ -4,3 +4,4 @@
 #include "menu/songselectp2.h"
 #include "menu/stepcreate.h"
 #include "menu/titlescreen.h"
+#include "menu/debug.h"

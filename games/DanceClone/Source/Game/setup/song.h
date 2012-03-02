@@ -24,7 +24,8 @@ public:
   bool hit;
   bool jump;  // not implemented yet, to assist in rating arrows when more than one on same line.  rules vary slightly
   bool rated;
-  arrow(int d, long t, long y, int l, int ty) : direction(d),time(t),ypos(y),length(l),type(ty),hit(false),rated(false){};
+  bool hidden;
+  arrow(int d, long t, long y, int l, int ty) : direction(d),time(t),ypos(y),length(l),type(ty),hit(false),jump(false),rated(false),hidden(false){};
 };
 
 class bpm_change
@@ -149,18 +150,18 @@ bool song::read_step_data()
 {
   if (DEBUG_LEVEL >= DEBUG_BASIC)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "beginning read step data" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "beginning read step data" << endl;
+    //#log.close();
   }
 
 
   // read file
   if (DEBUG_LEVEL >= DEBUG_MINOR)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "indata.open(" << step_file_path() << ")" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "indata.open(" << step_file_path() << ")" << endl;
+    //#log.close();
   }
   ifstream indata;
   indata.open(step_file_path().c_str());
@@ -169,11 +170,10 @@ bool song::read_step_data()
   while (getline(indata, file_line)) file_lines.push_back(file_line);
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "got file contents of " << file_lines.size() << " lines. " << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "got file contents of " << file_lines.size() << " lines. " << endl;
+    //#log.close();
   }  
-  
   
   // analyse contents
   string bpm_tag = "#BPMS:";
@@ -187,9 +187,9 @@ bool song::read_step_data()
       // found bpm data
       if (DEBUG_LEVEL >= DEBUG_DETAIL)
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "found #BPMS:" << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "found #BPMS:" << endl;
+        //#log.close();
       }
       bpm_changes = parse_bpms(file_lines[current_line]);
     }
@@ -198,9 +198,9 @@ bool song::read_step_data()
       // found offset data
       if (DEBUG_LEVEL >= DEBUG_DETAIL)
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "found #OFFSET:" << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "found #OFFSET:" << endl;
+        //#log.close();
       }
       beat_0_offset = parse_offset(file_lines[current_line]);
     }
@@ -208,18 +208,18 @@ bool song::read_step_data()
     {
       if (DEBUG_LEVEL >= DEBUG_DETAIL)
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "found #NOTES:" << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "found #NOTES:" << endl;
+        //#log.close();
       }
       
       // found note data
       if (bpm_changes.size() == 0)
       {
         //error unable to process note data without BPM info!
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "ERROR: no bpm_changes " << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "ERROR: no bpm_changes " << endl;
+        //#log.close();
       }
       else
       {
@@ -264,9 +264,9 @@ bool song::read_step_data()
         {
           if (DEBUG_LEVEL >= DEBUG_DETAIL)
           {
-            debug_log.open("debug", std::ios_base::app);
-            debug_log << "found difficulty " << current_difficulty << endl;
-            debug_log.close();
+            //#log.open("debug", std::ios_base::app);
+            log << "found difficulty " << current_difficulty << endl;
+            //#log.close();
           }
           
           // confirm mode is dance-single
@@ -289,9 +289,9 @@ bool song::read_step_data()
           {
             if (DEBUG_LEVEL >= DEBUG_DETAIL)
             {
-              debug_log.open("debug", std::ios_base::app);
-              debug_log << "confirmed data is for dance-single" << endl;
-              debug_log.close();
+              //#log.open("debug", std::ios_base::app);
+              log << "confirmed data is for dance-single" << endl;
+              //#log.close();
             }          
             
             // found valid note data.  
@@ -300,14 +300,49 @@ bool song::read_step_data()
             float current_position = beat_0_offset * pixels_per_ms_at_1_bpm * bpm_changes.front().bpm;
             if (DEBUG_LEVEL >= DEBUG_DETAIL)
             {
-              debug_log.open("debug", std::ios_base::app);
-              debug_log << "starting with current_time " << current_time << endl;
-              debug_log.close();
+              //#log.open("debug", std::ios_base::app);
+              log << "starting with current_time " << current_time << endl;
+              //#log.close();
             }
             int current_bpm_index = -1; // reused variable name... ick
             float current_beat = 0;
-        
-            //TODO: move this down to also detect errors like lack of BPM
+            float current_16th_beat = 0;
+
+            // calculate beat ticks preceding beat 0 back to the beginning of the song minus sound sync offset
+            // this is needed for the arrow animation to work before the first beat
+            float one_16th_offset = 240000 / bpm_changes[0].bpm / 16 / 4;
+            float temp_16th_time = current_time;
+            float temp_16th_position = current_position;
+
+            // store beat ticks.  these serve several purposes and I'm getting foggy as to what they are
+            // one has to exist for each note I think, and I'm adding a requirement for all 16th note ticks
+            // to be present as well.  they are used to translate beat to timestamp and vice versa
+            
+            // NOTE: simple insertion into vector would be too inefficient.  C++ STL vector insertion moves
+            // all elements after insertion point so it is much better to create a temp vector using push_back
+            // and then flip the contents into the real working variable
+            vector<beat_tick> initial_beat_ticks;
+            while (temp_16th_time > 0-SONG_START_OFFSET-PLAYER_PREP_OFFSET)
+            {
+              temp_16th_time -= one_16th_offset;
+              temp_16th_position -= one_16th_offset * pixels_per_ms_at_1_bpm * bpm_changes[0].bpm;
+              current_16th_beat -= 1.0/16.0;  //TODO: optimise out calculation
+              /*
+  log << "beat_ticks+=(" << (long)temp_16th_position \
+  << ", " <<  temp_16th_time \
+  << ", " <<  current_16th_beat \
+  << ")" << endl; //TEMPLOG: output building of nice beat_ticks array
+  */
+              initial_beat_ticks.push_back(beat_tick((long)temp_16th_position, temp_16th_time, current_16th_beat));
+            }
+            for (int l = initial_beat_ticks.size()-1; l >= 0; l--)
+            {
+             // beat_ticks.push_back(initial_beat_ticks[l]);
+              beat_ticks.push_back(beat_tick(initial_beat_ticks[l].ypos, initial_beat_ticks[l].timestamp, initial_beat_ticks[l].beat));
+            }
+            initial_beat_ticks.clear();
+            current_16th_beat = 0;
+
             difficulty_available[current_difficulty] = true;
             
             // read note data
@@ -343,21 +378,22 @@ bool song::read_step_data()
                   measure_line_index++;
                 }
                 ticks_per_measure = measure_line_index - note_line_index;
-                // if this value is < 4 or > 48 then the file is not standard SM 5
-                if (ticks_per_measure < 4 || ticks_per_measure > 48)
+                // if this value is < 4 or > 192 then the data is not standard 
+                if (ticks_per_measure < 4 || ticks_per_measure > 192)
                 {
-                  //error
-                  debug_log.open("debug", std::ios_base::app);
-                  debug_log << "WARN: non-standard ticks_per_measure: " << ticks_per_measure << " in data block starting at " << note_line_index << endl;
-                  debug_log.close();
+                  //#log.open("debug", std::ios_base::app);
+                  log << "WARN: strange ticks_per_measure (<4 or >192): " << ticks_per_measure << " in data block starting at " << step_file_path().c_str() << ":" << note_line_index << endl;
+                  //#log.close();
+                  //skip forward past this data
+                  note_line_index = measure_line_index;
                 }
                 else
                 {
                   if (DEBUG_LEVEL >= DEBUG_DETAIL)
                   {
-                    debug_log.open("debug", std::ios_base::app);
-                    debug_log << "detected ticks per measure " << ticks_per_measure << endl;
-                    debug_log.close();
+                    //#log.open("debug", std::ios_base::app);
+                    log << "detected ticks per measure " << ticks_per_measure << endl;
+                    //#log.close();
                   }
 
                   
@@ -368,11 +404,10 @@ bool song::read_step_data()
                   {
                     if (DEBUG_LEVEL >= DEBUG_DETAIL)
                     {
-                      debug_log.open("debug", std::ios_base::app);
-                      debug_log << "beat tick start. current_beat: " << current_beat << " current_time: " << current_time << " current_position: " << current_position << " line: " << note_line_index << endl;
-                      debug_log.close();
+                      //#log.open("debug", std::ios_base::app);
+                      log << "beat tick start. current_beat: " << current_beat << " current_time: " << current_time << " current_position: " << current_position << " line: " << note_line_index << endl;
+                      //#log.close();
                     }
-                    beat_ticks.push_back(beat_tick((long)current_position, current_time, current_beat));
                     
                     // set BPM according to current beat and list of BPMs that apply to each beat
                     while (current_bpm_index+1 < (int)bpm_changes.size()
@@ -388,10 +423,10 @@ bool song::read_step_data()
                       
                       if (DEBUG_LEVEL >= DEBUG_DETAIL)
                       {
-                        debug_log.open("debug", std::ios_base::app);
-                        debug_log << "beat change detected on beat " << current_beat << " new bpm is " << bpm_changes[current_bpm_index].bpm << " at index " << current_bpm_index << endl;
-                        debug_log << "timestamped bpm_change with " << current_time << endl;
-                        debug_log.close();
+                        //#log.open("debug", std::ios_base::app);
+                        log << "beat change detected on beat " << current_beat << " new bpm is " << bpm_changes[current_bpm_index].bpm << " at index " << current_bpm_index << endl;
+                        log << "timestamped bpm_change with " << current_time << endl;
+                        //#log.close();
                       }
                     }
                     
@@ -410,12 +445,55 @@ bool song::read_step_data()
                       break;
                       case 12:
                         if ((measure_line_index-note_line_index) % 3 == 0) note_type = NOTE_TYPE_QUARTER;
-                        else note_type = NOTE_TYPE_TWELFTH;
+                        else note_type = NOTE_TYPE_QUARTER_TRIPLET;
                       break;
                       case 16:
                         if ((measure_line_index-note_line_index) % 4 == 0) note_type = NOTE_TYPE_QUARTER;
                         else if ((measure_line_index-note_line_index) % 2 == 0) note_type = NOTE_TYPE_EIGHTH;
                         else note_type = NOTE_TYPE_SIXTEENTH;
+                      break;
+                      case 24:
+                        if ((measure_line_index-note_line_index) % 6 == 0) note_type = NOTE_TYPE_QUARTER;
+                        else if ((measure_line_index-note_line_index) % 3 == 0) note_type = NOTE_TYPE_EIGHTH;
+                        else if ((measure_line_index-note_line_index) % 2 == 0) note_type = NOTE_TYPE_QUARTER_TRIPLET;
+                        else note_type = NOTE_TYPE_EIGHTH_TRIPLET;
+                      break;
+                      case 32:
+                        if ((measure_line_index-note_line_index) % 8 == 0) note_type = NOTE_TYPE_QUARTER;
+                        else if ((measure_line_index-note_line_index) % 4 == 0) note_type = NOTE_TYPE_EIGHTH;
+                        else if ((measure_line_index-note_line_index) % 2 == 0) note_type = NOTE_TYPE_SIXTEENTH;
+                        else note_type = NOTE_TYPE_THIRTYSECOND;
+                      break;
+                      case 48:
+                        if ((measure_line_index-note_line_index) % 12 == 0) note_type = NOTE_TYPE_QUARTER;
+                        else if ((measure_line_index-note_line_index) % 6 == 0) note_type = NOTE_TYPE_EIGHTH;
+                        else if ((measure_line_index-note_line_index) % 3 == 0) note_type = NOTE_TYPE_QUARTER_TRIPLET;
+                        else if ((measure_line_index-note_line_index) % 2 == 0) note_type = NOTE_TYPE_EIGHTH_TRIPLET;
+                        else note_type = NOTE_TYPE_SIXTEENTH_TRIPLET;
+                      break;
+                      case 64:
+                        if ((measure_line_index-note_line_index) % 16 == 0) note_type = NOTE_TYPE_QUARTER;
+                        else if ((measure_line_index-note_line_index) % 8 == 0) note_type = NOTE_TYPE_EIGHTH;
+                        else if ((measure_line_index-note_line_index) % 4 == 0) note_type = NOTE_TYPE_SIXTEENTH;
+                        else if ((measure_line_index-note_line_index) % 2 == 0) note_type = NOTE_TYPE_THIRTYSECOND;
+                        else note_type = NOTE_TYPE_SIXTYFOURTH;
+                      break;
+                      case 96:
+                        if ((measure_line_index-note_line_index) % 24 == 0) note_type = NOTE_TYPE_QUARTER;
+                        else if ((measure_line_index-note_line_index) % 12 == 0) note_type = NOTE_TYPE_EIGHTH;
+                        else if ((measure_line_index-note_line_index) % 6 == 0) note_type = NOTE_TYPE_QUARTER_TRIPLET;
+                        else if ((measure_line_index-note_line_index) % 3 == 0) note_type = NOTE_TYPE_EIGHTH_TRIPLET;
+                        else if ((measure_line_index-note_line_index) % 2 == 0) note_type = NOTE_TYPE_SIXTEENTH_TRIPLET;
+                        else note_type = NOTE_TYPE_THIRTYSECOND_TRIPLET;
+                      break;
+                      case 192:
+                        if ((measure_line_index-note_line_index) % 48 == 0) note_type = NOTE_TYPE_QUARTER;
+                        else if ((measure_line_index-note_line_index) % 24 == 0) note_type = NOTE_TYPE_EIGHTH;
+                        else if ((measure_line_index-note_line_index) % 12 == 0) note_type = NOTE_TYPE_QUARTER_TRIPLET;
+                        else if ((measure_line_index-note_line_index) % 6 == 0) note_type = NOTE_TYPE_EIGHTH_TRIPLET;
+                        else if ((measure_line_index-note_line_index) % 3 == 0) note_type = NOTE_TYPE_SIXTEENTH_TRIPLET;
+                        else if ((measure_line_index-note_line_index) % 2 == 0) note_type = NOTE_TYPE_THIRTYSECOND_TRIPLET;
+                        else note_type = NOTE_TYPE_SIXTYFOURTH_TRIPLET;
                       break;
                       default:
                         // unhandled data.  fail elegantly
@@ -424,9 +502,9 @@ bool song::read_step_data()
                     
                     if (DEBUG_LEVEL >= DEBUG_DETAIL)
                     {
-                      debug_log.open("debug", std::ios_base::app);
-                      debug_log << "detected note type " << note_type << " on tick " << measure_line_index-note_line_index << " at line " << measure_line_index << endl;
-                      debug_log.close();
+                      //#log.open("debug", std::ios_base::app);
+                      log << "detected note type " << note_type << " on tick " << measure_line_index-note_line_index << " at line " << measure_line_index << endl;
+                      //#log.close();
                     }
                     
                     if (note_type != -1)
@@ -443,9 +521,9 @@ bool song::read_step_data()
                       {
                         if (DEBUG_LEVEL >= DEBUG_DETAIL)
                         {
-                          debug_log.open("debug", std::ios_base::app);
-                          debug_log << "detecting note class and direction on line " << measure_line_index << endl;
-                          debug_log.close();
+                          //#log.open("debug", std::ios_base::app);
+                          log << "detecting note class and direction on line " << measure_line_index << endl;
+                          //#log.close();
                         }
                         
                         
@@ -466,9 +544,9 @@ bool song::read_step_data()
                           {
                             if (DEBUG_LEVEL >= DEBUG_DETAIL)
                             {
-                              debug_log.open("debug", std::ios_base::app);
-                              debug_log << "searching for start of hold note which ends on line " << measure_line_index << endl;
-                              debug_log.close();
+                              //#log.open("debug", std::ios_base::app);
+                              log << "searching for start of hold note which ends on line " << measure_line_index << endl;
+                              //#log.close();
                             }
                             for (int i = song_arrows[current_difficulty].size()-1; i > 0; i--)
                             {
@@ -476,9 +554,9 @@ bool song::read_step_data()
                               {
                                 if (DEBUG_LEVEL >= DEBUG_DETAIL)
                                 {
-                                  debug_log.open("debug", std::ios_base::app);
-                                  debug_log << "detected start of hold note at arrow index " << i << endl;
-                                  debug_log.close();
+                                  //#log.open("debug", std::ios_base::app);
+                                  log << "detected start of hold note at arrow index " << i << endl;
+                                  //#log.close();
                                 }
                                 song_arrows[current_difficulty][i].length = (long)current_time - song_arrows[current_difficulty][i].time;
                                 break;
@@ -489,9 +567,19 @@ bool song::read_step_data()
                       }
                     }
                     
+                    float temp_16th_time = current_time;
+                    float temp_16th_position = current_position;
+                    /*
+  log << "eeeeek current_time:" << current_time \
+    << "  current_position:" <<  current_position \
+    << ")" << endl;//TEMPLOG: output building of nice beat_ticks array
+    */
+                    
                     // ms per measure = (1000*60/bpm)*4
                     // ms per tick = ms per measure / ticks_per_measure
                     float time_offset = 240000 / bpm_changes[current_bpm_index].bpm / ticks_per_measure;
+                    float one_16th_offset = 240000 / bpm_changes[current_bpm_index].bpm / 16 / 4;
+                    
                     current_time += time_offset;
 
                     current_position += time_offset * pixels_per_ms_at_1_bpm * bpm_changes[current_bpm_index].bpm;
@@ -505,12 +593,51 @@ bool song::read_step_data()
                     measure_line_index++;
                     
                     current_beat += 1.0/(ticks_per_measure/4);  //ho! ticks per measure is 4x ticks per beat.
+
+                    // compensate for float imprecision
+                    if (fabs(current_beat - (long)current_beat) <= 0.01)
+                    {
+                      // reset float on integral beats
+                      current_beat = (long)current_beat;
+                    }
+
+                    // store beat ticks.  at least 16th note ticks must be present.
+                    // used to translate beat to timestamp and vice versa for animation code.
+                    while (current_16th_beat < current_beat)
+                    {
+                    /*  
+  log << "beat_ticks+=(" << (long)temp_16th_position \
+    << ", " <<  temp_16th_time \
+    << ", " <<  current_16th_beat \
+    << ")" << endl; //TEMPLOG: output building of nice beat_ticks array
+    */
+                      beat_ticks.push_back(beat_tick((long)temp_16th_position, temp_16th_time, current_16th_beat));
+                      temp_16th_time += one_16th_offset;
+                      temp_16th_position += one_16th_offset * pixels_per_ms_at_1_bpm * bpm_changes[current_bpm_index].bpm;
+                      current_16th_beat += 1.0/16.0;  //TODO: optimise out calculation
+                    }
+                    
+                    // for measures where the ticks per measure are not aligned with 16th (ie 12, 24)
+                    // or there are more than 16 ticks per measure
+                    // float comparison...
+                    if (!float_same(current_beat, current_16th_beat))
+                    //if (current_beat != current_16th_beat)    // should be possible using -mepsilon command-line parameter but that gives me an error :(
+                    {
+  log << "beat_ticks+=(" << (long)current_position \
+    << ", " <<  current_time \
+    << ", " <<  current_beat \
+    << ")" << endl; //TEMPLOG: output building of nice beat_ticks array
+                      beat_ticks.push_back(beat_tick((long)current_position, current_time, current_beat));
+                    }
+
+
+
                     
                     if (DEBUG_LEVEL >= DEBUG_DETAIL)
                     {
-                      debug_log.open("debug", std::ios_base::app);
-                      debug_log << "done processing beat line. new arrow count=" << song_arrows[current_difficulty].size() << endl;
-                      debug_log.close();
+                      //#log.open("debug", std::ios_base::app);
+                      log << "done processing beat line. new arrow count=" << song_arrows[current_difficulty].size() << endl;
+                      //#log.close();
                     }
                   }
                   
@@ -518,9 +645,9 @@ bool song::read_step_data()
                   note_line_index = measure_line_index;
                   if (DEBUG_LEVEL >= DEBUG_DETAIL)
                   {
-                    debug_log.open("debug", std::ios_base::app);
-                    debug_log << "done processing beat block.  updated note line index " << note_line_index << endl;
-                    debug_log.close();
+                    //#log.open("debug", std::ios_base::app);
+                    log << "done processing beat block.  updated note line index " << note_line_index << endl;
+                    //#log.close();
                   }
                   
                   // was this the last measure?  if so, continue directly to
@@ -534,9 +661,9 @@ bool song::read_step_data()
                   {
                     if (DEBUG_LEVEL >= DEBUG_DETAIL)
                     {
-                      debug_log.open("debug", std::ios_base::app);
-                      debug_log << "detected end of last measure at index " << note_line_index << endl;
-                      debug_log.close();
+                      //#log.open("debug", std::ios_base::app);
+                      log << "detected end of last measure at index " << note_line_index << endl;
+                      //#log.close();
                     }
                     continue;
                   }
@@ -547,18 +674,18 @@ bool song::read_step_data()
                 note_line_index++;
                 if (DEBUG_LEVEL >= DEBUG_DETAIL)
                 {
-                  debug_log.open("debug", std::ios_base::app);
-                  debug_log << "done processing measure.  current_beat: " << current_beat << " note_line_index: " << note_line_index << endl;
-                  debug_log.close();
+                  //#log.open("debug", std::ios_base::app);
+                  log << "done processing measure.  current_beat: " << current_beat << " note_line_index: " << note_line_index << endl;
+                  //#log.close();
                 }
               }
               
               // skip past this processed data
               if (DEBUG_LEVEL >= DEBUG_DETAIL)
               {
-                debug_log.open("debug", std::ios_base::app);
-                debug_log << "current line skipping from " << current_line << " to " << note_line_index << endl;
-                debug_log.close();
+                //#log.open("debug", std::ios_base::app);
+                log << "current line skipping from " << current_line << " to " << note_line_index << endl;
+                //#log.close();
               }
               current_line = note_line_index;
             }
@@ -570,22 +697,29 @@ bool song::read_step_data()
     current_line++;
     if (DEBUG_LEVEL >= DEBUG_DETAIL)
     {
-      debug_log.open("debug", std::ios_base::app);
-      debug_log << "current line incremented to " << current_line << endl;
-      debug_log.close();
+      //#log.open("debug", std::ios_base::app);
+      log << "current line incremented to " << current_line << endl;
+      //#log.close();
     }
   }
   
   indata.close();
 
-
+{
+  int num_beat_ticks = beat_ticks.size();
+  for (int i = 0; i < num_beat_ticks; i++)
+  {
+    log << "b_ts["<<i<<"]="<<beat_ticks[i].ypos<<","<<beat_ticks[i].timestamp<<","<<beat_ticks[i].beat<<endl;
+    //TEMPLOG: output built beat_ticks array
+  }  
+}
   
 
   if (DEBUG_LEVEL >= DEBUG_MINOR)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "leaving read step data" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "leaving read step data" << endl;
+    //#log.close();
   }
   
   return bpm_changes.size() > 0 && (
@@ -602,9 +736,9 @@ vector<bpm_change> song::parse_bpms(const string& s)
 {
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "parse_bpms()" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "parse_bpms()" << endl;
+    //#log.close();
   }
   
   vector<bpm_change> bpm_change_data;
@@ -641,9 +775,9 @@ vector<bpm_change> song::parse_bpms(const string& s)
 
         if (DEBUG_LEVEL >= DEBUG_DETAIL)
         {
-          debug_log.open("debug", std::ios_base::app);
-          debug_log << atof(bpm_float.c_str()) << " at " << atof(bpm_beat.c_str()) << endl;
-          debug_log.close();
+          //#log.open("debug", std::ios_base::app);
+          log << atof(bpm_float.c_str()) << " at " << atof(bpm_beat.c_str()) << endl;
+          //#log.close();
         }
       }
       else
@@ -668,9 +802,9 @@ vector<bpm_change> song::parse_bpms(const string& s)
 
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "parse_bpms() finished.  extracted " << bpm_change_data.size() << " bpm changes" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "parse_bpms() finished.  extracted " << bpm_change_data.size() << " bpm changes" << endl;
+    //#log.close();
   }  
   return bpm_change_data;
 }
@@ -679,9 +813,9 @@ long song::parse_offset(const string& s)
 {
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "parse_offset()" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "parse_offset()" << endl;
+    //#log.close();
   }
   
   long offset_data = 0;
@@ -705,9 +839,9 @@ long song::parse_offset(const string& s)
       
       if (DEBUG_LEVEL >= DEBUG_DETAIL)
       {
-        debug_log.open("debug", std::ios_base::app);
-        debug_log << "extracted long offset: " << offset_data << " from text (" << offset_long << ")" << endl;
-        debug_log.close();
+        //#log.open("debug", std::ios_base::app);
+        log << "extracted long offset: " << offset_data << " from text (" << offset_long << ")" << endl;
+        //#log.close();
       }
     }      
     else

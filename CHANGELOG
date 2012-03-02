@@ -1,5 +1,10 @@
 changelog
 --
+v0.55
+-new graphics resource code to support different bitmaps for each
+ note type and home arrow beat animation
+-animate arrows with beat
+-added support for notes lengths up to 64th triplet (192nd note)
 
 v0.54
 -fix BPM changes were being done on measures instead of beats, so

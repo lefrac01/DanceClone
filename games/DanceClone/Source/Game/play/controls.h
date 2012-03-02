@@ -7,9 +7,9 @@ void Game_play_controls(){
 /*
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "Game_play_controls() begins" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "Game_play_controls() begins" << endl;
+    //#log.close();
   }
 
   // update player controls
@@ -90,9 +90,9 @@ void Game_play_controls(){
 
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "checking for boo" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "checking for boo" << endl;
+    //#log.close();
   }
   //TODO: recode using current bpm to calculate a max distance.
   //TODO: if arrow has flowed past, consider it still the next ratable
@@ -106,9 +106,9 @@ void Game_play_controls(){
   //#}
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "checking for perfect / good" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "checking for perfect / good" << endl;
+    //#log.close();
   }
   
   //TODO: record rating.  each direction has a "current ratable arrow" 
@@ -139,9 +139,9 @@ void Game_play_controls(){
   
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "checking for perfect on held arrow" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "checking for perfect on held arrow" << endl;
+    //#log.close();
   }
   for(int b=0;b<4;b++)
   if((b==0 && leftcontrol)||(b==1 && downcontrol)||(b==2 && upcontrol)||(b==3 && rightcontrol))
@@ -163,8 +163,8 @@ void Game_play_controls(){
   */
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "leaving Game_play_controls()" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "leaving Game_play_controls()" << endl;
+    //#log.close();
   }
 }

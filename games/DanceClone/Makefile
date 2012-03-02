@@ -26,7 +26,8 @@ INCLUDES	:=
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE)
+# -mepsilon should go here, but is giving an error ???  (floating point comparison)
+CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE)		
 #CFLAGS	= -g -Wall $(MACHDEP) $(INCLUDE)
 CXXFLAGS	=	$(CFLAGS)
 

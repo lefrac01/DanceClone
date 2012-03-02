@@ -5,7 +5,9 @@
 
 
 
-
+// quick hack delay song start for player prep
+char* mp3_buffer;
+long mp3_lSize;
 
 #include <iostream>
 using std::cerr;
@@ -17,7 +19,7 @@ using std::ifstream;
 #include <cstdlib>
 
 
-#define GAMEVERSIONSTRING "DanceClone v0.54"
+#define GAMEVERSIONSTRING "DanceClone v0.55"
 #define DEBUG_OFF 0
 #define DEBUG_BASIC 1
 #define DEBUG_MINOR 2
@@ -26,7 +28,7 @@ using std::ifstream;
 #define DEBUG_LEVEL DEBUG_OFF
 #define LOG_DEBUG
 #define LOG_ERRORS
-ofstream debug_log;
+ofstream log;
 ofstream error_log;
 
 

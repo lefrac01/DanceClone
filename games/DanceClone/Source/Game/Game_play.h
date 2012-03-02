@@ -1,23 +1,13 @@
-//TODO: change scroll speed based on current BPM
-//
-
-
-//TODO: home arrow animations so they pulse on the quarter notes of each beat
-//
 //TODO: add second player arrows with player-specific difficulty
-//
-//TODO: animate player arrows in time with beat
-//
-//TODO: when missed arrows scroll past, they scroll off screen
-//
-//TODO: move home arrows down toward center of screen
-//
-//TODO: see about regular hitching that arrows do.  must slide smoothly
 //
 //TODO: play video in background
 //
 //TODO: support an assist tick like in stepmania.  not necessary but
 // could be really useful for people doing non-synth songs
+//
+//TODO: draw freeze arrow tails.  start with freezetail graphic
+// drawn at ypos of arrow end and clipped up to arrow start.  while
+// start not reached, add blits of freezebody clipped up to arrow start.
 
 extern int arrow_height;
 
@@ -27,16 +17,33 @@ void Game_play()
 {
   if (DEBUG_LEVEL >= DEBUG_GUTS)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "Game_play() begins" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "Game_play() begins" << endl;
+    //#log.close();
   }
 
 
   // update 
   current_play_data.frame();
-
-
+/*
+//TODO: fix player start prep
+  // if player prep delay has gone by, start music
+  if (current_play_data.song_time > 0-SONG_START_OFFSET)
+  {
+    // start playing music
+    
+    #ifdef WIN
+      Mix_PlayMusic(music,0);
+    #endif
+    #ifdef WII
+      MP3Player_PlayBuffer(mp3_buffer, mp3_lSize, NULL);
+      free(mp3_buffer);
+    #endif
+  }
+  
+  */
+  
+  
   // read player controls
   // this function also rates arrows
   //current_play_data.read_player_controls();
@@ -47,9 +54,9 @@ void Game_play()
   /*
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "applying ratings surfaces" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "applying ratings surfaces" << endl;
+    //#log.close();
   }
   for(int a=0;a<n_ratings;a++){
     apply_surface(ratings[a]->posx,ratings[a]->posy,ratingsimage,screen,&ratingsframes[ratings[a]->type]);
@@ -64,22 +71,52 @@ void Game_play()
   */
   
   // animate home arrows per user input
+  float beat_fraction = fabs(current_play_data.current_song.beat_ticks[current_play_data.current_beat_tick].beat) - (long)fabs(current_play_data.current_song.beat_ticks[current_play_data.current_beat_tick].beat);
+  // if we are before beat 0, correct tick whole calculation 
+  if (current_play_data.current_song.beat_ticks[current_play_data.current_beat_tick].beat < 0)
+  {
+    beat_fraction = 0.99-beat_fraction;
+  }
+  int tick_whole = 0;
+  while (beat_fraction >= 0.25)
+  {
+    ++tick_whole;
+    beat_fraction -= 0.25;
+  }
   
-  
+log << "cbt:" << current_play_data.current_beat_tick << "tw:" << tick_whole << "  beat_fraction:" <<  beat_fraction << endl; //TEMPLOG: outputting vars anims depend on 
+    
+  if (tick_whole == 0)
+  {
+    // first 16th of a quarter note, draw flashing home arrows
+    apply_surface(185, goal_offset, home_arrows_image, screen, &arrows_frames[4]);
+    apply_surface(250, goal_offset, home_arrows_image, screen, &arrows_frames[0]);
+    apply_surface(320, goal_offset, home_arrows_image, screen, &arrows_frames[8]);
+    apply_surface(385, goal_offset, home_arrows_image, screen, &arrows_frames[12]);
+  }
+  else
+  {
+    // other 15 16ths of quarter, draw normal home arrows
+    apply_surface(185, goal_offset, home_arrows_image, screen, &arrows_frames[6]);
+    apply_surface(250, goal_offset, home_arrows_image, screen, &arrows_frames[2]);
+    apply_surface(320, goal_offset, home_arrows_image, screen, &arrows_frames[10]);
+    apply_surface(385, goal_offset, home_arrows_image, screen, &arrows_frames[14]);
+  }
   
   //TODO: fix goalline vs goaloffset
   
   if (DEBUG_LEVEL >= DEBUG_GUTS)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "lighting home arrows according to pad presses" << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "lighting home arrows according to pad presses" << endl;
+    //#log.close();
   }
   
   
   //TODO: multiplayer
   player_data& pd = current_play_data.current_player_data[0];  
   
+  /*
   if(pd.left_control==0)
     apply_surface(185,goal_offset,arrowsimage,screen,&arrowsframes[4]);
   else if(pd.left_control==1)
@@ -93,18 +130,18 @@ void Game_play()
   else
     apply_surface(250,goal_offset,arrowsimage,screen,&arrowsframes[1]);
   if(pd.up_control==0)
-    apply_surface(rmode->viWidth/2,goal_offset,arrowsimage,screen,&arrowsframes[6]);
+    apply_surface(320,goal_offset,arrowsimage,screen,&arrowsframes[6]);
   else if(pd.up_control==1)
-    apply_surface(rmode->viWidth/2,goal_offset,arrowsimage,screen,&arrowsframes[10]);
+    apply_surface(320,goal_offset,arrowsimage,screen,&arrowsframes[10]);
   else
-    apply_surface(rmode->viWidth/2,goal_offset,arrowsimage,screen,&arrowsframes[2]);
+    apply_surface(320,goal_offset,arrowsimage,screen,&arrowsframes[2]);
   if(pd.right_control==0)
     apply_surface(385,goal_offset,arrowsimage,screen,&arrowsframes[7]);
   else if(pd.right_control==1)
     apply_surface(385,goal_offset,arrowsimage,screen,&arrowsframes[11]);
   else
     apply_surface(385,goal_offset,arrowsimage,screen,&arrowsframes[3]);
-
+*/
 
 
   // animate arrows
@@ -116,9 +153,9 @@ void Game_play()
       
     if (DEBUG_LEVEL >= DEBUG_DETAIL)
     {
-      debug_log.open("debug", std::ios_base::app);
-      debug_log << "begin animation player " << p << " arrows. base_arrow = " << pd.base_arrow << endl;
-      debug_log.close();
+      //#log.open("debug", std::ios_base::app);
+      log << "begin animation player " << p << " arrows. base_arrow = " << pd.base_arrow << endl;
+      //#log.close();
     }
     
     // update first and last visible arrows
@@ -138,9 +175,9 @@ void Game_play()
 
     if (DEBUG_LEVEL >= DEBUG_DETAIL)
     {
-      debug_log.open("debug", std::ios_base::app);
-      debug_log << "first_visible_arrow: " << pd.first_visible_arrow << " last_visible_arrow: = " << pd.last_visible_arrow << endl;
-      debug_log.close();
+      //#log.open("debug", std::ios_base::app);
+      log << "first_visible_arrow: " << pd.first_visible_arrow << " last_visible_arrow: = " << pd.last_visible_arrow << endl;
+      //#log.close();
     }
 
     
@@ -156,9 +193,9 @@ void Game_play()
           {
             if (DEBUG_LEVEL >= DEBUG_DETAIL)
             {
-              debug_log.open("debug", std::ios_base::app);
-              debug_log << "clearing last, first visible " << endl;
-              debug_log.close();
+              //#log.open("debug", std::ios_base::app);
+              log << "clearing last, first visible " << endl;
+              //#log.close();
             }
             pd.first_visible_arrow = -1;
             pd.last_visible_arrow = -1;
@@ -168,59 +205,101 @@ void Game_play()
           {
             if (DEBUG_LEVEL >= DEBUG_DETAIL)
             {
-              debug_log.open("debug", std::ios_base::app);
-              debug_log << "incrementing first visible: " << pd.first_visible_arrow << endl;
-              debug_log.close();
+              //#log.open("debug", std::ios_base::app);
+              log << "incrementing first visible: " << pd.first_visible_arrow << endl;
+              //#log.close();
             }
             ++pd.first_visible_arrow;
           }
         }
         else
         {
-          int screen_ypos = ar.ypos - current_play_data.viewport_offset + goal_offset;
-          
-          int arrows_frames_index = -1;
-          int xpos = -1;
-          switch (ar.direction)
+          //arrows become hidden if the player clears them
+          if (!ar.hidden)
           {
-            case 0: xpos = 185; arrows_frames_index = 12; break;
-            case 1: xpos = 250; arrows_frames_index = 13; break;
-            case 2: xpos = 320; arrows_frames_index = 14; break;
-            case 3: xpos = 385; arrows_frames_index = 15; break;
-            default: break;
+            int screen_ypos = ar.ypos - current_play_data.viewport_offset + goal_offset;
+            
+            int arrows_frames_index = -1;
+            int xpos = -1;
+            switch (ar.direction)
+            {
+              case 0: xpos = 185; arrows_frames_index =  4+tick_whole; break;
+              case 1: xpos = 250; arrows_frames_index =  0+tick_whole; break;
+              case 2: xpos = 320; arrows_frames_index =  8+tick_whole; break;
+              case 3: xpos = 385; arrows_frames_index = 12+tick_whole; break;
+              default: break;
+            }
+            
+            if (DEBUG_LEVEL >= DEBUG_DETAIL)
+            {
+              //#log.open("debug", std::ios_base::app);
+              log << "draw arrow index:" << a << " screen_ypos:" << screen_ypos << " direction:" << ar.direction  << " arrows_frames_index:" << arrows_frames_index  << endl; 
+              //#log.close();
+            }
+            
+            //TODO: add index for type of arrow (quarter, eighth, hold, etc)
+            SDL_Surface* arrow_bitmap_src = NULL;
+            switch(ar.type)
+            {
+            case NOTE_TYPE_QUARTER:
+              arrow_bitmap_src = quarter_arrows_image;
+              break;
+            case NOTE_TYPE_EIGHTH:
+              arrow_bitmap_src = eighth_arrows_image;
+              break;
+            case NOTE_TYPE_QUARTER_TRIPLET:
+              arrow_bitmap_src = quarter_triplet_arrows_image;
+              break;
+            case NOTE_TYPE_SIXTEENTH:
+              arrow_bitmap_src = sixteenth_arrows_image;
+              break;
+            case NOTE_TYPE_EIGHTH_TRIPLET:
+              arrow_bitmap_src = eighth_triplet_arrows_image;
+              break;
+            case NOTE_TYPE_THIRTYSECOND:
+              arrow_bitmap_src = thirtysecond_arrows_image;
+              break;
+            case NOTE_TYPE_SIXTEENTH_TRIPLET:
+              arrow_bitmap_src = sixteenth_triplet_arrows_image;
+              break;
+            case NOTE_TYPE_SIXTYFOURTH:
+              arrow_bitmap_src = sixtyfourth_arrows_image;
+              break;
+            //NOTE: same graphics used for 96th and 192nd
+            case NOTE_TYPE_THIRTYSECOND_TRIPLET:
+            case NOTE_TYPE_SIXTYFOURTH_TRIPLET:
+              arrow_bitmap_src = sixtyfourth_triplet_arrows_image;
+              break;
+
+            default:
+              log << "fell to default arrow type.  type=" << ar.type << endl;
+              arrow_bitmap_src = quarter_arrows_image;
+              break;
+            }
+            apply_surface(xpos, screen_ypos, arrow_bitmap_src, screen, &arrows_frames[arrows_frames_index]);
+            
+            /*
+            if(posy>0-70 && posy<rmode->viHeight){
+              if(pd.arrows[a].length){
+                if(pd.arrows[a].direction==0){
+                  apply_surface(185+10,posy,holdimage,screen,&holdframes[0]);
+                  for(int b=0;b<floor((double)pd.arrows[a].length/5/35);b++)
+                    apply_surface(185+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
+                  temprect.h = (Uint16)(pd.arrows[a].length/5-floor((double)pd.arrows[a].length/5/35)*35);
+                  apply_surface(185+10,posy+(int)floor((double)pd.arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
+                  apply_surface(185+10,posy+pd.arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
+                if(pd.arrows[a].direction==1){
+                  ...
+            }
+            */
           }
-          
           if (DEBUG_LEVEL >= DEBUG_DETAIL)
           {
-            debug_log.open("debug", std::ios_base::app);
-            debug_log << "draw arrow index:" << a << " screen_ypos:" << screen_ypos << endl;
-            debug_log.close();
+            //#log.open("debug", std::ios_base::app);
+            log << "done" << endl;
+            //#log.close();
           }
-          
-          //TODO: add index for type of arrow (quarter, eighth, hold, etc)
-          apply_surface(xpos, screen_ypos, arrowsimage, screen, &arrowsframes[arrows_frames_index]);
-          
-          /*
-          if(posy>0-70 && posy<rmode->viHeight){
-            if(pd.arrows[a].length){
-              if(pd.arrows[a].direction==0){
-                apply_surface(185+10,posy,holdimage,screen,&holdframes[0]);
-                for(int b=0;b<floor((double)pd.arrows[a].length/5/35);b++)
-                  apply_surface(185+10,posy+35*b+35,holdimage,screen,&holdframes[1]);
-                temprect.h = (Uint16)(pd.arrows[a].length/5-floor((double)pd.arrows[a].length/5/35)*35);
-                apply_surface(185+10,posy+(int)floor((double)pd.arrows[a].length/5/35)*35+35,holdimage,screen,&temprect);
-                apply_surface(185+10,posy+pd.arrows[a].length/5+35,holdimage,screen,&holdframes[2]);}
-              if(pd.arrows[a].direction==1){
-                ...
-          }
-          */
         }
-        if (DEBUG_LEVEL >= DEBUG_DETAIL)
-        {
-          debug_log.open("debug", std::ios_base::app);
-          debug_log << "done" << endl;
-          debug_log.close();
-        }    
       }
     }
   }
@@ -246,6 +325,15 @@ void Game_play()
   }
   
   
+//TODO: fix player start prep
+/*  
+  #ifdef WII
+  if((current_play_data.song_time > 0-SONG_START_OFFSET) && !MP3Player_IsPlaying()){
+    MP3Player_Stop();
+    gamestate=9;
+  }
+  #endif
+*/
   #ifdef WII
   if(!MP3Player_IsPlaying()){
     MP3Player_Stop();
@@ -276,15 +364,13 @@ void Game_play()
   ){
     MP3Player_Stop();
     gamestate=4;
-    
-debug_log.close();    
   }
   #endif
 
   if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    debug_log.open("debug", std::ios_base::app);
-    debug_log << "Game_play() done " << endl;
-    debug_log.close();
+    //#log.open("debug", std::ios_base::app);
+    log << "Game_play() done " << endl;
+    //#log.close();
   }    
 }
