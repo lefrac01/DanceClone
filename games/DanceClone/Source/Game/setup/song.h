@@ -1,3 +1,5 @@
+//TODO: arrow.h... sigh
+
 //NOTE: stepmania file format at http://www.stepmania.com/wiki/The_.SM_file_format
 //
 //TODO: implement #STOPS:
@@ -19,13 +21,14 @@ public:
   int direction;
   long time;
   long ypos;
-  int length;
+  long length;
   int type; // for drawing based on note value
-  bool hit;
-  bool jump;  // not implemented yet, to assist in rating arrows when more than one on same line.  rules vary slightly
-  bool rated;
+  int rating;
+  int freeze_rating;
+  bool jump;
   bool hidden;
-  arrow(int d, long t, long y, int l, int ty) : direction(d),time(t),ypos(y),length(l),type(ty),hit(false),jump(false),rated(false),hidden(false){};
+  long anim_start_time;
+  arrow(int d, long t, long y, long l, int ty) : direction(d),time(t),ypos(y),length(l),type(ty),rating(RATING_NONE),freeze_rating(FREEZE_RATING_NONE),jump(false),hidden(false),anim_start_time(-1){};
 };
 
 class bpm_change
@@ -43,7 +46,7 @@ public:
   long  ypos;
   float timestamp;
   float beat; // easier considering ticks per measure can vary
-  beat_tick(long y, float t, float o) : ypos(y),timestamp(t),beat(o){};
+  beat_tick(long y, float t, float b) : ypos(y),timestamp(t),beat(b){};
 };
 
 class song
@@ -548,17 +551,17 @@ bool song::read_step_data()
                               log << "searching for start of hold note which ends on line " << measure_line_index << endl;
                               //#log.close();
                             }
-                            for (int i = song_arrows[current_difficulty].size()-1; i > 0; i--)
+                            for (int i = song_arrows[current_difficulty].size()-1; i >= 0; i--)
                             {
                               if (song_arrows[current_difficulty][i].direction == d)
                               {
                                 if (DEBUG_LEVEL >= DEBUG_DETAIL)
                                 {
                                   //#log.open("debug", std::ios_base::app);
-                                  log << "detected start of hold note at arrow index " << i << endl;
+                                  log << "detected start of hold note at arrow index " << i << ". length=" << (long)current_position - (long)song_arrows[current_difficulty][i].ypos << endl;
                                   //#log.close();
                                 }
-                                song_arrows[current_difficulty][i].length = (long)current_time - song_arrows[current_difficulty][i].time;
+                                song_arrows[current_difficulty][i].length = (long)current_position - (long)song_arrows[current_difficulty][i].ypos;
                                 break;
                               }
                             }
@@ -569,11 +572,6 @@ bool song::read_step_data()
                     
                     float temp_16th_time = current_time;
                     float temp_16th_position = current_position;
-                    /*
-  log << "eeeeek current_time:" << current_time \
-    << "  current_position:" <<  current_position \
-    << ")" << endl;//TEMPLOG: output building of nice beat_ticks array
-    */
                     
                     // ms per measure = (1000*60/bpm)*4
                     // ms per tick = ms per measure / ticks_per_measure
@@ -605,12 +603,6 @@ bool song::read_step_data()
                     // used to translate beat to timestamp and vice versa for animation code.
                     while (current_16th_beat < current_beat)
                     {
-                    /*  
-  log << "beat_ticks+=(" << (long)temp_16th_position \
-    << ", " <<  temp_16th_time \
-    << ", " <<  current_16th_beat \
-    << ")" << endl; //TEMPLOG: output building of nice beat_ticks array
-    */
                       beat_ticks.push_back(beat_tick((long)temp_16th_position, temp_16th_time, current_16th_beat));
                       temp_16th_time += one_16th_offset;
                       temp_16th_position += one_16th_offset * pixels_per_ms_at_1_bpm * bpm_changes[current_bpm_index].bpm;
@@ -623,15 +615,8 @@ bool song::read_step_data()
                     if (!float_same(current_beat, current_16th_beat))
                     //if (current_beat != current_16th_beat)    // should be possible using -mepsilon command-line parameter but that gives me an error :(
                     {
-  log << "beat_ticks+=(" << (long)current_position \
-    << ", " <<  current_time \
-    << ", " <<  current_beat \
-    << ")" << endl; //TEMPLOG: output building of nice beat_ticks array
                       beat_ticks.push_back(beat_tick((long)current_position, current_time, current_beat));
                     }
-
-
-
                     
                     if (DEBUG_LEVEL >= DEBUG_DETAIL)
                     {
@@ -705,14 +690,14 @@ bool song::read_step_data()
   
   indata.close();
 
-{
-  int num_beat_ticks = beat_ticks.size();
-  for (int i = 0; i < num_beat_ticks; i++)
+  if (DEBUG_LEVEL >= DEBUG_DETAIL)
   {
-    log << "b_ts["<<i<<"]="<<beat_ticks[i].ypos<<","<<beat_ticks[i].timestamp<<","<<beat_ticks[i].beat<<endl;
-    //TEMPLOG: output built beat_ticks array
-  }  
-}
+    int num_beat_ticks = beat_ticks.size();
+    for (int i = 0; i < num_beat_ticks; i++)
+    {
+      log << "b_ts["<<i<<"]="<<beat_ticks[i].ypos<<","<<beat_ticks[i].timestamp<<","<<beat_ticks[i].beat<<endl;
+    }  
+  }
   
 
   if (DEBUG_LEVEL >= DEBUG_MINOR)

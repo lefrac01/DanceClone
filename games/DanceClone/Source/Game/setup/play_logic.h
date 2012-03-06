@@ -7,27 +7,34 @@
 #define PERFECT_MS 45
 #define MARVELLOUS_MS 23
 
-#include "play_data.h"
+#define FREEZE_FAIL_MS 200
 
-extern play_data current_play_data;
+#define NOTE_TYPE_HOLD 1              
+#define NOTE_TYPE_QUARTER 2           // 1 per beat, 4 per measure
+#define NOTE_TYPE_EIGHTH 3            // 2 per beat, 8 per measure
+#define NOTE_TYPE_QUARTER_TRIPLET 4   // 3 per beat, 12 per measure
+#define NOTE_TYPE_SIXTEENTH 5         // 4 per beat, 16 per measure
+#define NOTE_TYPE_EIGHTH_TRIPLET 6    // 6 per beat, 24 per measure
+#define NOTE_TYPE_THIRTYSECOND 7      // 8 per beat, 32 per measure
+#define NOTE_TYPE_SIXTEENTH_TRIPLET 8 // 12 per beat, 48 per measure
+#define NOTE_TYPE_SIXTYFOURTH 9       // 16 per beat, 64 per measure
+#define NOTE_TYPE_THIRTYSECOND_TRIPLET 10  // 24 per beat, 96 per measure
+#define NOTE_TYPE_SIXTYFOURTH_TRIPLET 11   // 48 per beat, 192 per measure
 
-void rate_arrow(int p, int arrownum, int rate)
-{
-  //TODO: fix ratings
-  //#ratings[n_ratings] = new rating(rmode->viWidth/2-125/2, goaloffset, rate);
-  //#n_ratings++;
-  current_play_data.current_player_data[p].base_arrow++;
-}
+#define RATING_NONE -1
+#define RATING_MISS 0
+#define RATING_GOOD 1
+#define RATING_GREAT 2
+#define RATING_PERFECT 3
+#define RATING_MARVELLOUS 4
 
-void detect_missed_arrows(int p)
-{
-  for (unsigned int a = current_play_data.current_player_data[p].base_arrow; a < current_play_data.current_player_data[p].arrows.size(); a++)
-  {
-    if (current_play_data.current_player_data[p].arrows[a].time - current_play_data.song_time < (-1000/8))
-    {
-      rate_arrow(p, a, 0);
-      current_play_data.current_player_data[p].combo = 0;
-      current_play_data.current_player_data[p].boo++;
-    }
-  }
-}
+#define FREEZE_RATING_NONE -1
+#define FREEZE_RATING_FAILED 0
+#define FREEZE_RATING_OK 1
+
+#define FREEZE_LENGTH_ALLOW 25 // how many pixels before the end of a freeze
+ // arrow the player is allowed to lift off without failing the freeze
+
+#define JUMP_ALLOW_MS 100 // how many milliseconds are allowed between 
+  // inputs before they are not considered as valid for a jump
+void fart(int boo);

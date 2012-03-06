@@ -1,3 +1,15 @@
+//TODO: tighten up file organisation.  header inclusion tree could be nicer
+// and on-disk file layout is strange.  also main program flow is hard to 
+// follow.  redo bad design ie play_data as a class is responsible for reading 
+// player controls and updating the viewport every frame...
+//
+//TODO: instead of always opening/closing log as in: (or commenting that out as currently)
+//log.open("debug", std::ios_base::app);
+//log << "something" << endl;
+//log.close();
+//replace with a macro in which the open/close are controlled by a 
+//FAILSAFE_LOG define
+
 //#define WIN
 #define WII
 //#define USEACCELEROMETER
@@ -19,7 +31,7 @@ using std::ifstream;
 #include <cstdlib>
 
 
-#define GAMEVERSIONSTRING "DanceClone v0.55"
+#define GAMEVERSIONSTRING "DanceClone v0.56"
 #define DEBUG_OFF 0
 #define DEBUG_BASIC 1
 #define DEBUG_MINOR 2

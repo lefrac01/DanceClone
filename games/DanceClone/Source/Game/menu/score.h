@@ -83,6 +83,23 @@ void Game_menu_score(){
 
   if(WiiDash_button(rmode->viWidth-100-40,rmode->viHeight-10-40,100,10,0,1,(char*)"temp no score - Back"))gamestate=4;
 */
+  //TODO: multiplayer
+  player_data& pd = current_play_data.current_player_data[0];  
+
+  char temptext[100];
+  sprintf(temptext,"%d%s",pd.marvellous," MARVELLOUS");
+  WiiDash_spritetext(rmode->viWidth/2,440-18*8,temptext,2);
+  sprintf(temptext,"%d%s",pd.perfect," PERFECT");
+  WiiDash_spritetext(rmode->viWidth/2,440-18*7,temptext,2);
+  sprintf(temptext,"%d%s",pd.great," GREAT");
+  WiiDash_spritetext(rmode->viWidth/2,440-18*6,temptext,2);
+  sprintf(temptext,"%d%s",pd.good," GOOD");
+  WiiDash_spritetext(rmode->viWidth/2,440-18*5,temptext,2);
+  sprintf(temptext,"%d%s",pd.boo," BOO");
+  WiiDash_spritetext(rmode->viWidth/2,440-18*4,temptext,2);
+  sprintf(temptext,"%d%s",pd.longest_combo," MAX COMBO");
+  WiiDash_spritetext(rmode->viWidth/2,440-18*1,temptext,2);
+
 
   if(WiiDash_button(rmode->viWidth-300-40,rmode->viHeight-10-40,100,10,0,1,(char*)"temp no score - Back"))gamestate=4;
 }

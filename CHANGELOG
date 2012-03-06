@@ -1,8 +1,17 @@
 changelog
 --
+v0.56
+-freeze arrows are correctly drawn
+-arrow hit animations
+-freeze arrow animations
+-rating code redone and updated for freeze arrows
+-added great and marvellous ratings
+-simple score screen
+-new background ripped from google images
+
 v0.55
 -new graphics resource code to support different bitmaps for each
- note type and home arrow beat animation
+ note length and home arrow beat animation
 -animate arrows with beat
 -added support for notes lengths up to 64th triplet (192nd note)
 

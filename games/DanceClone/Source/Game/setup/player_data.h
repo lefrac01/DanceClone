@@ -13,28 +13,25 @@ public:
   int combo;
   int boo;
   int good;
+  int great;
   int perfect;
-  vector<unsigned int> current_ratable_arrow;
-  vector<unsigned int> next_ratable_arrow;
+  int marvellous;
   int first_visible_arrow;
   int last_visible_arrow;
   int next_offscreen_arrow;
   int num_arrows;
-  int up_control;
-  int down_control;
-  int left_control;
-  int right_control;
+  bool up_control_down;
+  bool down_control_down;
+  bool left_control_down;
+  bool right_control_down;
+  bool up_control_held;
+  bool down_control_held;
+  bool left_control_held;
+  bool right_control_held;
     
-  player_data();
   void init();
   int find_next_ratable_arrow(unsigned int direction);
 };
-
-player_data::player_data() :
-current_ratable_arrow(4), // one for each direction. change to support dance-double
-next_ratable_arrow(4) 
-{
-}
 
 void player_data::init()
 {
@@ -45,17 +42,19 @@ void player_data::init()
   boo = 0;
   good = 0;
   perfect = 0;
-  current_ratable_arrow[0]=current_ratable_arrow[1]=current_ratable_arrow[2]=current_ratable_arrow[3] = -1;
-  next_ratable_arrow[0]=next_ratable_arrow[1]=next_ratable_arrow[2]=next_ratable_arrow[3] = -1;
   last_visible_arrow = -1;
   first_visible_arrow = -1;
   next_offscreen_arrow = -1;
   
   //TODO: control data in vector?
-  up_control = 0;
-  down_control = 0;
-  left_control = 0;
-  right_control = 0;
+  up_control_down = false;
+  down_control_down = false;
+  left_control_down = false;
+  right_control_down = false;
+  up_control_held = false;
+  down_control_held = false;
+  left_control_held = false;
+  right_control_held = false;
 }
 
 int player_data::find_next_ratable_arrow(unsigned int direction)

@@ -1,5 +1,8 @@
+//TODO: need freeze arrow length in pixels and in ms
+//TODO: need freeze arrow length in pixels and in ms
+//
 //TODO: fix current_song assignment.  not tight enough
-
+//
 //TODO: base class compatible_step_file with derivative sm_file
 // to which vector of string can be passed to various parse functions
 // that fill the passed members.  e.g. find_lines_offset(), parse_offset()
@@ -151,7 +154,7 @@ void play_data::frame()
   long partial_frame_time_begin = old_song_time;
   long frame_time_end = song_time;
   
-log << "fte: " << frame_time_end << endl; //TEMPLOG:
+//log << "fte: " << frame_time_end << endl; //TEMPLOG:
   
   // process beat ticks
   int frame_end_beat_tick = current_beat_tick;
@@ -161,7 +164,7 @@ log << "fte: " << frame_time_end << endl; //TEMPLOG:
         >= current_song.beat_ticks[frame_end_beat_tick+1].timestamp
   )
   {
-log << "inc febt " << endl; //TEMPLOG:
+//log << "inc febt " << endl; //TEMPLOG:
     frame_end_beat_tick++;
   }
 
@@ -274,34 +277,6 @@ log << "inc febt " << endl; //TEMPLOG:
   read_player_controls(0);
   
   rate_arrows(0);
-  
-  
-  //TEMP:
-  // figure out the hard offset needed to synchronise all song time 
-  // calculations with the actual sound coming from the speaker.  this
-  // is the delay between the moment the call to start the mp3/ogg 
-  // returns and the moment the sound actually begins.
-  /*
-  if (WiiButtonsDown[0] & WPAD_BUTTON_UP)
-  {
-    ++song_start_offset;
-  }
-  else if (WiiButtonsDown[0] & WPAD_BUTTON_DOWN)
-  {
-    --song_start_offset;
-  }
-  else if (WiiButtonsDown[0] & WPAD_BUTTON_RIGHT)
-  {
-    song_start_offset += 20;
-  }
-  else if (WiiButtonsDown[0] & WPAD_BUTTON_LEFT)
-  {
-    song_start_offset -= 20;
-  }
-  char uoffset[32];
-  sprintf(uoffset, "%ld", song_start_offset);
-  WiiDash_spritetext(25,450,(char*)uoffset,1);
-  */
 }
 
 void play_data::partial_frame(long begin, long end)
@@ -316,220 +291,179 @@ void play_data::partial_frame(long begin, long end)
   pixels_left_to_scroll = pixels_to_scroll - whole_pixels_to_scroll;
 
   viewport_offset += whole_pixels_to_scroll;
-
-  if (DEBUG_LEVEL >= DEBUG_DETAIL)
-  {
-    //#log.open("debug", std::ios_base::app);
-    log << "partial_frame(" << begin << ", " << end << ") viewport_offset: " << viewport_offset << endl;
-    //#log.close();
-  }
 }
 
 void play_data::read_player_controls(int p)
 {
-  if (DEBUG_LEVEL >= DEBUG_GUTS)
-  {
-    //#log.open("debug", std::ios_base::app);
-    log << "Game_play_controls() begins" << endl;
-    //#log.close();
-  }
+  #ifdef WIN
+  pd.up_control = keystate[SDLK_UP];
+  pd.down_control = keystate[SDLK_DOWN];
+  pd.left_control = keystate[SDLK_LEFT];
+  pd.right_control = keystate[SDLK_RIGHT];
+  #endif
 
   // update player controls
-  
-  u32 WiiButtons1Held = WiiButtonsHeld[0];
-  u32 WiiButtons1Down = WiiButtonsDown[0];
+  #ifdef WII
+  //u32 WiiButtons1Held = WiiButtonsHeld[0];
+  //u32 WiiButtons1Down = WiiButtonsDown[0];
   u16 GCButtons1Held = GCButtonsHeld[0];
   u16 GCButtons1Down = GCButtonsDown[0];
-  expansion_t WPAD_Expansion1 = expans[0];
+  //expansion_t WPAD_Expansion1 = expans[0];
 
   //TODO: multiplayer
-  //TODO: leaving in reference to frame_time but 
-  // this is to move to a function called from frame() where
-  // it will receive frame time there
   player_data& pd = current_player_data[p];
-  pd.up_control = pd.up_control - frame_time;
-  pd.down_control = pd.down_control - frame_time;
-  pd.left_control = pd.left_control - frame_time;
-  pd.right_control = pd.right_control - frame_time;
 
-
-  if(pd.up_control<0)pd.up_control=0;
-  if(pd.down_control<0)pd.down_control=0;
-  if(pd.left_control<0)pd.left_control=0;
-  if(pd.right_control<0)pd.right_control=0;
-
-  #ifdef WIN
-  if(keystate[SDLK_UP] && pd.up_control==0){pd.up_control=1;}
-  if(keystate[SDLK_DOWN] && pd.down_control==0){pd.down_control=1;}
-  if(keystate[SDLK_LEFT] && pd.left_control==0){pd.left_control=1;}
-  if(keystate[SDLK_RIGHT] && pd.right_control==0){pd.right_control=1;}
-  if(keystate[SDLK_UP]==2)pd.up_control=125;
-  if(keystate[SDLK_DOWN]==2)pd.down_control=125;
-  if(keystate[SDLK_LEFT]==2)pd.left_control=125;
-  if(keystate[SDLK_RIGHT]==2)pd.right_control=125;
-  #endif
-  
-  #ifdef WII
-
-  if(pd.up_control==0 && WiiButtons1Held & WPAD_BUTTON_UP)pd.up_control=1;
-  if(pd.down_control==0 && WiiButtons1Held & WPAD_BUTTON_DOWN)pd.down_control=1;
-  if(pd.left_control==0 && WiiButtons1Held & WPAD_BUTTON_LEFT)pd.left_control=1;
-  if(pd.right_control==0 && WiiButtons1Held & WPAD_BUTTON_RIGHT)pd.right_control=1;
-  if(WiiButtons1Down & WPAD_BUTTON_UP)pd.up_control=125;
-  if(WiiButtons1Down & WPAD_BUTTON_DOWN)pd.down_control=125;
-  if(WiiButtons1Down & WPAD_BUTTON_LEFT)pd.left_control=125;
-  if(WiiButtons1Down & WPAD_BUTTON_RIGHT)pd.right_control=125;
-
-
-
-  if(pd.up_control==0 && GCButtons1Held & PAD_BUTTON_UP)pd.up_control=1;
-  if(pd.down_control==0 && GCButtons1Held & PAD_BUTTON_DOWN)pd.down_control=1;
-  if(pd.left_control==0 && GCButtons1Held & PAD_BUTTON_LEFT)pd.left_control=1;
-  if(pd.right_control==0 && GCButtons1Held & PAD_BUTTON_RIGHT)pd.right_control=1;
-  if(GCButtons1Down & PAD_BUTTON_UP)pd.up_control=125;
-  if(GCButtons1Down & PAD_BUTTON_DOWN)pd.down_control=125;
-  if(GCButtons1Down & PAD_BUTTON_LEFT)pd.left_control=125;
-  if(GCButtons1Down & PAD_BUTTON_RIGHT)pd.right_control=125;
-
-
-
-  if(WPAD_Expansion1.type == WPAD_EXP_CLASSIC){
-    if(pd.up_control==0 && WiiButtons1Held & WPAD_CLASSIC_BUTTON_UP)pd.up_control=1;
-    if(pd.down_control==0 && WiiButtons1Held & WPAD_CLASSIC_BUTTON_DOWN)pd.down_control=1;
-    if(pd.left_control==0 && WiiButtons1Held & WPAD_CLASSIC_BUTTON_LEFT)pd.left_control=1;
-    if(pd.right_control==0 && WiiButtons1Held & WPAD_CLASSIC_BUTTON_RIGHT)pd.right_control=1;
-    if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_UP)pd.up_control=125;
-    if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_DOWN)pd.down_control=125;
-    if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_LEFT)pd.left_control=125;
-    if(WiiButtons1Down & WPAD_CLASSIC_BUTTON_RIGHT)pd.right_control=125;    
+  pd.up_control_down =    GCButtons1Down & PAD_BUTTON_UP;
+  pd.down_control_down =  GCButtons1Down & PAD_BUTTON_DOWN;
+  pd.left_control_down =  GCButtons1Down & PAD_BUTTON_LEFT;
+  pd.right_control_down = GCButtons1Down & PAD_BUTTON_RIGHT;
+  pd.up_control_held =    GCButtons1Held & PAD_BUTTON_UP;
+  pd.down_control_held =  GCButtons1Held & PAD_BUTTON_DOWN;
+  pd.left_control_held =  GCButtons1Held & PAD_BUTTON_LEFT;
+  pd.right_control_held = GCButtons1Held & PAD_BUTTON_RIGHT;
+/*
+  if(WPAD_Expansion1.type == WPAD_EXP_CLASSIC)
+  {
+    pd.up_control = (WiiButtons1Held & WPAD_CLASSIC_BUTTON_UP) || (WiiButtons1Down & WPAD_CLASSIC_BUTTON_UP);
+    pd.down_control = (WiiButtons1Held & WPAD_CLASSIC_BUTTON_DOWN) || (WiiButtons1Down & WPAD_CLASSIC_BUTTON_DOWN);
+    pd.left_control = (WiiButtons1Held & WPAD_CLASSIC_BUTTON_LEFT) || (WiiButtons1Down & WPAD_CLASSIC_BUTTON_LEFT);
+    pd.right_control = (WiiButtons1Held & WPAD_CLASSIC_BUTTON_RIGHT) || (WiiButtons1Down & WPAD_CLASSIC_BUTTON_RIGHT);
   }
-
+  */
+  
   #endif
 }
 
 void play_data::rate_arrows(int p)
 {
   player_data& pd = current_player_data[p];
-
-  // rate arrows
-
-  if (DEBUG_LEVEL >= DEBUG_GUTS)
+  for(int a = pd.first_visible_arrow; a <= pd.last_visible_arrow; a++)
   {
-    //#log.open("debug", std::ios_base::app);
-    log << "checking for boo" << endl;
-    //#log.close();
-  }
-  //TODO: if arrow has flowed past, consider it still the next ratable
-  // arrow until either the max time(boo rating) or until the next
-  // arrow is sooner.  this is too allow excluding old arrows before the
-  // normal timeout if a stream of closely-placed arrows arrives.
-  //detect_missed_arrows(0);
-  for(int a=pd.first_visible_arrow;a<pd.last_visible_arrow;a++)if(pd.arrows[a].time-song_time<-BOO_MS)
-  {
-    if (pd.arrows[a].rated == false)
+    arrow& ar = pd.arrows[a];
+    if (ar.rating == RATING_NONE && song_time - ar.time > BOO_MS)
     {
-      if (DEBUG_LEVEL >= DEBUG_DETAIL)
+log << "MISS ar:" << a << endl; //TEMPLOG: outputting vars anims depend on 
+      ar.rating = RATING_MISS;
+      if (ar.type == NOTE_TYPE_HOLD)
       {
-        //#log.open("debug", std::ios_base::app);
-        log << "detected boo" << endl;
-        //#log.close();
+        ar.freeze_rating = FREEZE_RATING_FAILED;
       }
-      pd.arrows[a].rated = true;
-      //ratearrow(a,0);
-      pd.combo=0;++pd.boo;
+      pd.combo=0;
     }
   }
-  if (DEBUG_LEVEL >= DEBUG_GUTS)
+
+  for(int b=0; b<4; b++)
   {
-    //#log.open("debug", std::ios_base::app);
-    log << "checking for perfect / good" << endl;
-    //#log.close();
+    if((b==0 && pd.left_control_down)||(b==1 && pd.down_control_down)||(b==2 && pd.up_control_down)||(b==3 && pd.right_control_down))
+    {
+      for(int a = pd.first_visible_arrow; a <= pd.last_visible_arrow; a++)
+      {
+        arrow& ar = pd.arrows[a];
+        if (ar.direction == b && ar.rating == RATING_NONE)
+        {
+          int new_rating = RATING_NONE;
+          if(abs(ar.time - song_time) <= MARVELLOUS_MS)
+          {
+            new_rating = RATING_MARVELLOUS;
+          }
+          if(abs(ar.time - song_time) <= PERFECT_MS)
+          {
+            new_rating = RATING_PERFECT;
+          }
+          else if(abs(ar.time-song_time) <= GREAT_MS)
+          {
+            new_rating = RATING_GREAT;
+          }
+          else if(abs(ar.time-song_time) <= GOOD_MS)
+          {
+            new_rating = RATING_GOOD;
+          }
+          
+          if (new_rating != RATING_NONE)
+          {
+log << "RATE ar:" << a << " rating: " << new_rating << " because ar.t-st=" << abs(ar.time-song_time) << endl; //TEMPLOG: outputting vars anims depend on 
+            ar.anim_start_time = song_time;
+            ar.rating = new_rating;
+            ++pd.combo;
+            if (ar.length == 0)
+            {
+              ar.hidden = true;
+            }
+            break;
+          }
+        }
+      }
+    }
   }
-  
-  //TODO: record rating.  each direction has a "current ratable arrow" 
-  // whose y position is analysed relative to a scale calculated based on 
-  // current BPM.  separate each control's hit detection statement to 
-  // use the current ratable arrow for each column.
-  
-  
-  //TODO: fix this.
-//  detect_perfect_arrows(0);
 
   for(int b=0;b<4;b++)
-  if((b==0 && pd.left_control==125)||(b==1 && pd.down_control==125)||(b==2 && pd.up_control==125)||(b==3 && pd.right_control==125))
   {
-    for(int a=pd.first_visible_arrow;a<pd.last_visible_arrow;a++)if(pd.arrows[a].length==0)if(pd.arrows[a].direction==b)
+    if((b==0 && pd.left_control_held)||(b==1 && pd.down_control_held)||(b==2 && pd.up_control_held)||(b==3 && pd.right_control_held))
     {
-      if(pd.arrows[a].time-song_time>-PERFECT_MS && pd.arrows[a].time-song_time<PERFECT_MS)
+      for(unsigned int a=pd.base_arrow;a<pd.arrows.size();a++)
       {
-        if (pd.arrows[a].rated == false)
+        arrow& ar = pd.arrows[a];
+        if (ar.direction == b && ar.type == NOTE_TYPE_HOLD && ar.length != 0 && ar.rating != RATING_NONE && ar.rating != RATING_MISS && ar.freeze_rating == FREEZE_RATING_NONE)
         {
-          if (DEBUG_LEVEL >= DEBUG_DETAIL)
+          if (abs(viewport_offset - ar.ypos) >= ar.length)
           {
-            //#log.open("debug", std::ios_base::app);
-            log << "detected perfect" << endl;
-            //#log.close();
+            // don't give additional credit for zero-length freeze arrows.
+            // the note type hold is used on these to enforce the rule that
+            // all notes on the same row as a freeze arrow have freeze graphics
+            if (ar.length != 0)
+            {
+    log << "RATE ar:" << a << " freeze rating ok." << endl; //TEMPLOG: outputting vars anims depend on 
+              ar.freeze_rating = FREEZE_RATING_OK;
+            }
+            ar.hidden = true;
+            ar.anim_start_time = song_time;
           }
-          pd.arrows[a].hit = true;
-          //TODO: rate and hide arrow once hit unless it is part of a jump, then hide if other
-          //arrows in jump are hit.  
-          pd.arrows[a].rated = true;
-          pd.arrows[a].hidden = true;
-  //        ratearrow(a,2);
-          ++pd.combo;++pd.perfect;break;
-        }
-      }
-      else if(pd.arrows[a].time-song_time>-GOOD_MS && pd.arrows[a].time-song_time<GOOD_MS)
-      {
-        if (pd.arrows[a].rated == false)
-        {
-          if (DEBUG_LEVEL >= DEBUG_DETAIL)
-          {
-            //#log.open("debug", std::ios_base::app);
-            log << "detected good" << endl;
-            //#log.close();
-          }
-          pd.arrows[a].hit = true;
-          //TODO: rate and hide arrow once hit unless it is part of a jump, then hide if other
-          //arrows in jump are hit.  
-          pd.arrows[a].rated = true;
-          pd.arrows[a].hidden = true;
-  //        ratearrow(a,1);
-          ++pd.combo;++pd.good;break;
         }
       }
     }
-  }
+    else if((b==0 && !pd.left_control_held)||(b==1 && !pd.down_control_held)||(b==2 && !pd.up_control_held)||(b==3 && !pd.right_control_held))
+    {
+      for(unsigned int a=pd.base_arrow;a<pd.arrows.size();a++)
+      {
+        arrow& ar = pd.arrows[a];
+        if (ar.direction == b && ar.type == NOTE_TYPE_HOLD && ar.length != 0 && ar.rating != RATING_NONE && ar.rating != RATING_MISS && ar.freeze_rating == FREEZE_RATING_NONE)
+        {
+          // don't fail freeze arrow too close to end, it looks funny and
+          // this is supposed to be a fun game anyway ;)
+          if (ar.length - abs(viewport_offset - ar.ypos) > FREEZE_LENGTH_ALLOW)
+          {
+  log << "RATE ar:" << a << " freeze rating FAILED." << endl; //TEMPLOG: outputting vars anims depend on 
+            ar.freeze_rating = FREEZE_RATING_FAILED;
+            // when a freeze arrow is failed, it grows a new head at the 
+            // point where it was failed for the rest of the darkened
+            // fail state drawing
+            long old_ypos = ar.ypos;
+            ar.ypos += viewport_offset - ar.ypos;
+            ar.length -= ar.ypos - old_ypos;
+          }
+          else
+          {
+            //TODO: above loop that detects success is filtering on the pad
+            // direction being pressed... investigate eliminating this duplication
+            if (abs(viewport_offset - ar.ypos) >= ar.length)
+            {
+              // don't give additional credit for zero-length freeze arrows.
+              // the note type hold is used on these to enforce the rule that
+              // all notes on the same row as a freeze arrow have freeze graphics
+              if (ar.length != 0)
+              {
+      log << "RATE ar:" << a << " freeze rating ok." << endl; //TEMPLOG: outputting vars anims depend on 
+                ar.freeze_rating = FREEZE_RATING_OK;
+              }
+              ar.hidden = true;
+              ar.anim_start_time = song_time;
+            }
+          }
+        }
+      }
+    }
+  }  
   
-  if (DEBUG_LEVEL >= DEBUG_GUTS)
-  {
-    //#log.open("debug", std::ios_base::app);
-    log << "checking for perfect on held arrow" << endl;
-    //#log.close();
-  }
-  for(int b=0;b<4;b++)
-  if((b==0 && pd.left_control)||(b==1 && pd.down_control)||(b==2 && pd.up_control)||(b==3 && pd.right_control))
-  {
-    for(unsigned int a=pd.base_arrow;a<pd.arrows.size();a++)if(pd.arrows[a].length!=0)if(pd.arrows[a].direction==b)
-    {
-      if(pd.arrows[a].time-song_time>-1000/5 && pd.arrows[a].time-song_time<1000/5)
-      {
-        if (DEBUG_LEVEL >= DEBUG_DETAIL)
-        {
-          //#log.open("debug", std::ios_base::app);
-          log << "detected succesfully held hold arrow" << endl;
-          //#log.close();
-        }
-//        pd.arrows[a].ypos+=timehaspast;
-//        pd.arrows[a].length-=timehaspast;
-//        if(pd.arrows[a].length<=0)
-//        {
-//          ratearrow(a,2);
-//        }
-
-        //TODO: fix length check
-        //combo=combo+1;perfect=perfect+1;
-      }
-    }
-  }
+  //TODO: all rating of arrows should be looping by arrow not by direction
+  // might be nice to be able to do if (pl.control_active[ar.direction])
 }

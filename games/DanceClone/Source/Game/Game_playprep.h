@@ -44,7 +44,7 @@ void Game_playprep(){
   // initialise play data
   
   //TODO: move to play data
-  while(n_ratings)deleterating(0);
+//  while(n_ratings)deleterating(0);
   
 
   if (!current_play_data.init())

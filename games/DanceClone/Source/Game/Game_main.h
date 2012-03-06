@@ -1,17 +1,7 @@
 //TODO: worth it to optimize bg by not always redrawing?
 //TODO: replace static bg by video
 
-#define NOTE_TYPE_HOLD 1              
-#define NOTE_TYPE_QUARTER 2           // 1 per beat, 4 per measure
-#define NOTE_TYPE_EIGHTH 3            // 2 per beat, 8 per measure
-#define NOTE_TYPE_QUARTER_TRIPLET 4   // 3 per beat, 12 per measure
-#define NOTE_TYPE_SIXTEENTH 5         // 4 per beat, 16 per measure
-#define NOTE_TYPE_EIGHTH_TRIPLET 6    // 6 per beat, 24 per measure
-#define NOTE_TYPE_THIRTYSECOND 7      // 8 per beat, 32 per measure
-#define NOTE_TYPE_SIXTEENTH_TRIPLET 8 // 12 per beat, 48 per measure
-#define NOTE_TYPE_SIXTYFOURTH 9       // 16 per beat, 64 per measure
-#define NOTE_TYPE_THIRTYSECOND_TRIPLET 10  // 24 per beat, 96 per measure
-#define NOTE_TYPE_SIXTYFOURTH_TRIPLET 11   // 48 per beat, 192 per measure
+#define ARROWS_HIT_ANIM_MS 200.0
 
 #define NUM_DIFFICULTIES 5
 
@@ -30,10 +20,11 @@ int arrow_height = 64;
 bool gamestatechange = 0;
 int difficulty = 0;
 #include "setup/play_logic.h"
+#include "setup/play_data.h"
+#include "Game_playprep.h"
 #include "Game_common.h"
 #include "Game_setup.h"
 #include "Game_menu.h"
-#include "Game_playprep.h"
 #include "Game_play.h"
 
 play_data current_play_data;
@@ -67,7 +58,6 @@ void Game_run()
       log.open("debug", std::ios_base::app);
     }
   }
-
 }
 
 void game_cleanup()
