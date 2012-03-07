@@ -31,7 +31,7 @@ using std::ifstream;
 #include <cstdlib>
 
 
-#define GAMEVERSIONSTRING "DanceClone v0.56"
+#define GAMEVERSIONSTRING "DanceClone v0.57"
 #define DEBUG_OFF 0
 #define DEBUG_BASIC 1
 #define DEBUG_MINOR 2
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
     }
     
     // unless playing song, run wiidash code
-    if (gamestate!=8)
+    if (gamestate!=8 && gamestate != 7)
     {
       WiiDash_run();
     }

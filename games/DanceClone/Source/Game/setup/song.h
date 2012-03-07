@@ -325,7 +325,7 @@ bool song::read_step_data()
             // all elements after insertion point so it is much better to create a temp vector using push_back
             // and then flip the contents into the real working variable
             vector<beat_tick> initial_beat_ticks;
-            while (temp_16th_time > 0-SONG_START_OFFSET-PLAYER_PREP_OFFSET)
+            while (temp_16th_time > 0-SONG_START_OFFSET)
             {
               temp_16th_time -= one_16th_offset;
               temp_16th_position -= one_16th_offset * pixels_per_ms_at_1_bpm * bpm_changes[0].bpm;

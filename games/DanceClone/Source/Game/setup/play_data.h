@@ -12,8 +12,6 @@
 #include "song.h"
 #include "player_data.h"
 
-#define MAX_PLAYERS 1
-
 class play_data
 {
 private:
@@ -26,6 +24,8 @@ public:
   int num_bpm_changes;
   long song_start_time;
   long song_time;
+  long pre_start_time;
+  long song_abort_start_time;
   long frame_time; //TEMP
   long viewport_offset;
   float ms_per_pixel_at_1_bpm;
@@ -35,6 +35,8 @@ public:
   int num_players;
   
   play_data();
+  bool pre_start_delay_finished();
+  void check_abort();
   bool init();
   void initial_frame();
   void frame();
@@ -44,6 +46,7 @@ public:
 };
 
 play_data::play_data() :
+pre_start_time(-1),
 current_player_data(MAX_PLAYERS)
 {
 }
@@ -60,6 +63,7 @@ bool play_data::init()
   current_bpm_change = -1;
   song_start_time = WDgametime+(SDL_GetTicks()-WDruntime);
   song_time = 0;
+  song_abort_start_time = -1;
   ms_per_pixel_at_1_bpm = 120.0*4000.0/rmode->viHeight;
   num_players = MAX_PLAYERS;
   
@@ -112,6 +116,56 @@ bool play_data::init()
   return false;
 }
 
+bool play_data::pre_start_delay_finished()
+{
+  if (pre_start_time == -1)
+  {
+    pre_start_time = SDL_GetTicks();
+  }
+  if (SDL_GetTicks() - pre_start_time > PRE_START_DELAY)
+  {
+    pre_start_time = -1;
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+void play_data::check_abort()
+{
+  bool abort_held = false;
+  for (int i = 0; i < num_players; i++)
+  {
+    if(   (WiiButtonsHeld[i] & WPAD_BUTTON_A &&  WiiButtonsHeld[i] & WPAD_BUTTON_B)
+       || (GCButtonsHeld[i]  & PAD_BUTTON_A  &&  GCButtonsHeld[i]  & PAD_BUTTON_B)
+    ) {
+      abort_held = true;
+    }
+  }
+  if (abort_held)
+  {
+    if (song_abort_start_time == -1)
+    {
+      song_abort_start_time = SDL_GetTicks();
+    }
+    else
+    {
+      if (SDL_GetTicks() - song_abort_start_time > SONG_ABORT_DELAY)
+      {
+        song_abort_start_time = -1;
+        MP3Player_Stop();
+        gamestate=4;
+      }
+    }
+  }
+  else
+  {
+    song_abort_start_time = -1;
+  }
+}
+
 void play_data::initial_frame()
 {
   if (DEBUG_LEVEL >= DEBUG_MINOR)
@@ -125,11 +179,11 @@ void play_data::initial_frame()
   // first frame will calculate a negative current song time, allowing
   // actual song playback to be on sync if it starts a little later
   // than song start function call
-  song_start_time = SDL_GetTicks() + SONG_START_OFFSET + PLAYER_PREP_OFFSET;
+  song_start_time = SDL_GetTicks() + SONG_START_OFFSET;
   
   // viewport offset starts increasingly negative as song offset goes up,
   // so that after offset time it is at 0.  this synchronises rating and drawing
-  viewport_offset = - ((SONG_START_OFFSET+PLAYER_PREP_OFFSET) / ms_per_pixel_at_current_bpm);
+  viewport_offset = - ((SONG_START_OFFSET) / ms_per_pixel_at_current_bpm);
   
   // not taking into account partial pixels for initial offset. 
   // fractional pixels are only important over time
@@ -296,10 +350,10 @@ void play_data::partial_frame(long begin, long end)
 void play_data::read_player_controls(int p)
 {
   #ifdef WIN
-  pd.up_control = keystate[SDLK_UP];
-  pd.down_control = keystate[SDLK_DOWN];
-  pd.left_control = keystate[SDLK_LEFT];
-  pd.right_control = keystate[SDLK_RIGHT];
+  pd.up_control_down = keystate[SDLK_UP];
+  pd.down_control_down = keystate[SDLK_DOWN];
+  pd.left_control_down = keystate[SDLK_LEFT];
+  pd.right_control_down = keystate[SDLK_RIGHT];
   #endif
 
   // update player controls
@@ -313,14 +367,15 @@ void play_data::read_player_controls(int p)
   //TODO: multiplayer
   player_data& pd = current_player_data[p];
 
-  pd.up_control_down =    GCButtons1Down & PAD_BUTTON_UP;
-  pd.down_control_down =  GCButtons1Down & PAD_BUTTON_DOWN;
-  pd.left_control_down =  GCButtons1Down & PAD_BUTTON_LEFT;
-  pd.right_control_down = GCButtons1Down & PAD_BUTTON_RIGHT;
-  pd.up_control_held =    GCButtons1Held & PAD_BUTTON_UP;
-  pd.down_control_held =  GCButtons1Held & PAD_BUTTON_DOWN;
-  pd.left_control_held =  GCButtons1Held & PAD_BUTTON_LEFT;
-  pd.right_control_held = GCButtons1Held & PAD_BUTTON_RIGHT;
+  pd.control_data[UP].down =      GCButtons1Down & PAD_BUTTON_UP;
+  pd.control_data[DOWN].down =    GCButtons1Down & PAD_BUTTON_DOWN;
+  pd.control_data[LEFT].down =    GCButtons1Down & PAD_BUTTON_LEFT;
+  pd.control_data[RIGHT].down =   GCButtons1Down & PAD_BUTTON_RIGHT;
+  pd.control_data[UP].held =      GCButtons1Held & PAD_BUTTON_UP;
+  pd.control_data[DOWN].held =    GCButtons1Held & PAD_BUTTON_DOWN;
+  pd.control_data[LEFT].held =    GCButtons1Held & PAD_BUTTON_LEFT;
+  pd.control_data[RIGHT].held =   GCButtons1Held & PAD_BUTTON_RIGHT;
+
 /*
   if(WPAD_Expansion1.type == WPAD_EXP_CLASSIC)
   {
@@ -330,8 +385,46 @@ void play_data::read_player_controls(int p)
     pd.right_control = (WiiButtons1Held & WPAD_CLASSIC_BUTTON_RIGHT) || (WiiButtons1Down & WPAD_CLASSIC_BUTTON_RIGHT);
   }
   */
-  
   #endif
+  
+  // check clearing control down start time
+  for (int i = 0; i < NUM_CONTROL_DIRECTIONS; i++)
+  {
+    if (pd.control_data[i].down_time != -1 && !pd.control_data[i].held)
+    {
+      pd.control_data[i].down_time = -1;
+      pd.control_data[i].jump_active = false;
+    }
+  }
+
+  
+  // check setting control down start time
+  for (int i = 0; i < NUM_CONTROL_DIRECTIONS; i++)
+  {
+    if (pd.control_data[i].down) 
+    {
+      pd.control_data[i].down_time = song_time;
+    }
+  }
+  
+  // check setting jump flag for each direction
+  int num_controls_down = 0;
+  for (int i = 0; i < NUM_CONTROL_DIRECTIONS; i++)
+  {
+    if (pd.control_data[i].down_time != -1)
+    {
+      ++num_controls_down;
+    }
+  }
+  if (num_controls_down > 1)
+  {
+    // all controls held down since a time smaller than the allowed jump delay
+    // are considered part of a jump
+    for (int i = 0; i < NUM_CONTROL_DIRECTIONS; i++)
+    {
+      pd.control_data[i].jump_active = song_time - pd.control_data[i].down_time <= JUMP_ALLOW_MS;
+    }
+  }
 }
 
 void play_data::rate_arrows(int p)
@@ -342,7 +435,7 @@ void play_data::rate_arrows(int p)
     arrow& ar = pd.arrows[a];
     if (ar.rating == RATING_NONE && song_time - ar.time > BOO_MS)
     {
-log << "MISS ar:" << a << endl; //TEMPLOG: outputting vars anims depend on 
+log << "MISS ar:" << a << " because song_time - ar.time = " << song_time << " - " << ar.time << " == " << song_time-ar.time << endl; //TEMPLOG: outputting vars anims depend on 
       ar.rating = RATING_MISS;
       if (ar.type == NOTE_TYPE_HOLD)
       {
@@ -354,42 +447,108 @@ log << "MISS ar:" << a << endl; //TEMPLOG: outputting vars anims depend on
 
   for(int b=0; b<4; b++)
   {
-    if((b==0 && pd.left_control_down)||(b==1 && pd.down_control_down)||(b==2 && pd.up_control_down)||(b==3 && pd.right_control_down))
+    if (pd.control_data[b].down)
     {
       for(int a = pd.first_visible_arrow; a <= pd.last_visible_arrow; a++)
       {
         arrow& ar = pd.arrows[a];
+        
+        // when an arrow is reached that is too far ahead, don't bother looping any further
+        if (ar.time - song_time > BOO_MS) break;
+        
         if (ar.direction == b && ar.rating == RATING_NONE)
         {
+log << "check ar:" << a << "  song_time - ar.time = " << song_time << " - " << ar.time << " == " << song_time-ar.time << endl; //TEMPLOG: outputting vars anims depend on 
           int new_rating = RATING_NONE;
-          if(abs(ar.time - song_time) <= MARVELLOUS_MS)
+          if(labs(ar.time - song_time) <= MARVELLOUS_MS)
           {
             new_rating = RATING_MARVELLOUS;
           }
-          if(abs(ar.time - song_time) <= PERFECT_MS)
+          else if(labs(ar.time - song_time) <= PERFECT_MS)
           {
             new_rating = RATING_PERFECT;
           }
-          else if(abs(ar.time-song_time) <= GREAT_MS)
+          else if(labs(ar.time-song_time) <= GREAT_MS)
           {
             new_rating = RATING_GREAT;
           }
-          else if(abs(ar.time-song_time) <= GOOD_MS)
+          else if(labs(ar.time-song_time) <= GOOD_MS)
           {
             new_rating = RATING_GOOD;
           }
-          
-          if (new_rating != RATING_NONE)
+          else if(labs(ar.time-song_time) <= BOO_MS)
           {
-log << "RATE ar:" << a << " rating: " << new_rating << " because ar.t-st=" << abs(ar.time-song_time) << endl; //TEMPLOG: outputting vars anims depend on 
-            ar.anim_start_time = song_time;
-            ar.rating = new_rating;
-            ++pd.combo;
-            if (ar.length == 0)
+            new_rating = RATING_MISS;
+          }
+          
+
+          // jump rating: all arrows present in the same row are considered
+          // part of a jump group.  all jump directions must be active for
+          // these to be rated and they count as one arrow with one rating
+          int min_jump_arrow_index = a;
+          int max_jump_arrow_index = a;
+          while (min_jump_arrow_index-1 >= pd.first_visible_arrow)
+          {
+            if (pd.arrows[min_jump_arrow_index-1].time != ar.time)
             {
-              ar.hidden = true;
+              break;
             }
-            break;
+            --min_jump_arrow_index;
+          }
+          while (max_jump_arrow_index+1 <= pd.last_visible_arrow)
+          {
+            if (pd.arrows[max_jump_arrow_index+1].time != ar.time)
+            {
+              break;
+            }
+            ++max_jump_arrow_index;
+          }
+          if (min_jump_arrow_index != max_jump_arrow_index)
+          {
+            // more than one arrow on the same line.  are jump flags
+            // for each necessary direction active?
+            for (int i = min_jump_arrow_index; i <= max_jump_arrow_index; i++)
+            {
+              if (pd.control_data[pd.arrows[i].direction].jump_active == false)
+              {
+log << "NULLING RATE ar:" << a << " because control direction " << pd.arrows[i].direction << " not jump active " << " i: " << i << "  min idx: " << min_jump_arrow_index << " max: " << max_jump_arrow_index << endl; //TEMPLOG: outputting vars anims depend on 
+                new_rating = RATING_NONE;
+              }
+            }
+            // if the rating is still good, apply it to all arrows in the jump
+            if (new_rating != RATING_NONE)
+            {
+              for (int i = min_jump_arrow_index; i <= max_jump_arrow_index; i++)
+              {
+                arrow& jmp_ar = pd.arrows[i];
+                
+    log << "JUMP RATE ar:" << i << " rating: " << new_rating << endl;
+                jmp_ar.anim_start_time = song_time;
+                jmp_ar.rating = new_rating;
+                ++pd.combo;
+                if (jmp_ar.length == 0)
+                {
+                  jmp_ar.hidden = true;
+                }
+              }
+              break;
+            }
+          }
+          else
+          {
+            // non-jump arrow case
+            if (new_rating != RATING_NONE)
+            {
+  log << "RATE ar:" << a << " rating: " << new_rating << " because ar.t-st=" << labs(ar.time-song_time) << endl; //TEMPLOG: outputting vars anims depend on 
+              ar.anim_start_time = song_time;
+              ar.rating = new_rating;
+              ++pd.combo;
+              if (ar.length == 0)
+              {
+                ar.hidden = true;
+              }
+              break;
+            }
           }
         }
       }
@@ -398,14 +557,14 @@ log << "RATE ar:" << a << " rating: " << new_rating << " because ar.t-st=" << ab
 
   for(int b=0;b<4;b++)
   {
-    if((b==0 && pd.left_control_held)||(b==1 && pd.down_control_held)||(b==2 && pd.up_control_held)||(b==3 && pd.right_control_held))
+    if (pd.control_data[b].held)
     {
       for(unsigned int a=pd.base_arrow;a<pd.arrows.size();a++)
       {
         arrow& ar = pd.arrows[a];
         if (ar.direction == b && ar.type == NOTE_TYPE_HOLD && ar.length != 0 && ar.rating != RATING_NONE && ar.rating != RATING_MISS && ar.freeze_rating == FREEZE_RATING_NONE)
         {
-          if (abs(viewport_offset - ar.ypos) >= ar.length)
+          if (labs(viewport_offset - ar.ypos) >= ar.length)
           {
             // don't give additional credit for zero-length freeze arrows.
             // the note type hold is used on these to enforce the rule that
@@ -421,7 +580,7 @@ log << "RATE ar:" << a << " rating: " << new_rating << " because ar.t-st=" << ab
         }
       }
     }
-    else if((b==0 && !pd.left_control_held)||(b==1 && !pd.down_control_held)||(b==2 && !pd.up_control_held)||(b==3 && !pd.right_control_held))
+    else
     {
       for(unsigned int a=pd.base_arrow;a<pd.arrows.size();a++)
       {
@@ -430,7 +589,7 @@ log << "RATE ar:" << a << " rating: " << new_rating << " because ar.t-st=" << ab
         {
           // don't fail freeze arrow too close to end, it looks funny and
           // this is supposed to be a fun game anyway ;)
-          if (ar.length - abs(viewport_offset - ar.ypos) > FREEZE_LENGTH_ALLOW)
+          if (ar.length - labs(viewport_offset - ar.ypos) > FREEZE_LENGTH_ALLOW)
           {
   log << "RATE ar:" << a << " freeze rating FAILED." << endl; //TEMPLOG: outputting vars anims depend on 
             ar.freeze_rating = FREEZE_RATING_FAILED;
@@ -445,7 +604,7 @@ log << "RATE ar:" << a << " rating: " << new_rating << " because ar.t-st=" << ab
           {
             //TODO: above loop that detects success is filtering on the pad
             // direction being pressed... investigate eliminating this duplication
-            if (abs(viewport_offset - ar.ypos) >= ar.length)
+            if (labs(viewport_offset - ar.ypos) >= ar.length)
             {
               // don't give additional credit for zero-length freeze arrows.
               // the note type hold is used on these to enforce the rule that

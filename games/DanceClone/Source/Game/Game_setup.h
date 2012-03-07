@@ -21,5 +21,5 @@ void Game_init()
 
   Game_setup_sprites();
   
-  goal_offset = rmode->viHeight / 4; // Immitate DDR2 on Wii
+  goal_offset = rmode->viHeight / 4;
 }

@@ -1,3 +1,7 @@
+//TODO: visual display when player is too far up dance pad (on a or b button)
+//
+//TODO: redo home arrow step animation to use several frames
+//
 //TODO: add second player arrows with player-specific difficulty
 //
 //TODO: play video in background
@@ -96,10 +100,10 @@ void Game_play()
   else
   {
     // other 15 16ths of quarter, draw lit home arrow only if player presses it
-    apply_surface(185, goal_offset, home_arrows_image, screen, &arrows_frames[pd.left_control_down?4:6]);
-    apply_surface(250, goal_offset, home_arrows_image, screen, &arrows_frames[pd.down_control_down?0:2]);
-    apply_surface(320, goal_offset, home_arrows_image, screen, &arrows_frames[pd.up_control_down?8:10]);
-    apply_surface(385, goal_offset, home_arrows_image, screen, &arrows_frames[pd.right_control_down?12:14]);
+    apply_surface(185, goal_offset, home_arrows_image, screen, &arrows_frames[pd.control_data[LEFT].down?4:6]);
+    apply_surface(250, goal_offset, home_arrows_image, screen, &arrows_frames[pd.control_data[DOWN].down?0:2]);
+    apply_surface(320, goal_offset, home_arrows_image, screen, &arrows_frames[pd.control_data[UP].down?8:10]);
+    apply_surface(385, goal_offset, home_arrows_image, screen, &arrows_frames[pd.control_data[RIGHT].down?12:14]);
   }
   
  
@@ -452,15 +456,6 @@ void Game_play()
   }
   
   
-//TODO: fix player start prep
-/*  
-  #ifdef WII
-  if((current_play_data.song_time > 0-SONG_START_OFFSET) && !MP3Player_IsPlaying()){
-    MP3Player_Stop();
-    gamestate=9;
-  }
-  #endif
-*/
   #ifdef WII
   if(!MP3Player_IsPlaying()){
     MP3Player_Stop();
@@ -484,6 +479,7 @@ void Game_play()
   #endif
 
   #ifdef WII
+  /*
   if(
       WiiButtonsDown[0] & WPAD_BUTTON_HOME
   ||  WiiButtonsDown[0] & WPAD_BUTTON_B
@@ -492,6 +488,10 @@ void Game_play()
     MP3Player_Stop();
     gamestate=4;
   }
+  */
+  current_play_data.check_abort();
+  
+  
   #endif
 
   if (DEBUG_LEVEL >= DEBUG_DETAIL)

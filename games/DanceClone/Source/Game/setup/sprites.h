@@ -10,6 +10,7 @@ using std::string;
 SDL_Surface* backgroundimage = NULL;
 SDL_Surface* titleimage = NULL;
 SDL_Surface* ratingsimage = NULL; SDL_Rect ratingsframes[3];
+SDL_Surface* getreadyimage = NULL;
 
 // all non-hold arrows have same layout so use only one frames array
 SDL_Rect arrows_frames[16];
@@ -129,7 +130,8 @@ void Game_setup_sprites()
 {
   backgroundimage = IMG_LoadOptimize("Media/Game/background.png");
   titleimage = IMG_Load("Media/Game/title.png");
-
+  getreadyimage = IMG_Load("Media/Game/getready.png");
+  
   // expand source PNGs creating other arrow directions
   //optimistically using SDL_HWSURFACE but not all these can fit into the hardware memory ;)
   //http://en.wikipedia.org/wiki/Wii states 3MB framebuffer of which 1.2 is used per screen + dbl buffering... not leaving much

@@ -1,5 +1,10 @@
 changelog
 --
+v0.57
+-added intro delay before song start
+-added abort song by holding A+B
+-jump rating is now correct
+
 v0.56
 -freeze arrows are correctly drawn
 -arrow hit animations

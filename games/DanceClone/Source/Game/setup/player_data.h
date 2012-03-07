@@ -1,6 +1,23 @@
 // player_data
 //
 
+//TODO: make global since same index as sm files to be used?
+#define LEFT 0
+#define DOWN 1
+#define UP 2
+#define RIGHT 3
+#define NUM_CONTROL_DIRECTIONS 4
+
+class control_direction_data
+{
+private:
+
+public:
+  bool down;
+  long down_time;
+  bool held;
+  bool jump_active;
+};
 
 class player_data
 {
@@ -20,18 +37,16 @@ public:
   int last_visible_arrow;
   int next_offscreen_arrow;
   int num_arrows;
-  bool up_control_down;
-  bool down_control_down;
-  bool left_control_down;
-  bool right_control_down;
-  bool up_control_held;
-  bool down_control_held;
-  bool left_control_held;
-  bool right_control_held;
-    
+
+  vector<control_direction_data> control_data;
+  player_data();
   void init();
-  int find_next_ratable_arrow(unsigned int direction);
 };
+
+player_data::player_data() :
+control_data(NUM_CONTROL_DIRECTIONS)
+{
+}
 
 void player_data::init()
 {
@@ -46,18 +61,11 @@ void player_data::init()
   first_visible_arrow = -1;
   next_offscreen_arrow = -1;
   
-  //TODO: control data in vector?
-  up_control_down = false;
-  down_control_down = false;
-  left_control_down = false;
-  right_control_down = false;
-  up_control_held = false;
-  down_control_held = false;
-  left_control_held = false;
-  right_control_held = false;
-}
-
-int player_data::find_next_ratable_arrow(unsigned int direction)
-{
-  return -1;
+  for (int i = 0; i > NUM_CONTROL_DIRECTIONS; i++)
+  {
+    control_data[i].down = false;
+    control_data[i].down_time = -1;
+    control_data[i].held = false;
+    control_data[i].jump_active = false;
+  }
 }
