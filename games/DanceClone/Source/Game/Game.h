@@ -35,29 +35,34 @@ namespace DanceClone
 
 class Game
 {
-private:
+public:
 
   enum GameState
   {
-    NONE,
-    TITLE,
-    CREDITS,
-    SCORE,
-    SONGSELECTPT1,
-    SONGSELECTPT2,
-    STEPCREATE,
-    PLAYPREPPT1,
-    PLAYPREPPT2,
-    PLAY,
-    DEBUG
+    NONE,         //
+    TITLE,        // 0
+    CREDITS,      // 1
+    SCORE,        // 2, 9
+    SONG_SELECT1, // 3
+    SONG_SELECT2, // 4
+    STEP_CREATE,  // 5
+    PLAY_PREP1,   // 7
+    PLAY_PREP2,   // 11
+    PLAY,         // 8
+    DEBUG         // 10
   };
+
+
+private:
   
-  GameState state;
   Platform& platform;
+  GameState state;
+  bool gameStateChanged;
   Constants constants;
   SoundAgent soundAgent;
   GraphicsAgent graphicsAgent;
   Game(); //disallow emtpy public ctor 
+
   
 public:
 
@@ -66,6 +71,7 @@ public:
   void Cleanup();
   void Pump();
   GameState State();
+  void RunTitleScreen();
 };
 
 }

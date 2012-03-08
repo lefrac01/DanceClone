@@ -21,6 +21,15 @@
 
 namespace DanceClone
 {
-
+  
+void SoundAgent::Init()
+{
+  #ifdef WIN
+  Mix_Music* music = NULL;
+  Mix_OpenAudio(0,0,0,0);
+  //Mix_VolumeMusic(100);
+  //Mix_PlayMusic(music, -1);
+  #endif
+}
 
 }

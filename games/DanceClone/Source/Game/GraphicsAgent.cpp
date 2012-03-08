@@ -22,7 +22,8 @@
 namespace DanceClone
 {
 
-GraphicsAgent::GraphicsAgent() :
+GraphicsAgent::GraphicsAgent(Platform& p) :
+  platform(p),
   background_image(NULL),
   title_image(NULL),
   ratings_image(NULL),
@@ -54,7 +55,12 @@ GraphicsAgent::GraphicsAgent() :
 
 bool GraphicsAgent::Init(string ConfigFilePath)
 {
-  pixelsPerMsAt1BPM = 0.0; // calculate once screen height is known
+  screenWidth = platform.platformGraphicsAgent.ScreenWidth();
+  screenHeight = platform.platformGraphicsAgent.ScreenHeight();
+  
+  goalOffset = screenHeight / 4;
+  
+  pixelsPerMsAt1BPM = screenHeight / 4000.0 / 120.0; // calculate once screen height is known
 // based on the observed rate of 4000ms per screen height per quarter note
 // at 120 BPM
 
@@ -402,6 +408,11 @@ void GraphicsAgent::Cleanup()
     SDL_FreeSurface(freeze_hit_image);
     freeze_hit_image = NULL;
   }
+}
+
+void GraphicsAgent::DrawBackground()
+{
+  ApplySurface(0, 0, background_image, screen, NULL);
 }
 
 }

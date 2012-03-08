@@ -51,15 +51,19 @@ private:
 
   GUIDash dash;
   InputAgent inputAgent;
-  PlatformGraphicsAgent platformGraphicsAgent;
-  
   
 public:
+
+  PlatformGraphicsAgent platformGraphicsAgent;
   virtual void Init();
   virtual void Cleanup();
   virtual void Pump();
   bool DashVisible();
   void PumpDash();
+  
+  //TODO: not here
+  void DrawButton(int x, int y, int w, int h, bool glow);
+  bool DoButton(int x, int y, int w, int h, bool center, bool clickable, char* text);
 };
 
 #endif

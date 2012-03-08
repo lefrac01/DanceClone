@@ -14,7 +14,7 @@ using std::ifstream;
 #include <cstdlib>
 */
 
-#define GAMEVERSIONSTRING "DanceClone v0.57"
+#define GAMEVERSIONSTRING "DanceClone v0.58"
 /*
 #define DEBUG_OFF 0
 #define DEBUG_BASIC 1
@@ -58,35 +58,22 @@ int main(int argc, char* argv[])
   
   Game game(platform);
   game.Init();
-//  Game_init();
-//  WiiDash_init();
 
   bool done = false;
   while(!done)
   {
     platform.Pump();
     
-    //updatecontrolinput();
-    
-//    if(WDonoffpercent == 0)
-//    {
-//      Game_run();
-//    }
     if (!platform.DashVisible())
     {
       game.Pump();
     }
     
-    // unless playing song, run wiidash code
-//    if (gamestate!=8 && gamestate != 7)
-//TODO: enum
-    if (game.State() != 8 && game.State() != 7)
+    if (game.State() != Game::PLAY_PREP1 && game.State() != Game::PLAY_PREP2)
     {
-      //WiiDash_run();
       platform.PumpDash();
     }
     
-//    SDL_Flip(screen);
     SDL_Event event;
     
     while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_ALLEVENTS) > 0)
@@ -97,9 +84,7 @@ int main(int argc, char* argv[])
       }
     }
   }
-  //game_cleanup();
   game.Cleanup();
   platform.Cleanup();
-  //generic_cleanup();
   return 0;
 }

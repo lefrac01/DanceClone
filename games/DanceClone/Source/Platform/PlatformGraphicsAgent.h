@@ -46,11 +46,29 @@ public:
   Uint8* pWDrgb1;
   Uint8* pWDrgb2;
 
+  SDL_Surface *WDbackground;
+  SDL_Surface *WDbackgroundblurred;
+  SDL_Surface *WDborderimage;
+  SDL_Surface *WDtopbottomborderimage;
+  SDL_Surface *WDcursorimage;
+  SDL_Rect WDcursorframes[16];
+  SDL_Surface *WDfontimage;
+  SDL_Rect WDfontframes[95];
+  SDL_Surface *WDbuttonimage;
+  SDL_Rect WDbuttonframes[18];
+  SDL_Surface *WDarrowsimage;
+  SDL_Rect WDarrowsframes[4];
+  SDL_Surface *WDfontimagecolored;
+
   PlatformGraphicsAgent();
   bool Init();
   void Cleanup();
   void ApplySurface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip = NULL);
   void Pump();
+  int ScreenHeight();
+  int ScreenWidth();
+  void DrawSpriteText(int posx,int posy,char* texttosprite,int leftmiddleright);
+
 };
 
 

@@ -19,6 +19,9 @@
 
 #include "PlatformGraphicsAgent.h"
 
+//TODO: static tools class
+#include "../../../../Generic/charstuff.h"
+
 PlatformGraphicsAgent::PlatformGraphicsAgent() :
   screen(NULL),
   rmode(NULL),
@@ -87,7 +90,54 @@ bool PlatformGraphicsAgent::Init()
 //TODO: per-platform agent subclassing
 //#endif
   
+  
+WDbackground      = SDL_DisplayFormat(screen);
+WDbackgroundblurred   = SDL_DisplayFormat(screen);
+WDfontimage       = LoadOptimizeAlpha("Media/WiiDash/Font.png");
+#ifdef WII
+  while(!WDfontimage){
+  WDfontimage     = LoadOptimizeAlpha("Media/WiiDash/Font.png");
+  fatInitDefault();}
+#endif
+WDbuttonimage       = LoadOptimizeAlpha("Media/WiiDash/Button.png");
+WDarrowsimage       = LoadOptimize("Media/WiiDash/Arrows.png");
+WDborderimage       = LoadOptimize("Media/WiiDash/Border.png");
+WDtopbottomborderimage  = LoadOptimize("Media/WiiDash/TopBottomBorder.png");
+WDcursorimage       = LoadOptimizeAlpha("Media/WiiDash/Cursor.png");
+WDfontimagecolored    = LoadOptimizeAlpha("Media/WiiDash/Font.png");
+
+for(int a=0; a<95; a++){
+WDfontframes[a].x=a*15;
+WDfontframes[a].y=0;
+WDfontframes[a].w=15;
+WDfontframes[a].h=21;}
+for(int b=0; b<2; b++)for(int a=0; a<9; a++){
+WDbuttonframes[a+b*9].x=a*21;
+WDbuttonframes[a+b*9].y=b*21;
+WDbuttonframes[a+b*9].w=21;
+WDbuttonframes[a+b*9].h=21;}
+for(int a=0; a<4; a++){
+WDarrowsframes[a].x=a*16;
+WDarrowsframes[a].y=0;
+WDarrowsframes[a].w=16;
+WDarrowsframes[a].h=16;}
+for(int a=0; a<16; a++){
+WDcursorframes[a].x=a*96;
+WDcursorframes[a].y=0;
+WDcursorframes[a].w=96;
+WDcursorframes[a].h=96;}
+  
   return true;
+}
+
+int PlatformGraphicsAgent::ScreenHeight()
+{
+  return rmode->viHeight;
+}
+
+int PlatformGraphicsAgent::ScreenWidth()
+{
+  return rmode->viWidth;
 }
 
 void PlatformGraphicsAgent::Pump()
@@ -146,4 +196,20 @@ void PlatformGraphicsAgent::Cleanup()
   
   //screen(NULL),  SDL_Quit does this?
   //rmode(NULL),  ??
+}
+
+void PlatformGraphicsAgent::DrawSpriteText(int posx,int posy,char* texttosprite,int leftmiddleright)
+{
+  int textlength=strlen(texttosprite);
+  int textnumber;
+  int letterprintx=0;
+  int letterprinty=posy;
+  if(leftmiddleright==1)letterprintx=posx;
+  if(leftmiddleright==2)letterprintx=posx-textlength*11/2;
+  if(leftmiddleright==3)letterprintx=posx-textlength*11;
+  for(int b=0;b<textlength;b++){
+    textnumber=getnumberfromchar(texttosprite[b]);
+    ApplySurface(letterprintx,letterprinty,WDfontimage,screen,&WDfontframes[textnumber]);
+    letterprintx+=11;
+  }
 }
