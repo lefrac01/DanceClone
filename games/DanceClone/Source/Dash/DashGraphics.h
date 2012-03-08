@@ -1,4 +1,4 @@
-//      Win32Platform.h
+//      Graphics.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -16,14 +16,43 @@
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
+#ifndef DASHGRAPHICS_H
+#define DASHGRAPHICS_H
 
-#include "Platform.h"
+#include <string>
+using std::string;
+#include <SDL/SDL_rotozoom.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_mixer.h>
+#include <exception>
+using std::exception;
+#include <gccore.h>
 
-class Win32Platform : public Platform
+#include "../Platform/OS.h"
+using Platform::OS;
+
+
+class DashGraphics
 {
 private:
 
+  DashGraphics();
+  OS& sys;
+
+  
 public:
-  void Init();
+
+  DashGraphics(OS& os);
+
+  SDL_Surface *background;
+  SDL_Surface *backgroundBlurred;
+  SDL_Surface *borderImage;
+  SDL_Surface *topBottomBorderImage;
+
+  bool Init();
   void Cleanup();
 };
+
+
+#endif

@@ -1,4 +1,4 @@
-//      SoundAgent.cpp
+//      Sound.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,13 +17,14 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#include "SoundAgent.h"
+#include "Sound.h"
 
 namespace DanceClone
 {
   
-void SoundAgent::Init()
+void Sound::Init()
 {
+  LOG(DEBUG_MINOR, "DanceClone::Sound::Init()" << endl)
   #ifdef WIN
   Mix_Music* music = NULL;
   Mix_OpenAudio(0,0,0,0);

@@ -1,5 +1,4 @@
-//TODO: .ini for rating times
-//      Constants.cpp
+//      Win32OS.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -18,32 +17,18 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#include "Constants.h"
+#include "OS.h"
 
-namespace DanceClone
+namespace Platform
 {
-//TODO: game drawing constants like ms per pixel at 1 bpm and goal offset!
-void Constants::Init(string ConfigFilePath)
-{
-  LOG(DEBUG_MINOR, "DanceClone::Constants::Init()" << endl)
-  arrowsHitAnimMs = 200.0;
-  numDifficulties = 5;
-  songStartOffset = 100;
 
-  goalOffset = 0;
-  maxPlayers = 1;
-  preStartDelay = 3000;
-  songAbortDelay = 3000;
-  jumpAllowDelay = 100;
-  booDelay = 200;
-  goodDelay = 200;
-  greatDelay = 100;
-  perfectDelay = 50;
-  marvellousDelay = 25;
-  freezeFailDelay = 250;
-  freezeLengthAllow = 25;
-  // how many pixels before the end of a freeze arrow the player is
-  //  allowed to lift off without failing the freeze
-}
+class Win32OS : public OS
+{
+private:
+
+public:
+  void Init();
+  void Cleanup();
+};
 
 }

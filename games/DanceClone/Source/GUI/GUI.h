@@ -1,4 +1,4 @@
-//      Game.h
+//      GUI.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -16,66 +16,47 @@
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
+#ifndef GUI_H
+#define GUI_H
 
-
-#include <string>
-using std::string;
-#include <fstream>
-using std::ofstream;
-using std::ifstream;
-using std::endl;
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL_mixer.h>
 
 #include "../Platform/OS.h"
 using Platform::OS;
-#include "../GUI/GUI.h"
-using Gooey::GUI;
-#include "Constants.h"
-#include "Sound.h"
-#include "Graphics.h"
+#include "GUIGraphics.h"
+#include "../Platform/Tools.h"
 
-namespace DanceClone
+namespace Gooey
 {
 
-class Game
+class GUI
 {
-public:
-
-  enum GameState
-  {
-    NONE,         //
-    TITLE,        // 0
-    CREDITS,      // 1
-    SCORE,        // 2, 9
-    SONG_SELECT1, // 3
-    SONG_SELECT2, // 4
-    STEP_CREATE,  // 5
-    PLAY_PREP1,   // 7
-    PLAY_PREP2,   // 11
-    PLAY,         // 8
-    DEBUG         // 10
-  };
-
-
 private:
   
+  GUI();
   OS& sys;
-  GUI& gui;
-  GameState state;
-  bool gameStateChanged;
-  Constants constants;
-  Sound sound;
   Graphics gfx;
-  Game(); //disallow emtpy public ctor 
-
+  bool useCursors;
+  bool useCursor[4];
   
 public:
 
-  Game(OS& os, GUI& g);
-  bool Init(string configFilePath = "");
+  GUI(OS& os);
+  bool Init();
+  void Update();
   void Cleanup();
-  void Run();
-  GameState State();
-  void RunTitleScreen();
+  void DrawSpriteText(int posx,int posy,char* texttosprite,int leftmiddleright);
+  void DrawButton(int x, int y,int w,int h,bool glow);
+  bool DoButton(int x, int y,int w,int h,bool center,bool clickable,char* text);
+  int SpriteTextWrapped(int posx,int posy,char* texttosprite,int length);
+  void SpriteText(int posx,int posy,char* texttosprite,int leftmiddleright);
+  void SpriteTextColored(int posx,int posy,char* texttosprite,int leftmiddleright);
+  void SetSpriteTextColored(Uint32 color);
+  void SavePngScreenshot();
+  //void WiiDash_savebmpscreenshot();
 };
 
 }
+#endif

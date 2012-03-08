@@ -1,4 +1,4 @@
-//      WiiPlatform.h
+//      OS.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -16,23 +16,35 @@
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
-#ifndef WIIPLATFORM_H
-#define WIIPLATFORM_H
 
-#include "Platform.h"
+#include "OS.h"
 
-#include <gccore.h>
-#include <fat.h>
-#include <dirent.h>
-#include <unistd.h>
-
-class WiiPlatform : public Platform
+namespace Platform
 {
-private:
 
-public:
-  void Init();
-  void Cleanup();
-};
+//TODO: bool
+void OS::Init()
+{
+  srand((int)time(NULL));
 
-#endif
+  vid.Init();
+  input.Init();
+  
+  SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+  SDL_ShowCursor(SDL_DISABLE);
+}
+
+void OS::Pump()
+{
+  LOG(DEBUG_GUTS, " OS::Pump" << endl)
+  SDL_PumpEvents();
+  vid.Pump();
+  input.Update();
+}
+
+void OS::Cleanup()
+{
+  SDL_Quit();
+}
+
+}

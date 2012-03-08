@@ -1,4 +1,4 @@
-//      GUIDash.h
+//      OS.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,28 +17,45 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#ifndef GUIDASH_H
-#define GUIDASH_H
+#ifndef OS_H
+#define OS_H
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <string>
+#include <math.h>
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_mixer.h>
 
-class GUIDash
+#include "Input.h"
+#include "Video.h"
+
+
+namespace Platform
+{
+
+
+class OS
 {
 private:
-  
-  double onOffPercent;
-  Uint8* pWDrgb1;
-  Uint8* pWDrgb2;
 
   
 public:
 
-  void Init();
-  void Update();
-  void Cleanup();
-  bool Visible();
+  Video vid;
+  Input input;
+
+  virtual void Init();
+  virtual void Cleanup();
+  virtual void Pump();
+  
+  //TODO: not here
+  void DrawButton(int x, int y, int w, int h, bool glow);
+  bool DoButton(int x, int y, int w, int h, bool center, bool clickable, char* text);
 };
 
+}
 #endif

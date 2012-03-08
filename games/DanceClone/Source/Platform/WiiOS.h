@@ -1,4 +1,4 @@
-//      GUIDash.cpp
+//      WiiOS.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -16,23 +16,31 @@
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
+#ifndef WIIPLATFORM_H
+#define WIIPLATFORM_H
 
-#include "GUIDash.h"
+#include "OS.h"
 
+#include <gccore.h>
+#include <fat.h>
+#include <dirent.h>
+#include <unistd.h>
 
-void GUIDash::Init()
+namespace Platform
 {
-}
 
-void GUIDash::Update()
+class WiiOS : public OS
 {
-}
+private:
+  static void WiiResetPressed();
+  static void WiiPowerPressed();
+  static void WiimotePowerPressed(s32 chan);
 
-void GUIDash::Cleanup()
-{
-}
+public:
+  void Init();
+  void Cleanup();
+  void Pump();
+};
 
-bool GUIDash::Visible()
-{
-  return onOffPercent != 0;
 }
+#endif

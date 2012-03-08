@@ -1,4 +1,4 @@
-//      Platform.h
+//      LOG.H
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,15 +17,11 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#ifndef PLATFORM_H
-#define PLATFORM_H
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <string>
-#include <math.h>
 
+//ultra cheap logging
+#ifndef LOG_H
+#define LOG_H
 
 #include <iostream>
 using std::cerr;
@@ -36,34 +32,36 @@ using std::ofstream;
 using std::ifstream;
 #include <cstdlib>
 
+static ofstream logFile; // tired == global
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <SDL/SDL_mixer.h>
+#define DEBUG_OFF 0
+#define DEBUG_BASIC 1
+#define DEBUG_MINOR 2
+#define DEBUG_DETAIL 3
+#define DEBUG_GUTS 4
+#define LOG_LEVEL DEBUG_GUTS
+#define SAFE_LOGGING
 
-#include "GUIDash.h"
-#include "InputAgent.h"
-#include "PlatformGraphicsAgent.h"
+#ifdef SAFE_LOGGING
+  #define LOG(lev, content) if (LOG_LEVEL >= lev) \
+                            { logFile.open("debug", std::ios_base::app); \
+                              logFile << content; \
+                              logFile.close(); \
+                            }
+                          
+  #define INIT_LOG  logFile.open("debug", std::ios_base::trunc); \
+                    logFile.close();
 
-class Platform
-{
-private:
-
-  GUIDash dash;
-  InputAgent inputAgent;
+  #define CLOSE_LOG 
+  #define FLUSH_LOG
+#else
+  #define LOG(lev, content) if (LOG_LEVEL >= lev) { logFile << content; }
   
-public:
+  #define INIT_LOG  logFile.open("debug", std::ios_base::trunc);
+                    
+  #define CLOSE_LOG logFile.close();
+  #define FLUSH_LOG logFile.close(); logFile.open("debug", std::ios_base::app);
+#endif
 
-  PlatformGraphicsAgent platformGraphicsAgent;
-  virtual void Init();
-  virtual void Cleanup();
-  virtual void Pump();
-  bool DashVisible();
-  void PumpDash();
-  
-  //TODO: not here
-  void DrawButton(int x, int y, int w, int h, bool glow);
-  bool DoButton(int x, int y, int w, int h, bool center, bool clickable, char* text);
-};
 
 #endif

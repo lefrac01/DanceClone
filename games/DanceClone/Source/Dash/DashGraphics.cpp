@@ -1,4 +1,4 @@
-//      Win32Platform.cpp
+//      Graphics.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,15 +17,34 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
+#include "DashGraphics.h"
 
-#include "Win32Platform.h"
-
-void Win32Platform::Init()
+DashGraphics::DashGraphics(OS& os) :
+  sys(os),
+  background(NULL),
+  backgroundBlurred(NULL),
+  borderImage(NULL),
+  topBottomBorderImage(NULL)
 {
-  Platform::Init();
 }
 
-void Win32Platform::Cleanup()
+bool DashGraphics::Init()
 {
-  Platform::Cleanup();
+  LOG(DEBUG_BASIC, "DashGraphics::Init()" << endl)
+
+//WDborderimage       = LoadOptimize("Media/WiiDash/Border.png");
+//WDtopbottomborderimage  = LoadOptimize("Media/WiiDash/TopBottomBorder.png");
+//WDbackground
+//WDbackgroundblurred
+  background = SDL_DisplayFormat(sys.vid.screen);
+  backgroundBlurred = SDL_DisplayFormat(sys.vid.screen);
+  borderImage = sys.vid.LoadOptimize("Media/WiiDash/Border.png");
+  topBottomBorderImage = sys.vid.LoadOptimize("Media/WiiDash/TopBottomBorder.png");
+  
+
+  return (background && backgroundBlurred && borderImage && topBottomBorderImage);
+}
+
+void DashGraphics::Cleanup()
+{
 }

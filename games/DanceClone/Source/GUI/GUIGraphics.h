@@ -1,4 +1,6 @@
-//      GraphicsAgent.h
+//      GUIGraphics.h // Gah.  using 2 namespaces in same project compiled with make is not working.
+// at least at my level of competence, the makefile is dumping all .o files into the same build
+// dir and overwriting the Gooey::Graphics .o with the DanceClone::Graphics one :(
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -16,6 +18,8 @@
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
+#ifndef GOOEYGRAPHICS_H
+#define GOOEYGRAPHICS_H
 
 #include <string>
 using std::string;
@@ -27,25 +31,46 @@ using std::string;
 using std::exception;
 #include <gccore.h>
 
-class GraphicsAgent
+#include "../Platform/OS.h"
+using Platform::OS;
+
+namespace Gooey
+{
+
+class Graphics 
 {
 private:
 
-  SDL_Surface* LoadOptimize(string filename);
-  SDL_Surface* LoadOptimizeAlpha(string filename);
-  void ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* dest_frames, int src_cols);
-  void SetArrowFrame(SDL_Rect* dest, int index, int x, int y, int w, int h);
-
+  Graphics();
+  OS& sys;
+  
 public:
-  SDL_Surface* screen;
-  GXRModeObj* rmode;
-
-  GraphicsAgent();
+/*
+  SDL_Surface *WDcursorimage;
+  SDL_Rect WDcursorframes[16];
+  SDL_Surface *WDfontimage;
+  SDL_Rect WDfontframes[95];
+  SDL_Surface *WDbuttonimage;
+  SDL_Rect WDbuttonframes[18];
+  SDL_Surface *WDarrowsimage;
+  SDL_Rect WDarrowsframes[4];
+  SDL_Surface *WDfontimagecolored;
+  */
+  SDL_Surface *cursorImage;
+  SDL_Rect cursorFrames[16];
+  SDL_Surface *fontImage;
+  SDL_Rect fontFrames[95];
+  SDL_Surface *buttonImage;
+  SDL_Rect buttonFrames[18];
+  SDL_Surface *arrowsImage;
+  SDL_Rect arrowsFrames[4];
+  SDL_Surface *fontImageColored;
+  
+  Graphics(OS& os);
   bool Init();
   void Cleanup();
-  void ApplySurface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip = NULL);
-  void Pump();
 };
 
+}
 
-
+#endif

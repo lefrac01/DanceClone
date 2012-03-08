@@ -19,6 +19,8 @@
 #include <string>
 using std::string;
 
+#include "../Platform/LOG.H"
+
 namespace DanceClone
 {
   

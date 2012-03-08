@@ -1,4 +1,4 @@
-//      WiiPlatform.cpp
+//      WiiOS.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -18,29 +18,54 @@
 //      MA 02110-1301, USA.
 
 
-#include "WiiPlatform.h"
+#include "WiiOS.h"
 
 
-//TODO: tighten
-s8 HWButton = -1;
-void WiiResetPressed(){HWButton = SYS_RETURNTOMENU;}
-void WiiPowerPressed(){HWButton = SYS_POWEROFF;}
-void WiimotePowerPressed(s32 chan){HWButton = SYS_POWEROFF;}
 
-void WiiPlatform::Init()
+namespace Platform
 {
-  Platform::Init();
+
+s8 HWButton;
+
+void WiiOS::WiiResetPressed(){HWButton = SYS_RETURNTOMENU;}
+void WiiOS::WiiPowerPressed(){HWButton = SYS_POWEROFF;}
+void WiiOS::WiimotePowerPressed(s32 chan){HWButton = SYS_POWEROFF;}
+
+void WiiOS::Init()
+{  
+  OS::Init();
+  HWButton = -1;
+  input.WiiSetScreenExtents(vid.ScreenWidth(), vid.ScreenHeight());
+  //TODO: call this function until a successful file read can be done
   fatInitDefault();
+  //TEMP
+  sleep(2);
 
   WPAD_Init();
-
+  WPAD_SetVRes(WPAD_CHAN_ALL,vid.ScreenWidth(),vid.ScreenHeight());  
+  WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);  
+  
   SYS_SetResetCallback(WiiResetPressed);
   SYS_SetPowerCallback(WiiPowerPressed);
   WPAD_SetPowerButtonCallback(WiimotePowerPressed);  
 }
 
-void WiiPlatform::Cleanup()
+void WiiOS::Pump()
 {
-  Platform::Cleanup();
+  OS::Pump();
+//    SYS_SetResetCallback(WiiResetPressed);  //TODO:???
+//    SYS_SetPowerCallback(WiiPowerPressed);  //TODO:???
+//    WPAD_SetPowerButtonCallback(WiimotePowerPressed); //TODO:???
+  if (HWButton != -1)
+  {
+    SYS_ResetSystem(HWButton, 0, 0);
+  }
+}
+
+void WiiOS::Cleanup()
+{
+  OS::Cleanup();
   fatUnmount(0); 
+}
+
 }

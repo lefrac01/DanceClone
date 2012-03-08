@@ -1,4 +1,4 @@
-//      GraphicsAgent.h
+//      Graphics.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -16,8 +16,8 @@
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
-#ifndef GRAPHICSAGENT_H
-#define GRAPHICSAGENT_H
+#ifndef GRAPHICS_H
+#define GRAPHICS_H
 
 #include <string>
 using std::string;
@@ -29,24 +29,23 @@ using std::string;
 using std::exception;
 #include <gccore.h>
 
-#include "../Platform/Platform.h"
+#include "../Platform/OS.h"
+using Platform::OS;
 
 namespace DanceClone
 {
 
-class GraphicsAgent
+class Graphics
 {
 private:
 
-  Platform& platform;
-  SDL_Surface* LoadOptimize(string filename);
-  SDL_Surface* LoadOptimizeAlpha(string filename);
+  OS& sys;
   void ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* dest_frames, int src_cols);
   void SetArrowFrame(SDL_Rect* dest, int index, int x, int y, int w, int h);
-  GraphicsAgent();
   int screenWidth;
   int screenHeight;
   int goalOffset;
+  Graphics();
   
 public:
 
@@ -95,10 +94,9 @@ public:
   float pixelsPerMsAt1BPM;
 
 
-  GraphicsAgent(Platform& p);
+  Graphics(OS& os);
   bool Init(string configFilePath = "");
   void Cleanup();
-  void ApplySurface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip = NULL);
   void DrawBackground();
 };
 

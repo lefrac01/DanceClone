@@ -22,9 +22,10 @@
 namespace DanceClone
 {
 
-Game::Game(Platform& p) :
-platform(p),
-graphicsAgent(p)
+Game::Game(OS& os, GUI& g) :
+sys(os),
+gui(g),
+gfx(os)
 {
 }
 
@@ -33,11 +34,12 @@ bool Game::Init(string ConfigFilePath)
   try
   {
     constants.Init();
-    graphicsAgent.Init();
+    gfx.Init();
   }
   catch (exception& e)
   {
     // log
+    LOG(DEBUG_BASIC, "Game::Init error (" << e.what() << ")" << endl)
     ofstream error_log;
     error_log.open("errors", std::ios_base::app);
     error_log << " Game::Init() failed due to exception: " << endl;
@@ -46,21 +48,24 @@ bool Game::Init(string ConfigFilePath)
     return false;
   }
 
-  soundAgent.Init();
+  sound.Init();
   
   gameStateChanged = false;
+  state = TITLE;
   
   return true;
 }
 
 void Game::Cleanup()
 {
-  graphicsAgent.Cleanup();
+  gfx.Cleanup();
 }
 
-void Game::Pump()
+void Game::Run()
 {
-  graphicsAgent.DrawBackground();
+  //TODO: gfx are a resource.  have a class responsible for all the 
+  // game drawing logic
+  gfx.DrawBackground();
 
   GameState oldState = state;
 
@@ -110,13 +115,14 @@ Game::GameState Game::State()
   return state;
 }
 
+//NOTE: no relation to OO methodology here!  no time!!
 void Game::RunTitleScreen()
 {
-  graphicsAgent.ApplySurface(platform.platformGraphicsAgent.ScreenWidth()/2-300/2, 30, graphicsAgent.title_image, platform.platformGraphicsAgent.screen, NULL);
+  sys.vid.ApplySurface(sys.vid.ScreenWidth()/2-300/2, 30, gfx.title_image, sys.vid.screen, NULL);
   
-  if(platform.DoButton(platform.platformGraphicsAgent.ScreenWidth()/2,55+4*40,platform.platformGraphicsAgent.ScreenWidth()-40,10,1,1,(char*)"Play")){state=PLAY;}
-  if(platform.DoButton(platform.platformGraphicsAgent.ScreenWidth()/2,55+5*40,platform.platformGraphicsAgent.ScreenWidth()-40,10,1,1,(char*)"Credits")){state=CREDITS;}
-  if(platform.DoButton(platform.platformGraphicsAgent.ScreenWidth()/2,55+6*40,platform.platformGraphicsAgent.ScreenWidth()-40,10,1,1,(char*)"Debug")){state=DEBUG;}
+  if(gui.DoButton(sys.vid.ScreenWidth()/2,55+4*40,sys.vid.ScreenWidth()-40,10,1,1,(char*)"Play")){state=PLAY;}
+  if(gui.DoButton(sys.vid.ScreenWidth()/2,55+5*40,sys.vid.ScreenWidth()-40,10,1,1,(char*)"Credits")){state=CREDITS;}
+  if(gui.DoButton(sys.vid.ScreenWidth()/2,55+6*40,sys.vid.ScreenWidth()-40,10,1,1,(char*)"Debug")){state=DEBUG;}
 }
 
 }

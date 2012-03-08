@@ -1,4 +1,4 @@
-//      InputAgent.cpp
+//      Input.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,23 +17,29 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
+#include "Input.h"
 
-
-#include "InputAgent.h"
-
-void InputAgent::Init()
+namespace Platform
 {
+
+void Input::Init()
+{
+  LOG(DEBUG_GUTS, "Input::Init(" << endl)
   //there is a way to reinit SDL adding joystick...
   //SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
   SDL_ShowCursor(SDL_DISABLE);
-
-  #ifdef WII
-  HWButton = -1;
-  #endif
 }
 
-void InputAgent::Update()
+void Input::WiiSetScreenExtents(int h, int w)
 {
+  screenWidth = w;
+  screenHeight = h;
+}
+
+void Input::Update()
+{
+  LOG(DEBUG_GUTS, "Input::Update()" << endl)
+
   //TODO: platform specific subclassing of input agent :(
   SDL_Event event;
 
@@ -49,16 +55,19 @@ void InputAgent::Update()
   while(SDL_PeepEvents(&event,1,SDL_GETEVENT,SDL_EVENTMASK(SDL_MOUSEBUTTONUP)))
     for(int a=0;a<mousecount;a++)if(event.button.button==a)mousestate[a]=0;
 
-  #ifdef WIN
-    Uint8 mousestate=SDL_GetMouseState(&cursorx[0],&cursory[0]);
-  #endif
-  #ifdef WII
+//TODO: subclassing per platform
+//  #ifdef WIN
+//    Uint8 mousestate=SDL_GetMouseState(&cursorx[0],&cursory[0]);
+//  #endif
+//  #ifdef WII
     WPAD_ScanPads();
     u32 ext;
     wiimoteactive[0]=(WPAD_Probe(WPAD_CHAN_0,&ext)!=WPAD_ERR_NO_CONTROLLER);
     wiimoteactive[1]=(WPAD_Probe(WPAD_CHAN_1,&ext)!=WPAD_ERR_NO_CONTROLLER);
     wiimoteactive[2]=(WPAD_Probe(WPAD_CHAN_2,&ext)!=WPAD_ERR_NO_CONTROLLER);
     wiimoteactive[3]=(WPAD_Probe(WPAD_CHAN_3,&ext)!=WPAD_ERR_NO_CONTROLLER);
+    LOG(DEBUG_GUTS, "wiimoteactive[0]:" << wiimoteactive[0] << " [1]:" << wiimoteactive[1] << " [2]:" << wiimoteactive[2] << "[3]:" << wiimoteactive[3] << endl)
+
     WiiButtonsHeld[0]=WPAD_ButtonsHeld(WPAD_CHAN_0);
     WiiButtonsDown[0]=WPAD_ButtonsDown(WPAD_CHAN_0);
     WiiButtonsUp[0]=WPAD_ButtonsUp(WPAD_CHAN_0);
@@ -75,6 +84,8 @@ void InputAgent::Update()
     WPAD_IR(WPAD_CHAN_1,&ir[1]);
     WPAD_IR(WPAD_CHAN_2,&ir[2]);
     WPAD_IR(WPAD_CHAN_3,&ir[3]);
+    LOG(DEBUG_GUTS, "ir[0].valid:" << ir[0].valid << " [1]:" << ir[1].valid << " [2]:" << ir[2].valid << "[3]:" << ir[3].valid << endl)
+    
     WPAD_Expansion(WPAD_CHAN_0,&expans[0]);
     WPAD_Expansion(WPAD_CHAN_1,&expans[1]);
     WPAD_Expansion(WPAD_CHAN_2,&expans[2]);
@@ -89,24 +100,24 @@ void InputAgent::Update()
     GCButtonsHeld[0]=PAD_ButtonsHeld(0);
     GCButtonsDown[0]=PAD_ButtonsDown(0);
     GCButtonsUp[0]=PAD_ButtonsUp(0);
-    SYS_SetResetCallback(WiiResetPressed);
-    SYS_SetPowerCallback(WiiPowerPressed);
-    WPAD_SetPowerButtonCallback(WiimotePowerPressed);
-    if(HWButton != -1){SYS_ResetSystem(HWButton, 0, 0);}
     if(ir[0].valid){cursorx[0]=ir[0].x*1.25-80;cursory[0]=ir[0].y*1.25-60;}
     if(ir[1].valid){cursorx[1]=ir[1].x*1.25-80;cursory[1]=ir[1].y*1.25-60;}
     if(ir[2].valid){cursorx[2]=ir[2].x*1.25-80;cursory[2]=ir[2].y*1.25-60;}
     if(ir[3].valid){cursorx[3]=ir[3].x*1.25-80;cursory[3]=ir[3].y*1.25-60;}
+    LOG(DEBUG_GUTS, "raw cursorx[0]:" << cursorx[0] << " cursory[0]:" << cursory[1] << endl)
     for(int a=0;a<4;a++){
       if(cursorx[a]<0)cursorx[a]=0;
-      if(cursorx[a]>rmode->viWidth)cursorx[a]=rmode->viWidth;
+      if(cursorx[a]>screenWidth)cursorx[a]=screenWidth;
       if(cursory[a]<0)cursory[a]=0;
-      if(cursory[a]>rmode->viHeight)cursory[a]=rmode->viHeight;
+      if(cursory[a]>screenHeight)cursory[a]=screenHeight;
     }
-  #endif
+    LOG(DEBUG_GUTS, "fin cursorx[0]:" << cursorx[0] << " cursory[0]:" << cursory[1] << endl)
+//  #endif
 }
 
-void InputAgent::Cleanup()
+void Input::Cleanup()
 {
   
+}
+
 }

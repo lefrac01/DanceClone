@@ -1,4 +1,4 @@
-//      SoundAgent.h
+//      Video.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,23 +17,43 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
+#include <string>
+using std::string;
+#include <SDL/SDL_rotozoom.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_mixer.h>
+#include <exception>
+using std::exception;
+#include <gccore.h>
 
+#include "LOG.H"
 
-namespace DanceClone
+namespace Platform
 {
 
-class SoundAgent
+
+class Video
 {
 private:
 
-  char* mp3_buffer;
-  long mp3_lSize;
-
+ 
 public:
-  void Init();
-  //void InitMP3(string path);
+  SDL_Surface* screen;
+  GXRModeObj* rmode;
+
+  Video();
+  bool Init();
+  void Cleanup();
+  SDL_Surface* LoadOptimize(string filename);
+  SDL_Surface* LoadOptimizeAlpha(string filename);
+  void ApplySurface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip = NULL);
+  void Pump();
+  int ScreenHeight();
+  int ScreenWidth();
+  Uint32 GetPixel(SDL_Surface *surface,int x,int y);
+  void PutPixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
+  void PutPixel16(SDL_Surface *surface, int x, int y, Uint32 pixel);
 };
 
 }
-
-

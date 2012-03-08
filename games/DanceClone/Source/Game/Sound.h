@@ -1,4 +1,4 @@
-//      InputAgent.h
+//      Sound.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,46 +17,24 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#ifndef INPUTAGENT_H
-#define INPUTAGENT_H
 
+#include "../Platform/LOG.H"
 
-#include <SDL/SDL.h>
-#include <gccore.h>
-#include <wiiuse/wpad.h>
+namespace DanceClone
+{
 
-class InputAgent
+class Sound
 {
 private:
 
-  int cursorx[4];
-  int cursory[4];
-
-  static const int keycount=500;
-  int keystate[keycount];
-  static const int mousecount = 10;
-  int mousestate[mousecount];
-
-#ifdef WII
-  bool wiimoteactive[4];
-  u32 WiiButtonsHeld[4];
-  u32 WiiButtonsDown[4];
-  u32 WiiButtonsUp[4];
-  u16 GCButtonsHeld[4];
-  u16 GCButtonsDown[4];
-  u16 GCButtonsUp[4];
-  ir_t ir[4];
-  expansion_t expans[4];
-  #ifdef USEACCELEROMETER
-  gforce_t gforce[4];
-  #endif
-  s8 HWButton;
-#endif
+  char* mp3_buffer;
+  long mp3_lSize;
 
 public:
   void Init();
-  void Update();
-  void Cleanup();
+  //void InitMP3(string path);
 };
 
-#endif
+}
+
+

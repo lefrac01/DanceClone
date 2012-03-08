@@ -1,4 +1,4 @@
-//      GraphicsAgent.cpp
+//      Video.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,20 +17,23 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#include "GraphicsAgent.h"
+#include "Video.h"
 
-GraphicsAgent::GraphicsAgent() :
+namespace Platform
+{
+
+Video::Video() :
   screen(NULL),
-  rmode(NULL),
-  pWDrgb1(NULL),
-  pWDrgb2(NULL)
+  rmode(NULL)
 {
 }
 
-bool GraphicsAgent::Init(string ConfigFilePath)
+bool Video::Init()
 {
-  SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
-  SDL_ShowCursor(SDL_DISABLE);
+  LOG(DEBUG_BASIC, "Platform::Video::Init()" << endl)
+  //TODO: there is a way to reinit adding support for just video...
+  //SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+  //SDL_ShowCursor(SDL_DISABLE);
 
 /*
 //TODO: per-platform agent subclassing
@@ -44,11 +47,7 @@ bool GraphicsAgent::Init(string ConfigFilePath)
 //#ifdef WII
 
   rmode = VIDEO_GetPreferredMode(NULL);
-/*
-  if (DEBUG_LEVEL >= DEBUG_BASIC)
-  {
-    //#log.open("debug", std::ios_base::app);
-    log << "VIDEO_GetPreferredMode(NULL) returns:"
+  LOG(DEBUG_BASIC, "VIDEO_GetPreferredMode(NULL) returns:"
       << "\nrmode->viTVMode:" << rmode->viTVMode \
       << "\nrmode->fbWidth:" << rmode->fbWidth \
       << "\nrmode->efbHeight:" << rmode->efbHeight \
@@ -57,10 +56,8 @@ bool GraphicsAgent::Init(string ConfigFilePath)
       << "\nrmode->viYOrigin:" << rmode->viYOrigin \
       << "\nrmode->viWidth:" << rmode->viWidth \
       << "\nrmode->viHeight:" << rmode->viHeight \
-      << endl;
-    //#log.close();
-  }
-*/
+      << endl)
+
   switch (rmode->viTVMode >> 2)
   {
           case VI_NTSC: // 480 lines (NTSC 60hz)
@@ -77,26 +74,31 @@ bool GraphicsAgent::Init(string ConfigFilePath)
 
   screen = SDL_SetVideoMode(rmode->viWidth, rmode->viHeight, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
   
-  //TODO: elements used by GUIDash...
-  pWDrgb1 = (Uint8*)malloc(rmode->viWidth * rmode->viHeight * 3 * sizeof(Uint8));
-  pWDrgb2 = (Uint8*)malloc(rmode->viWidth * rmode->viHeight * 3 * sizeof(Uint8));
-  
-  WPAD_SetVRes(WPAD_CHAN_ALL,rmode->viWidth,rmode->viHeight);  
-  WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);  
-  
 //TODO: per-platform agent subclassing
 //#endif
-  
+
   return true;
 }
 
-void GraphicsAgent::Pump()
+int Video::ScreenHeight()
 {
+  return rmode->viHeight;
+}
+
+int Video::ScreenWidth()
+{
+  return rmode->viWidth;
+}
+
+void Video::Pump()
+{
+  LOG(DEBUG_GUTS, "Video::Pump" << endl)
   SDL_Flip(screen);
 }
 
-SDL_Surface* GraphicsAgent::LoadOptimize(string filename)
+SDL_Surface* Video::LoadOptimize(string filename)
 {
+  LOG(DEBUG_MINOR, "Video::LoadOptimize(" << filename << ")" << endl)
   SDL_Surface* loadedImage = NULL;
   SDL_Surface* optimizedImage = NULL;
   loadedImage = IMG_Load(filename.c_str()); 
@@ -110,8 +112,9 @@ SDL_Surface* GraphicsAgent::LoadOptimize(string filename)
   return optimizedImage;
 }
 
-SDL_Surface* GraphicsAgent::LoadOptimizeAlpha(string filename)
+SDL_Surface* Video::LoadOptimizeAlpha(string filename)
 {
+  LOG(DEBUG_MINOR, "Video::LoadOptimizeAlpha(" << filename << ")" << endl)
   SDL_Surface* loadedImage = NULL;
   SDL_Surface* optimizedImage = NULL;
   loadedImage = IMG_Load(filename.c_str()); 
@@ -123,27 +126,70 @@ SDL_Surface* GraphicsAgent::LoadOptimizeAlpha(string filename)
   return optimizedImage;
 }
 
-void GraphicsAgent::ApplySurface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip)
+void Video::ApplySurface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip)
 {
+  // can't log, too many tiny blits with little meaning
+  //LOG(DEBUG_GUTS, "Video::ApplySurface(" << x << ", " << y << ")" << endl)
   SDL_Rect offset;offset.x = x; offset.y = y;
   SDL_BlitSurface(source, clip, destination, &offset);
 }
 
-void GraphicsAgent::Cleanup()
+void Video::Cleanup()
 {
-  
-  //TODO: elements used by GUIDash...
-  if (pWDrgb1)
-  {
-    free(pWDrgb1);
-    pWDrgb1 = NULL;
-  }
-  if (pWDrgb2)
-  {
-    free(pWDrgb2);
-    pWDrgb2 = NULL;
-  }
-  
+  LOG(DEBUG_MINOR, "Video::Cleanup" << endl)
   //screen(NULL),  SDL_Quit does this?
   //rmode(NULL),  ??
+}
+
+Uint32 Video::GetPixel(SDL_Surface *surface,int x,int y){
+  int bpp = surface->format->BytesPerPixel;
+  Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+  switch(bpp) {
+    case 1:
+      return *p;
+    case 2:
+      return *(Uint16 *)p;
+    case 3:
+      if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
+        return p[0] << 16 | p[1] << 8 | p[2];
+      else
+        return p[0] | p[1] << 8 | p[2] << 16;
+    case 4:
+      return *(Uint32 *)p;
+    default:
+      return 0;
+  }
+}
+
+void Video::PutPixel(SDL_Surface *surface, int x, int y, Uint32 pixel){
+    int bpp = surface->format->BytesPerPixel;
+    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+    switch(bpp) {
+    case 1:
+        *p = pixel;
+        break;
+    case 2:
+        *(Uint16 *)p = pixel;
+        break;
+    case 3:
+        if(SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+            p[0] = (pixel >> 16) & 0xff;
+            p[1] = (pixel >> 8) & 0xff;
+            p[2] = pixel & 0xff;
+        } else {
+            p[0] = pixel & 0xff;
+            p[1] = (pixel >> 8) & 0xff;
+            p[2] = (pixel >> 16) & 0xff;
+        }
+        break;
+    case 4:
+        *(Uint32 *)p = pixel;
+        break;
+    }
+}
+
+void Video::PutPixel16(SDL_Surface *surface, int x, int y, Uint32 pixel){
+  *((Uint16 *)surface->pixels+y*surface->pitch/2+x)=pixel;
+}
+
 }

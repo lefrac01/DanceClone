@@ -1,4 +1,4 @@
-//      Game.h
+//      Dash.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,65 +17,63 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
+#ifndef DASH_H
+#define DASH_H
 
-#include <string>
-using std::string;
-#include <fstream>
-using std::ofstream;
-using std::ifstream;
-using std::endl;
-
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
+#include <SDL/SDL_mixer.h>
 #include "../Platform/OS.h"
 using Platform::OS;
+#include "../Platform/LOG.H"
+#include "../Platform/Tools.h"
 #include "../GUI/GUI.h"
 using Gooey::GUI;
-#include "Constants.h"
-#include "Sound.h"
-#include "Graphics.h"
+#include "DashGraphics.h"
 
-namespace DanceClone
+
+class Dash
 {
-
-class Game
-{
-public:
-
-  enum GameState
-  {
-    NONE,         //
-    TITLE,        // 0
-    CREDITS,      // 1
-    SCORE,        // 2, 9
-    SONG_SELECT1, // 3
-    SONG_SELECT2, // 4
-    STEP_CREATE,  // 5
-    PLAY_PREP1,   // 7
-    PLAY_PREP2,   // 11
-    PLAY,         // 8
-    DEBUG         // 10
-  };
-
-
 private:
   
+  Dash();
   OS& sys;
   GUI& gui;
-  GameState state;
-  bool gameStateChanged;
-  Constants constants;
-  Sound sound;
-  Graphics gfx;
-  Game(); //disallow emtpy public ctor 
+  DashGraphics gfx;
+  bool userWantsOut;
+  double onOffPercent;
+  bool onOff;
+  Uint8* prgb1;
+  Uint8* prgb2;
+  int screenWidth;
+  int screenHeight;
+  struct tm* dashTime;
 
+  static const char* wdayNames[];
+  static const char* monthNames[];
+  static const char* dayNames[];
+
+  int runTime;
+  int gameTime;
+  int frameTime;
+  int framerate;
+  double timespeed;
+
+  char extraCredits[100];
+  Uint8 In8bitRange(int num);
   
 public:
 
-  Game(OS& os, GUI& g);
-  bool Init(string configFilePath = "");
-  void Cleanup();
+  Dash(OS& os, GUI& g);
+  bool Init();
   void Run();
-  GameState State();
-  void RunTitleScreen();
+  void Cleanup();
+  bool Visible();
+  int OnOffSlide(int onPos, int offPos);
+  void RunOnOff();
+  void RunMenu();
+  void RunTopBottomBars();
+  bool UserWantsOut();
 };
 
-}
+#endif

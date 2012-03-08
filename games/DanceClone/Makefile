@@ -17,7 +17,7 @@ include $(DEVKITPPC)/wii_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	boot
 BUILD		:=	build
-SOURCES		:=	Source Source/Game Source/Platform
+SOURCES		:=	Source Source/Game Source/Platform Source/GUI Source/Dash
 DATA		:=	data  
 INCLUDES	:=
 

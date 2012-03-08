@@ -1,4 +1,4 @@
-//      GraphicsAgent.cpp
+//      Graphics.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,13 +17,13 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#include "GraphicsAgent.h"
+#include "Graphics.h"
 
 namespace DanceClone
 {
 
-GraphicsAgent::GraphicsAgent(Platform& p) :
-  platform(p),
+Graphics::Graphics(OS& os) :
+  sys(os),
   background_image(NULL),
   title_image(NULL),
   ratings_image(NULL),
@@ -53,10 +53,12 @@ GraphicsAgent::GraphicsAgent(Platform& p) :
 {
 }
 
-bool GraphicsAgent::Init(string ConfigFilePath)
+bool Graphics::Init(string configFilePath)
 {
-  screenWidth = platform.platformGraphicsAgent.ScreenWidth();
-  screenHeight = platform.platformGraphicsAgent.ScreenHeight();
+  LOG(DEBUG_MINOR, "DanceClone::Graphics::Init(" << configFilePath << ")" << endl)
+
+  screenWidth = sys.vid.ScreenWidth();
+  screenHeight = sys.vid.ScreenHeight();
   
   goalOffset = screenHeight / 4;
   
@@ -68,7 +70,7 @@ bool GraphicsAgent::Init(string ConfigFilePath)
   {
     //TODO: nice error log instead of hard crash when something is missing
     //TODO: fix hard-coded constants
-    background_image = LoadOptimize("Media/Game/background.png");
+    background_image = sys.vid.LoadOptimize("Media/Game/background.png");
     title_image = IMG_Load("Media/Game/title.png");
     get_ready_image = IMG_Load("Media/Game/getready.png");
     
@@ -164,42 +166,7 @@ bool GraphicsAgent::Init(string ConfigFilePath)
   return true;
 }
 
-SDL_Surface* GraphicsAgent::LoadOptimize(string filename)
-{
-  SDL_Surface* loadedImage = NULL;
-  SDL_Surface* optimizedImage = NULL;
-  loadedImage = IMG_Load(filename.c_str()); 
-  if (loadedImage != NULL)
-  {
-    optimizedImage = SDL_DisplayFormat(loadedImage);
-    Uint32 colorkey = SDL_MapRGB(optimizedImage->format, 0, 0xFF, 0xFF);
-    SDL_SetColorKey(optimizedImage, SDL_SRCCOLORKEY, colorkey);
-    SDL_FreeSurface(loadedImage);
-  }
-  return optimizedImage;
-}
-
-SDL_Surface* GraphicsAgent::LoadOptimizeAlpha(string filename)
-{
-  SDL_Surface* loadedImage = NULL;
-  SDL_Surface* optimizedImage = NULL;
-  loadedImage = IMG_Load(filename.c_str()); 
-  if (loadedImage != NULL)
-  {
-    optimizedImage = SDL_DisplayFormatAlpha(loadedImage);
-    SDL_FreeSurface(loadedImage);
-  }
-  return optimizedImage;
-}
-
-void GraphicsAgent::ApplySurface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip)
-{
-  SDL_Rect offset;offset.x = x; offset.y = y;
-  SDL_BlitSurface(source, clip, destination, &offset);
-}
-
-
-void GraphicsAgent::SetArrowFrame(SDL_Rect* dest, int index, int x, int y, int w, int h)
+void Graphics::SetArrowFrame(SDL_Rect* dest, int index, int x, int y, int w, int h)
 {
   dest[index].x = x;
   dest[index].y = y;
@@ -213,7 +180,7 @@ void GraphicsAgent::SetArrowFrame(SDL_Rect* dest, int index, int x, int y, int w
 // 4 arrows pointing down,  64x64x32bit png each,
 // arranged horizontally in 256w x 64h rectangle, with each column
 // being an animation frame for one tick.  tick x = column x
-void GraphicsAgent::ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* dest_frames, int src_cols)
+void Graphics::ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* dest_frames, int src_cols)
 {
   int aw = arrowWidth;
   int ah = arrowHeight;
@@ -291,7 +258,7 @@ void GraphicsAgent::ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect
   SDL_FreeSurface(temp_src);
 }
 
-void GraphicsAgent::Cleanup()
+void Graphics::Cleanup()
 {
   if (background_image)
   {
@@ -410,9 +377,9 @@ void GraphicsAgent::Cleanup()
   }
 }
 
-void GraphicsAgent::DrawBackground()
+void Graphics::DrawBackground()
 {
-  ApplySurface(0, 0, background_image, screen, NULL);
+  sys.vid.ApplySurface(0, 0, background_image, sys.vid.screen, NULL);
 }
 
 }
