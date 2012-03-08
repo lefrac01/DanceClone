@@ -15,10 +15,9 @@ include $(DEVKITPPC)/wii_rules
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-#TARGET		:=	$(notdir $(CURDIR))
 TARGET		:=	boot
 BUILD		:=	build
-SOURCES		:=	Source
+SOURCES		:=	Source Source/Game Source/Platform
 DATA		:=	data  
 INCLUDES	:=
 
@@ -28,7 +27,7 @@ INCLUDES	:=
 
 # -mepsilon should go here, but is giving an error ???  (floating point comparison)
 CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE)		
-#CFLAGS	= -g -Wall $(MACHDEP) $(INCLUDE)
+#CFLAGS	= -g -Wall $(MACHDEP) $(INCLUDE)	#disable opts when addr2line is needed
 CXXFLAGS	=	$(CFLAGS)
 
 LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
@@ -101,6 +100,7 @@ export OUTPUT	:=	$(CURDIR)/$(TARGET)
 
 #---------------------------------------------------------------------------------
 $(BUILD):
+#	echo w00t the CPPFILES IZZ: $(CPPFILES) whiches wuz found in source dirs: $(SOURCES)
 	@[ -d $@ ] || mkdir -p $@
 	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 

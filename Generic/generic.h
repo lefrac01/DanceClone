@@ -79,10 +79,6 @@ void init()
     log << GAMEVERSIONSTRING << " startup" << endl;
     //#log.close();
   }
-  #ifdef LOG_ERRORS
-  error_log.open("errors", std::ios_base::trunc);
-  error_log.close();
-  #endif
   
   
   srand((int)time(NULL));

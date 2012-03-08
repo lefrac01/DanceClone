@@ -1,26 +1,9 @@
-//TODO: tighten up file organisation.  header inclusion tree could be nicer
-// and on-disk file layout is strange.  also main program flow is hard to 
-// follow.  redo bad design ie play_data as a class is responsible for reading 
-// player controls and updating the viewport every frame...
-//
-//TODO: instead of always opening/closing log as in: (or commenting that out as currently)
-//log.open("debug", std::ios_base::app);
-//log << "something" << endl;
-//log.close();
-//replace with a macro in which the open/close are controlled by a 
-//FAILSAFE_LOG define
 
 //#define WIN
 #define WII
 //#define USEACCELEROMETER
 
-
-
-
-// quick hack delay song start for player prep
-char* mp3_buffer;
-long mp3_lSize;
-
+/*
 #include <iostream>
 using std::cerr;
 using std::cout;
@@ -29,9 +12,10 @@ using std::endl;
 using std::ofstream;
 using std::ifstream;
 #include <cstdlib>
-
+*/
 
 #define GAMEVERSIONSTRING "DanceClone v0.57"
+/*
 #define DEBUG_OFF 0
 #define DEBUG_BASIC 1
 #define DEBUG_MINOR 2
@@ -39,39 +23,70 @@ using std::ifstream;
 #define DEBUG_GUTS 4
 #define DEBUG_LEVEL DEBUG_OFF
 #define LOG_DEBUG
-#define LOG_ERRORS
 ofstream log;
-ofstream error_log;
+*/
 
+#include "Game/Game.h"
+using DanceClone::Game;
 
-bool done = false;
-#include "../../../Generic/generic.h"
-#include "../../../Generic/WiiDash/WiiDash_main.h"
-#include "Game/Game_main.h"
+#ifdef WIN
+#include "Platform/Win32Platform.h"
+#endif
+
+#ifdef WII
+#include "Platform/WiiPlatform.h"
+#endif
 
 int main(int argc, char* argv[])
 {
-  init();
-  Game_init();
-  WiiDash_init();
+/*
+  if (DEBUG_LEVEL > DEBUG_OFF)
+  {
+    log.open("debug", std::ios_base::trunc);
+    log << GAMEVERSIONSTRING << " startup" << endl;
+    log.close();
+  }
+*/  
+  #ifdef WIN
+  Win32Platform platform;
+  #endif
+  #ifdef WII
+  WiiPlatform platform;
+  #endif
+
+  platform.Init();
   
+  Game game(platform);
+  game.Init();
+//  Game_init();
+//  WiiDash_init();
+
+  bool done = false;
   while(!done)
   {
-    SDL_PumpEvents();
-    updatecontrolinput();
+    platform.Pump();
     
-    if(WDonoffpercent == 0)
+    //updatecontrolinput();
+    
+//    if(WDonoffpercent == 0)
+//    {
+//      Game_run();
+//    }
+    if (!platform.DashVisible())
     {
-      Game_run();
+      game.Pump();
     }
     
     // unless playing song, run wiidash code
-    if (gamestate!=8 && gamestate != 7)
+//    if (gamestate!=8 && gamestate != 7)
+//TODO: enum
+    if (game.State() != 8 && game.State() != 7)
     {
-      WiiDash_run();
+      //WiiDash_run();
+      platform.PumpDash();
     }
     
-    SDL_Flip(screen);
+//    SDL_Flip(screen);
     SDL_Event event;
     
     while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_ALLEVENTS) > 0)
@@ -82,7 +97,9 @@ int main(int argc, char* argv[])
       }
     }
   }
-  game_cleanup();
-  generic_cleanup();
+  //game_cleanup();
+  game.Cleanup();
+  platform.Cleanup();
+  //generic_cleanup();
   return 0;
 }
