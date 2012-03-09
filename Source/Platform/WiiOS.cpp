@@ -68,4 +68,54 @@ void WiiOS::Cleanup()
   fatUnmount(0); 
 }
 
+vector<DirectoryEntry> WiiOS::ReadDirectory(string path)
+{
+  vector<DirectoryEntry> contents;
+
+  struct stat st;
+  struct dirent* dirEntry = NULL;
+  DIR* dirStruct;
+
+  if ((dirStruct = opendir(path.c_str())))
+  {
+    if(dirStruct->dirData != NULL)
+    {
+      while(  (dirEntry = readdir(dirStruct)) != NULL ) 
+      {
+        string filepath = "";
+        bool isFolder = false;
+        bool statFailed = true;
+        int extra = 0;
+        
+        if (path == "/")
+        {
+          filepath = path;
+          filepath += dirEntry->d_name;
+        }
+        else
+        {
+          filepath = path;
+          filepath += "/";
+          filepath += dirEntry->d_name;
+        }
+        if(stat(filepath.c_str(), &st) == 0) 
+        {
+          statFailed = false;
+          if(st.st_mode & S_IFDIR)
+          {
+            isFolder = true;
+          }
+        }
+        else
+        {
+          statFailed = true;
+        }
+        contents.push_back(DirectoryEntry(dirEntry->d_name, isFolder, statFailed, extra));
+      }
+    }
+  }
+  
+  return contents;
+}
+
 }

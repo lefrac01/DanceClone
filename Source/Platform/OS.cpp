@@ -1,4 +1,4 @@
-//      WiiOS.h
+//      OS.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -16,31 +16,42 @@
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
-#ifndef WIIPLATFORM_H
-#define WIIPLATFORM_H
 
 #include "OS.h"
 
-#include <gccore.h>
-#include <fat.h>
-#include <dirent.h>
-#include <unistd.h>
-
 namespace Platform
 {
-
-class WiiOS : public OS
+DirectoryEntry::DirectoryEntry(char* f, bool isf, bool sf, int extra) :
+filename(f),
+folder(isf),
+statfailed(sf),
+extrainfoint(extra)
 {
-private:
-  static void WiiResetPressed();
-  static void WiiPowerPressed();
-  static void WiimotePowerPressed(s32 chan);
+}
 
-public:
-  void Init();
-  void Cleanup();
-  void Pump();
-};
+//TODO: bool
+void OS::Init()
+{
+  srand((int)time(NULL));
+
+  vid.Init();
+  input.Init();
+  
+  SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+  SDL_ShowCursor(SDL_DISABLE);
+}
+
+void OS::Pump()
+{
+  LOG(DEBUG_GUTS, " OS::Pump" << endl)
+  SDL_PumpEvents();
+  vid.Pump();
+  input.Update();
+}
+
+void OS::Cleanup()
+{
+  SDL_Quit();
+}
 
 }
-#endif

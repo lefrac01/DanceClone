@@ -36,7 +36,11 @@ namespace Platform
 class Video
 {
 private:
-
+  signed char Bresenhamix;
+  signed char Bresenhamiy;
+  int Bresenhamdelta_x;
+  int Bresenhamdelta_y;
+  int Bresenhamerror;
  
 public:
   SDL_Surface* screen;
@@ -54,6 +58,9 @@ public:
   Uint32 GetPixel(SDL_Surface *surface,int x,int y);
   void PutPixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
   void PutPixel16(SDL_Surface *surface, int x, int y, Uint32 pixel);
+  void BresenhamDrawLine(int x1,int y1,int x2,int y2,SDL_Surface *surface,Uint32 pixel);
+  bool Bresenham(int &x1,int &y1,int &x2,int &y2);
+  void BresenhamStart(int &x1,int &y1,int x2,int y2);
 };
 
 }

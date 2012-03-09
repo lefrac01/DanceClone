@@ -1,4 +1,4 @@
-//      OS.h
+//      WiiOS.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -16,45 +16,31 @@
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
+#ifndef WIIPLATFORM_H
+#define WIIPLATFORM_H
 
-#ifndef OS_H
-#define OS_H
+#include "OS.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <string>
-#include <math.h>
-
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <SDL/SDL_mixer.h>
-
-#include "Input.h"
-#include "Video.h"
-
+#include <gccore.h>
+#include <fat.h>
+#include <dirent.h>
+#include <unistd.h>
 
 namespace Platform
 {
 
-
-class OS
+class WiiOS : public OS
 {
 private:
+  static void WiiResetPressed();
+  static void WiiPowerPressed();
+  static void WiimotePowerPressed(s32 chan);
 
-  
 public:
-
-  Video vid;
-  Input input;
-
-  virtual void Init();
-  virtual void Cleanup();
-  virtual void Pump();
-  
-  //TODO: not here
-  void DrawButton(int x, int y, int w, int h, bool glow);
-  bool DoButton(int x, int y, int w, int h, bool center, bool clickable, char* text);
+  void Init();
+  void Cleanup();
+  void Pump();
+  vector<DirectoryEntry> ReadDirectory(string path);
 };
 
 }

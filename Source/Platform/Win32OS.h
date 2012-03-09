@@ -1,4 +1,4 @@
-//      OS.cpp
+//      Win32OS.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -22,29 +22,14 @@
 namespace Platform
 {
 
-//TODO: bool
-void OS::Init()
+class Win32OS : public OS
 {
-  srand((int)time(NULL));
+private:
 
-  vid.Init();
-  input.Init();
-  
-  SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
-  SDL_ShowCursor(SDL_DISABLE);
-}
-
-void OS::Pump()
-{
-  LOG(DEBUG_GUTS, " OS::Pump" << endl)
-  SDL_PumpEvents();
-  vid.Pump();
-  input.Update();
-}
-
-void OS::Cleanup()
-{
-  SDL_Quit();
-}
+public:
+  void Init();
+  void Cleanup();
+  vector<DirectoryEntry> ReadDirectory(string path);
+};
 
 }
