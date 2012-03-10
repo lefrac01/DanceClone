@@ -29,6 +29,10 @@ using std::endl;
 using Platform::OS;
 #include "../GUI/GUI.h"
 using Gooey::GUI;
+using Gooey::Screen;
+using Gooey::Element;
+using Gooey::Button;
+using Gooey::Image;
 #include "Constants.h"
 #include "Sound.h"
 #include "Graphics.h"
@@ -76,6 +80,7 @@ public:
   void Run();
   GameState State();
   void RunTitleScreen();
+  void RunDebugScreen();
 };
 
 }

@@ -27,6 +27,7 @@
 using Platform::OS;
 #include "GUIGraphics.h"
 #include "../Platform/Tools.h"
+#include "Screen.h"
 
 namespace Gooey
 {
@@ -55,6 +56,11 @@ public:
   void SpriteTextColored(int posx,int posy,char* texttosprite,int leftmiddleright);
   void SetSpriteTextColored(Uint32 color);
   void SavePngScreenshot();
+  void SetScreen(Screen* s);
+  void Render();
+  vector <Element*> dummy;
+  vector <Element*>& Elements();
+  Screen* screen;  // clash with sys.vid concept
   //void WiiDash_savebmpscreenshot();
 };
 

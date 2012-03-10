@@ -24,7 +24,8 @@ namespace Gooey
 
 GUI::GUI(OS& os) :
 sys(os),
-gfx(os)
+gfx(os),
+screen(NULL)
 {
 }
 
@@ -87,8 +88,83 @@ LOG(DEBUG_GUTS, "GUI::Update() ir[a] is valid" << endl)
 //    if(useCursor[0])sys.vid.ApplySurface(sys.input.cursorx[0]-48,cursory[0]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[3]);
 //    #endif    
   }
-  useCursors = true; 
+  useCursors = true;
+  
+  Render();
 }
+
+vector <Element*>& GUI::Elements()
+{
+  // would either need a dummy vector to return when no screen or 
+  // a complete rethink!!!!
+  if (screen)
+  {
+    return screen->Elements();
+  }
+  else
+  {
+    return dummy;
+  }
+}
+
+void GUI::SetScreen(Screen* s)
+{
+  if (screen)
+  {
+    LOG(DEBUG_MINOR, "GUI::SetScreen() deleting old screen " << endl)
+    delete screen;
+    screen = NULL;
+  }
+  screen = s;
+  if (screen)
+  {
+    LOG(DEBUG_MINOR, "GUI::SetScreen() screen element count now: " << screen->Elements().size()<< endl)
+  }
+  else
+  {
+    LOG(DEBUG_MINOR, "GUI::SetScreen() received null" << endl)
+  }
+}
+
+void GUI::Render()
+{
+  LOG(DEBUG_DETAIL, "GUI::Render() " << endl)
+  
+  if (!screen)
+  {
+    LOG(DEBUG_DETAIL, "GUI::Render() no screen, returning " << endl)
+    return;
+  }
+  
+  // render screen's elements using RTTI
+  for (unsigned int i = 0; i < screen->Elements().size(); i++)
+  {
+    Element* e = screen->Elements()[i];
+    
+    LOG(DEBUG_DETAIL, "GUI::Render() treating element x: " << e->x << " y: " << e->y << endl)
+    Button* b = dynamic_cast<Button*>(e);
+    if (b)
+    {
+      LOG(DEBUG_DETAIL, "GUI::Render() element is button " << endl)
+      //TODO: use state of object in DoButton.  currently it must have an internal var
+      if (DoButton(b->x, b->y, b->w, b->h, false, true, (char*)b->text.c_str()))
+      {
+        b->clicked = true;
+      }
+    }
+    else {
+      Image* i = dynamic_cast<Image*>(e);
+      if (i)
+      {
+        char buf[100];
+        sprintf(buf, "dyn ptr cast i: x:%d y:%d surf:%X", i->x, i->y, (unsigned int)i->surface);
+        LOG(DEBUG_DETAIL, buf << endl)
+        sys.vid.ApplySurface(i->x, i->y, i->surface, NULL, NULL);
+      }
+    }
+  }
+}
+
 
 void GUI::Cleanup()
 {

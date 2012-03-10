@@ -128,6 +128,7 @@ SDL_Surface* Video::LoadOptimizeAlpha(string filename)
 
 void Video::ApplySurface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip)
 {
+  if (!destination) destination = screen;
   // can't log, too many tiny blits with little meaning
   //LOG(DEBUG_GUTS, "Video::ApplySurface(" << x << ", " << y << ")" << endl)
   SDL_Rect offset;offset.x = x; offset.y = y;

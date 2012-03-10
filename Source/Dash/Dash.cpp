@@ -19,9 +19,9 @@
 
 #include "Dash.h"
 
-const char* wdayNames[]={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
-const char* monthNames[]={"January","February","March","April","May","June","July","August","September","October","November","December"};
-const char* dayNames[]={"1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th","13th","14th","15th","16th","17th","18th","19th","20th","21st","22nd","23rd","24th","25th","26th","27th","28th","29th","30th","31st"};
+const char* Dash::wdayNames[]={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+const char* Dash::monthNames[]={"January","February","March","April","May","June","July","August","September","October","November","December"};
+const char* Dash::dayNames[]={"1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th","13th","14th","15th","16th","17th","18th","19th","20th","21st","22nd","23rd","24th","25th","26th","27th","28th","29th","30th","31st"};
 
 Dash::Dash(OS& os, GUI& g) :
   sys(os),
@@ -75,10 +75,10 @@ void Dash::Run()
     now = time(NULL);
     dashTime = localtime(&now);
     RunMenu(); 
-    //WiiDash_topbottombars();
+    RunTopBottomBars();
   }
   
-  //WiiDash_cursor();
+  //WiiDash_cursor();   // handled now but GUI::Update()
   
   /*#ifdef WIN
   sys.vid.ApplySurface(0,0,WDborderimage,screen,NULL); 

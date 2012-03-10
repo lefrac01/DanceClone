@@ -72,13 +72,13 @@ int main(int argc, char* argv[])
     
     SDL_Event event;
     
-    LOG(DEBUG_GUTS, "Entering main loop" << endl) //TEMP
+    LOG(DEBUG_GUTS, "Entering main loop" << endl)
     while(SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_ALLEVENTS) > 0)
     {
-      LOG(DEBUG_GUTS, "Peeped SDL event in main loop" << endl) //TEMP
+      LOG(DEBUG_GUTS, "Peeped SDL event in main loop" << endl)
       if(event.type == SDL_QUIT)
       {
-        LOG(DEBUG_GUTS, "got SDL_QUIT" << endl) //TEMP
+        LOG(DEBUG_GUTS, "got SDL_QUIT" << endl)
         done = 1;
       }
     }
