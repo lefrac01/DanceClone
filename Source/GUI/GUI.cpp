@@ -24,8 +24,7 @@ namespace Gooey
 
 GUI::GUI(OS& os) :
 sys(os),
-gfx(os),
-screen(NULL)
+gfx(os)
 {
 }
 
@@ -49,9 +48,24 @@ void GUI::Update()
 
   //TODO: 1, Wii specific code
   //TODO: 2, input specific code
+
+
+  
+  //TODO: support cursor and "select" action for use with dance mat
+  //TODO: tighten.  Users at platform level have inputs that may or may not be
+  // mapped to Players at the game level
+  int numPlayers = 1;
+  for (int i = 0; i < numPlayers; i++)
+  {
+    if(sys.input.WiiButtonsDown[i] & WPAD_BUTTON_A)
+    {
+      screen.Clicked(sys.input.cursorx[i], sys.input.cursory[i]);
+    }
+  }
+  
+  Render(screen); // render screen first
   
   // draw cursor
-
   for(int a = 0; a < 4; a++)
   {
     useCursor[a] = 0;
@@ -61,7 +75,7 @@ void GUI::Update()
 //    #ifdef WII
     for(int a=0;a<4;a++){
       if(sys.input.ir[a].valid){
-LOG(DEBUG_GUTS, "GUI::Update() ir[a] is valid" << endl)
+//        LOG(DEBUG_GUTS, "GUI::Update() ir[a] is valid" << endl)
         useCursor[a]=1;
       }else if(sys.input.expans[a].type==WPAD_EXP_CLASSIC){
         useCursor[a]=1;
@@ -75,6 +89,7 @@ LOG(DEBUG_GUTS, "GUI::Update() ir[a] is valid" << endl)
       }
     }
     if(sys.input.wiimoteactive[0] && !sys.input.wiimoteactive[1] && !sys.input.wiimoteactive[2] && !sys.input.wiimoteactive[3]){
+//      LOG(DEBUG_GUTS, "CURSOR: cursorx[0]-48:" << sys.input.cursorx[0]-48 << " cursory[0]-48:" << sys.input.cursory[0]-48 << endl)
       if(useCursor[0])sys.vid.ApplySurface(sys.input.cursorx[0]-48,sys.input.cursory[0]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[3]);
     }else{
       if(useCursor[0])sys.vid.ApplySurface(sys.input.cursorx[0]-48,sys.input.cursory[0]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[6]);
@@ -88,83 +103,72 @@ LOG(DEBUG_GUTS, "GUI::Update() ir[a] is valid" << endl)
 //    if(useCursor[0])sys.vid.ApplySurface(sys.input.cursorx[0]-48,cursory[0]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[3]);
 //    #endif    
   }
+  
   useCursors = true;
-  
-  Render();
 }
 
-vector <Element*>& GUI::Elements()
+void GUI::SetScreen(Container& c)
 {
-  // would either need a dummy vector to return when no screen or 
-  // a complete rethink!!!!
-  if (screen)
+  screen = c;
+  // by the way the container must have its extents properly set or the click 
+  // detection fails.  expect user to always supply screen extents?
+  if (screen.x == -1 || screen.y == -1 || screen.w == -1 || screen.h == -1)
   {
-    return screen->Elements();
+    screen.x = 0;
+    screen.y = 0;
+    screen.w = sys.vid.ScreenWidth();
+    screen.h = sys.vid.ScreenHeight();
   }
-  else
-  {
-    return dummy;
-  }
+  LOG(DEBUG_MINOR, "GUI::SetScreen() screen button count now: " << screen.AllButtons().size() << endl)
 }
 
-void GUI::SetScreen(Screen* s)
+void GUI::Render(Container &c, int basex, int basey)
 {
-  if (screen)
-  {
-    LOG(DEBUG_MINOR, "GUI::SetScreen() deleting old screen " << endl)
-    delete screen;
-    screen = NULL;
-  }
-  screen = s;
-  if (screen)
-  {
-    LOG(DEBUG_MINOR, "GUI::SetScreen() screen element count now: " << screen->Elements().size()<< endl)
-  }
-  else
-  {
-    LOG(DEBUG_MINOR, "GUI::SetScreen() received null" << endl)
-  }
-}
+  LOG(DEBUG_GUTS, "GUI::Render() " << endl)
+  
 
-void GUI::Render()
-{
-  LOG(DEBUG_DETAIL, "GUI::Render() " << endl)
-  
-  if (!screen)
+  for (unsigned int i = 0; i < c.Images().size(); i++)
   {
-    LOG(DEBUG_DETAIL, "GUI::Render() no screen, returning " << endl)
-    return;
+    Image& im = c.Images()[i];
+    LOG(DEBUG_GUTS, "GUI::Render() element is image " << endl)
+    sys.vid.ApplySurface(basex + im.x, basey + im.y, im.surface, NULL, NULL);
   }
-  
-  // render screen's elements using RTTI
-  for (unsigned int i = 0; i < screen->Elements().size(); i++)
+  for (unsigned int i = 0; i < c.Labels().size(); i++)
   {
-    Element* e = screen->Elements()[i];
-    
-    LOG(DEBUG_DETAIL, "GUI::Render() treating element x: " << e->x << " y: " << e->y << endl)
-    Button* b = dynamic_cast<Button*>(e);
-    if (b)
+    Label& l = c.Labels()[i];
+    LOG(DEBUG_GUTS, "GUI::Render() element is label " << endl)
+    DrawSpriteText(basex + l.x, basey + l.y,(char*) l.text.c_str(), 1);
+  }
+  for (unsigned int i = 0; i < c.Buttons().size(); i++)
+  {
+    Button& b = c.Buttons()[i];
+    LOG(DEBUG_GUTS, "GUI::Render() element is button " << endl)
+    if (DoButton(basex + b.x, basey + b.y, b.w, b.h, false, true, (char*)b.text.c_str()))  //NOTE: first true is center
     {
-      LOG(DEBUG_DETAIL, "GUI::Render() element is button " << endl)
-      //TODO: use state of object in DoButton.  currently it must have an internal var
-      if (DoButton(b->x, b->y, b->w, b->h, false, true, (char*)b->text.c_str()))
-      {
-        b->clicked = true;
-      }
+      //b.clicked = true;   //TODO: clean up original code after clicking handled by new GUI
     }
-    else {
-      Image* i = dynamic_cast<Image*>(e);
-      if (i)
+  }
+  for (unsigned int i = 0; i < c.Containers().size(); i++)
+  {
+    Container& innerc = c.Containers()[i];
+    LOG(DEBUG_GUTS, "GUI::Render() element is container " << endl)
+    Render(innerc, basex + innerc.x, basey + innerc.y);
+  }
+  for (unsigned int i = 0; i < c.SimpleSongScrollers().size(); i++)
+  {
+    SimpleSongScroller& sss = c.SimpleSongScrollers()[i];
+    LOG(DEBUG_GUTS, "GUI::Render() element is simpleSongScroller " << endl)
+    for (unsigned int j = 0; j < sss.Buttons().size(); j++)
+    {
+      Button& b = sss.Buttons()[j];
+      LOG(DEBUG_GUTS, "GUI::Render() sss element is button " << endl)
+      if (DoButton(basex + b.x, basey + b.y, b.w, b.h, true, true, (char*)b.text.c_str()))  //NOTE: first true is center
       {
-        char buf[100];
-        sprintf(buf, "dyn ptr cast i: x:%d y:%d surf:%X", i->x, i->y, (unsigned int)i->surface);
-        LOG(DEBUG_DETAIL, buf << endl)
-        sys.vid.ApplySurface(i->x, i->y, i->surface, NULL, NULL);
+        //b.clicked = true;   //TODO: clean up original code after clicking handled by new GUI
       }
     }
   }
 }
-
 
 void GUI::Cleanup()
 {
@@ -242,8 +246,16 @@ bool GUI::DoButton(int x, int y,int w,int h,bool center,bool clickable,char* tex
 //  #ifdef WII
   if(clickable)for(int a=0;a<4;a++){
     if(useCursor[a] && sys.input.cursorx[a]>x-14 && sys.input.cursory[a]>y-14 && sys.input.cursorx[a]<x+w+13 && sys.input.cursory[a]<y+h+13){
-      if(sys.input.WiiButtonsDown[a] & WPAD_BUTTON_A)clicked=1;
-      if(sys.input.WiiButtonsDown[a] & WPAD_CLASSIC_BUTTON_A)clicked=1;
+      if(sys.input.WiiButtonsDown[a] & WPAD_BUTTON_A)
+      {
+        clicked=1;    //TODO multi-user input
+        LOG(DEBUG_DETAIL, "GUI::DoButton()... WPAD_BUTTON_A " << endl)
+      }
+      if(sys.input.WiiButtonsDown[a] & WPAD_CLASSIC_BUTTON_A)
+      {
+        clicked=1;  //TODO multi-user
+        LOG(DEBUG_DETAIL, "GUI::DoButton()... WPAD_CLASSIC_BUTTON_A " << endl)
+      }
       glow=1;
     }
   }

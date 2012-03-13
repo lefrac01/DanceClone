@@ -23,21 +23,20 @@ namespace Gooey
 {
 
 
-Image::Image(SDL_Surface* s, int t) :
-  Element(t),
+Image::Image(SDL_Surface* s) :
   surface(s)
 {
-  type = IMAGE;
 }
 
 Image::Image(SDL_Surface* s, int _x, int _y, int _w, int _h, int t) :
   Element(_x, _y, _w, _h, true, true, false, "", t),
   surface(s)
 {
-  type = IMAGE;
-  char buf[100];
-  sprintf(buf, "ctor i: x:%d y:%d surf:%X", x, y, (unsigned int)surface);
-  LOG(DEBUG_DETAIL, buf << endl)
+}
+
+bool Image::Clicked(int testx, int testy)
+{
+  return false;
 }
 
 }

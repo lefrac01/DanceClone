@@ -18,6 +18,11 @@
 //      MA 02110-1301, USA.
 #include "Tools.h"
 
+bool PointInSDLRect(int x, int y, SDL_Rect& r)
+{
+  return x >= r.x && x <= r.x+r.w && y >= r.y && y < r.y+r.h;
+}
+
 int getnumberfromchar(char text){
 int textnumber=0;
 if(text==' ')textnumber=0;

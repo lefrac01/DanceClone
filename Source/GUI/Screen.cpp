@@ -24,23 +24,35 @@ namespace Gooey
 
 Screen::~Screen()
 {
-  while (elements.size() > 0) 
+}
+
+vector<Button>& Screen::Buttons()
+{
+  return buttons;
+}
+
+vector<Image>& Screen::Images()
+{
+  return images;
+}
+
+void Screen::Add(Element& e)
+{
+  try 
   {
-    delete elements.back();
-    elements.pop_back();
+    Button& b = dynamic_cast<Button&>(e);
+    buttons.push_back(b);
+    LOG(DEBUG_MINOR, "Screen::Add() button b: x: " << b.x << " y: " << b.y << " w: " << b.w << " h: " << b.h << " text: " << b.text << " tag: " << b.tag << endl)
   }
-}
-
-vector<Element*>& Screen::Elements()
-{
-  return elements;
-}
-
-void Screen::Add(Element* e)
-{
-  elements.push_back(e);
-  LOG(DEBUG_MINOR, "Screen::Added() e: x: " << e->x << " y: " << e->y << " w: " << e->w << " h: " << e->h << " text: " << e->text << " tag: " << e->tag << endl)
-  LOG(DEBUG_MINOR, "new element count: " << elements.size() << endl)
+  catch (...){}
+  try 
+  {
+    Image& i = dynamic_cast<Image&>(e);
+    images.push_back(i);
+    LOG(DEBUG_MINOR, "Screen::Add() image i: x: " << i.x << " y: " << i.y << " w: " << i.w << " h: " << i.h << " text: " << i.text << " tag: " << i.tag << endl)
+  }
+  catch (...){}
+  
 }
 
 }

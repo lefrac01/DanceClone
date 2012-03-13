@@ -49,6 +49,9 @@ public:
   int freezeFailDelay;
   int freezeLengthAllow;
 
+  string musicFileRoot;
+  int baseFileButtonTag;
+
 /*
 //TODO: enums
 #define NOTE_TYPE_HOLD 1              

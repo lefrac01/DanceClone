@@ -20,7 +20,10 @@
 #ifndef GUI_BUTTON_H
 #define GUI_BUTTON_H
 
+#include <SDL/SDL.h>
+
 #include "../Platform/LOG.H"
+#include "../Platform/Tools.h"
 
 #include "Element.h"
 
@@ -43,10 +46,11 @@ enum ButtonState
 private:
   
 public:
-  virtual ~Button(){};
+  virtual ~Button();
   Button(string s, int t = -1);
   Button(string s, int _x, int _y, int _w, int _h, int t = -1);
   ButtonState state;
+  bool Clicked(int testx, int testy);
 };
 
 

@@ -75,13 +75,13 @@ void Game::Run()
     RunTitleScreen();
     break;
   case CREDITS:
-    //#Game_menu_credits();
+    RunCreditsScreen();
     break;
   case SCORE:
     //#Game_menu_score();
     break;
   case SONG_SELECT1:
-    //#Game_menu_songselectp1();
+    RunSongSelect1();
     break;
   case SONG_SELECT2:
     //#Game_menu_songselectp2();
@@ -99,7 +99,7 @@ void Game::Run()
     //#Game_play();
     break;
   case DEBUG:
-    //#Game_menu_debug();
+    RunDebugScreen();
     break;
   case NONE:
   default:
@@ -115,15 +115,7 @@ Game::GameState Game::State()
   return state;
 }
 
-void Game::RunTitleScreen()
-{
-  // if we just got here, construct the screen object then pass to gui for rendering
-  const int debugTag = 1;
-  
-  if (gameStateChanged)
-  {
-    LOG(DEBUG_BASIC, "Game::RunTitleScreen setting up title)" << endl)
-    
+
 /*
     //IDEA 1 - basic
     // specify all position details statically, closest to actual code e.g.
@@ -159,35 +151,52 @@ void Game::RunTitleScreen()
     
     title.Add(vertList);
 */
-
+void Game::RunTitleScreen()
+{
+  // if we just got here, construct the screen object then pass to gui for rendering
+  const int playTag = 1;
+  const int creditsTag = 2;
+  const int debugTag = 3;
+  
+  if (gameStateChanged)
+  {
+    LOG(DEBUG_BASIC, "Game::RunTitleScreen setting up title)" << endl)
     
-    // FOR NOW, IDEA 1.  I WANT TO PLAY DAMMIT!
-    Screen* title = new Screen();
-    Button* debug = new Button("Debug", sys.vid.ScreenWidth()/2-300/2,55+6*40,sys.vid.ScreenWidth()-40,10, debugTag);
-    title->Add(debug);
+    // FOR NOW, IDEA 1.
+    Container title;
 
-    Image* titleImage = new Image(gfx.title_image, sys.vid.ScreenWidth()/2-300/2, 30, 0, 0);
-    title->Add(titleImage);
+    Image titleImage(gfx.title_image, sys.vid.ScreenWidth()/2-300/2, 30, 0, 0);
+    title.Add(titleImage);
+
+    Button play("Play", sys.vid.ScreenWidth()/2,55+4*40,sys.vid.ScreenWidth()-40,10, playTag);
+    title.Add(play);
+
+    Button credits("Credits", sys.vid.ScreenWidth()/2,55+5*40,sys.vid.ScreenWidth()-40,10, creditsTag);
+    title.Add(credits);
+
+    Button debug("Debug", sys.vid.ScreenWidth()/2,55+6*40,sys.vid.ScreenWidth()-40,10, debugTag);
+    title.Add(debug);
     
     //title.SetRenderAnimation(GUI::SCREEN_WIPE); // FADE_IN // FADING_WIPE, etc
     gui.SetScreen(title);
   }
   
-  
-  // call on the gui to give us an updated state of the inputs
-  // execute logic based on these inputs
-  // update screen components based on inputs
-  // send back to gui
-  
-  for (unsigned int i = 0; i < gui.Elements().size(); i++)
+  vector<Button> buttons;
+  buttons = gui.screen.AllButtons();
+  for (unsigned int i = 0; i < buttons.size(); i++)
   {
-    Element* e = gui.Elements()[i];
-    if (e->clicked)
+    Button& b = buttons[i];
+    if (b.clicked)
     {
-      switch (e->tag)
+      switch (b.tag)
       {
+      case playTag:
+        state = SONG_SELECT1;
+        break;
+      case creditsTag:
+        state = CREDITS;
+        break;
       case debugTag:
-LOG(DEBUG_BASIC, "Game::RunTitleScreen detected click on debugTag ged button)" << endl)
         state = DEBUG;
         break;
       default:
@@ -195,82 +204,52 @@ LOG(DEBUG_BASIC, "Game::RunTitleScreen detected click on debugTag ged button)" <
       }
     }
   }
-  /*
-  // for interactive screens, the state of elements is directly modified
-  // not very protective of internal information...
-  e.g.
-  switch (el.tag)
-  {
-  case addPlayer:
-    if (numPlayers < maxPlayers)
-    {
-      ++numPlayers;
-      string n;
-      n << numPlayers;
-      // update player number panel
-      for (int j = 0; j < s.Elements().size(); j++)
-      {
-        GUI::Element& el2 = s.Elements[j];
-        if (el2.tag == playerNumberPanel)
-        {
-          el2.SetText(n);
-        }
-      }
-    }
-    else
-    {
-      sound.Play(snd.guiFailDing);
-    }
-    ...
-  }
-  */
   
-  
-  
-  
-  // PROCEDURAL:
-  //sys.vid.ApplySurface(sys.vid.ScreenWidth()/2-300/2, 30, gfx.title_image, sys.vid.screen, NULL);
-  
-  //if(gui.DoButton(sys.vid.ScreenWidth()/2,55+4*40,sys.vid.ScreenWidth()-40,10,1,1,(char*)"Play")){state=PLAY;}
-  //if(gui.DoButton(sys.vid.ScreenWidth()/2,55+5*40,sys.vid.ScreenWidth()-40,10,1,1,(char*)"Credits")){state=CREDITS;}
-  //if(gui.DoButton(sys.vid.ScreenWidth()/2,55+6*40,sys.vid.ScreenWidth()-40,10,1,1,(char*)"Debug")){state=DEBUG;}
   LOG(DEBUG_GUTS, "Game::RunTitleScreen() done" << endl)
-
 }
 
-
-void Game::RunDebugScreen()
+void Game::RunCreditsScreen()
 {
-  const int backButtonTag = 1;
+  const int backButtonTag = 4;
+  
   if (gameStateChanged)
   {
-    Screen debug;
+    LOG(DEBUG_BASIC, "Game::RunCreditsScreen setting up" << endl)
+    Container credits;
 
-    int y=40;
+    Label cred1("v0.50 Programming and graphics by ThatOtherPerson", sys.vid.ScreenWidth()/2, 200+20*0, 0, 0);
+    Label cred2("thatotherdev.wordpress.com", sys.vid.ScreenWidth()/2, 200+20*1, 0, 0);
 
-    //WiiDash_spritetext(25,y,(char*)temp_text.c_str(),1);
-    //WiiDash_spritetext(180,420,(char*)temp_text.c_str(),1);
-    Element* title = new Element(25, y, 0, 0, true, true, false, "debug");
-    debug.Add(title);
+    Label cred3("v0.57 enhancements by Carl Lefrançois", sys.vid.ScreenWidth()/2, 200+20*3, 0, 0);
 
-    //apply_surface(80, 260, freeze_arrows_tail_image, screen, &freeze_tail_frames[3]); //12
-    //apply_surface(80, 132, freeze_arrows_body_image, screen, &freeze_body_frames[3]); //12
-    //apply_surface(80, 100, freeze_arrows_head_image, screen, &freeze_head_frames[3]); //16
+    Label cred4("Dance, NOW! music by RekcahDam", sys.vid.ScreenWidth()/2, 200+20*5, 0, 0);
+    Label cred5("rekcahdam.blogspot.com", sys.vid.ScreenWidth()/2, 200+20*6, 0, 0);
 
+    credits.Add(cred1);
+    credits.Add(cred2);
+    credits.Add(cred3);
+    credits.Add(cred4);
+    credits.Add(cred5);
     
-    Image* freezeHit = new Image(gfx.freeze_hit_image, 30, 70, 0, 0);
-    debug.Add(freezeHit);
+    Button back("Back", sys.vid.ScreenWidth()-100-40, sys.vid.ScreenHeight()-10-40, 100, 10, backButtonTag);
+    credits.Add(back);
     
-    Button back("Back", sys.vid.ScreenWidth()-300-40, sys.vid.ScreenHeight()-10-40, 100, 10, backButtonTag);
+    gui.SetScreen(credits);
+    
+    Uint32 soWhite;
+    soWhite = SDL_MapRGB(sys.vid.screen->format, 255, 255, 255);
+    gui.SetSpriteTextColored(soWhite);
   }
 
 
-  for (unsigned int i = 0; i < gui.Elements().size(); i++)
+  vector<Button> buttons;
+  buttons = gui.screen.AllButtons();
+  for (unsigned int i = 0; i < buttons.size(); i++)
   {
-    Element* e = gui.Elements()[i];
-    if (e->clicked)
+    Button& b = buttons[i];
+    if (b.clicked)
     {
-      switch (e->tag)
+      switch (b.tag)
       {
       case backButtonTag:
         state = TITLE;
@@ -281,5 +260,124 @@ void Game::RunDebugScreen()
     }
   }
 }
+
+void Game::RunDebugScreen()
+{
+  const int backButtonTag = 5;
+  
+  if (gameStateChanged)
+  {
+    LOG(DEBUG_BASIC, "Game::RunDebugScreen setting up" << endl)
+    Container debug;
+
+    int y=40;
+
+    Label title("debug", 25, y, 0, 0);
+    debug.Add(title);
+
+   
+    Image freezeHit(gfx.freeze_hit_image, 30, 70, 0, 0);
+    debug.Add(freezeHit);
+    
+    Button back("Back", sys.vid.ScreenWidth()-300-40, sys.vid.ScreenHeight()-10-40, 100, 10, backButtonTag);
+    debug.Add(back);
+    
+    gui.SetScreen(debug);
+
+    Uint32 soTeal;
+    soTeal = SDL_MapRGB(sys.vid.screen->format, 200, 255, 250);
+    gui.SetSpriteTextColored(soTeal);
+  }
+
+
+  sys.vid.ApplySurface(80, 260, gfx.freeze_arrows_tail_image, NULL, &gfx.freeze_tail_frames[3]); //12
+  sys.vid.ApplySurface(80, 132, gfx.freeze_arrows_body_image, NULL, &gfx.freeze_body_frames[3]); //12
+  sys.vid.ApplySurface(80, 100, gfx.freeze_arrows_head_image, NULL, &gfx.freeze_head_frames[3]); //16
+
+  vector<Button> buttons;
+  buttons = gui.screen.AllButtons();
+  for (unsigned int i = 0; i < buttons.size(); i++)
+  {
+    Button& b = buttons[i];
+    if (b.clicked)
+    {
+      switch (b.tag)
+      {
+      case backButtonTag:
+        state = TITLE;
+        break;
+      default:
+        break;
+      }
+    }
+  }
+}
+
+void Game::RunSongSelect1()
+{
+  //TODO: preload the song info into a nifty structure with images and meta info
+  const int backButtonTag = 6;
+  
+  if (gameStateChanged)
+  {
+    LOG(DEBUG_BASIC, "Game::RunSongSelect1 setting up" << endl)
+    Container songSelect1;
+
+    int entryNumber = 0;
+    string temp;
+  
+    string mp3Extension = ".mp3";  
+    vector<DirectoryEntry> musicFileRootContents;
+    musicFileRootContents = sys.ReadDirectory(constants.musicFileRoot);
+
+    SimpleSongScroller fileList;
+    //Container fileList;
+
+    for(unsigned int i = 0; i < musicFileRootContents.size(); i++)
+    {
+      DirectoryEntry& en = musicFileRootContents[i];
+      
+      if (!en.folder)
+      {
+        if (en.filename.size() > mp3Extension.size() && boost::iequals(en.filename.substr(en.filename.size()-4, 4), mp3Extension))
+        {
+          //Button fileSelect((char*)en.filename.c_str(), sys.vid.ScreenWidth()/2, 55 + entryNumber*40, 500, 10, constants.baseFileButtonTag+entryNumber);
+          fileList.AddSongChoice(en.filename, constants.baseFileButtonTag+entryNumber);
+          ++entryNumber;
+        }
+      }
+    }
+    
+    fileList.Recalculate();
+    
+    songSelect1.Add(fileList);
+
+    Button back("Back", sys.vid.ScreenWidth()-100-40, sys.vid.ScreenHeight()-10-40, 100, 10, backButtonTag);
+    songSelect1.Add(back);
+    
+    gui.SetScreen(songSelect1);
+  }
+
+
+  vector<Button> buttons;
+  buttons = gui.screen.AllButtons();
+  for (unsigned int i = 0; i < buttons.size(); i++)
+  {
+    Button& b = buttons[i];
+    if (b.clicked)
+    {
+      switch (b.tag)
+      {
+      case backButtonTag:
+        state = TITLE;
+        break;
+      default:
+        LOG(DEBUG_BASIC, "Game::RunSongSelect1 selected song # " << b.tag-constants.baseFileButtonTag << endl)
+        break;
+      }
+    }
+  }
+}
+
 
 }

@@ -24,6 +24,7 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+#include <SDL/SDL.h>
 
 
 int getnumberfromchar(char text);
@@ -51,5 +52,5 @@ bool SegmentIntersectRectangle(double a_rectangleMinX,
                  double a_p1y,
                  double a_p2x,
                  double a_p2y);
-
+bool PointInSDLRect(int x, int y, SDL_Rect& r);
 #endif

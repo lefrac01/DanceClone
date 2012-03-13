@@ -49,6 +49,10 @@ public:
   SDL_Surface *backgroundBlurred;
   SDL_Surface *borderImage;
   SDL_Surface *topBottomBorderImage;
+  
+  //TODO: fix this
+  SDL_Surface *cursorImage;
+  SDL_Rect cursorFrames[16];
 
   bool Init();
   void Cleanup();

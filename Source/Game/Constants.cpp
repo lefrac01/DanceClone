@@ -44,6 +44,15 @@ void Constants::Init(string ConfigFilePath)
   freezeLengthAllow = 25;
   // how many pixels before the end of a freeze arrow the player is
   //  allowed to lift off without failing the freeze
+  
+//    #ifdef WIN
+//  musicFileRoot = "Music/";
+//    #endif
+//    #ifdef WII
+  musicFileRoot = "/apps/DanceClone/Music/";
+  baseFileButtonTag = 1024;
+
+//    #endif  
 }
 
 }

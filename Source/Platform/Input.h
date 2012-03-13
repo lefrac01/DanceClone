@@ -65,7 +65,7 @@ public:
   int mousestate[mousecount];
 
 //TODO: subclassing
-  void WiiSetScreenExtents(int h, int w);
+  void WiiSetScreenExtents(int w, int h);
 //#ifdef WII
   bool wiimoteactive[4];
   u32 WiiButtonsHeld[4];

@@ -1,4 +1,4 @@
-//      Screen.h
+//      Label.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,38 +17,26 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#ifndef GUI_SCREEN_H
-#define GUI_SCREEN_H
-
-#include <vector>
-using std::vector;
-
-#include "../Platform/LOG.H"
-
-#include "Element.h"
-#include "Image.h"
-#include "Button.h"
-#include "Container.h"
+#include "Label.h"
 
 namespace Gooey
 {
-  
-class Screen
-{
-private:
 
-  vector<Image> images;
-  vector<Button> buttons;
-  
-public:
-  ~Screen();
-  vector<Image>& Images();
-  vector<Button>& Buttons();
-  //vector<Element*>& Elements();
-  void Add(Element& e);
-};
+
+Label::Label(string s)
+{
+  text = s;
+}
+
+Label::Label(string s, int _x, int _y, int _w, int _h, int t) :
+  Element(_x, _y, _w, _h, true, true, false, s, t)
+{
+}
+
+bool Label::Clicked(int testx, int testy)
+{
+  return false;
+}
 
 
 }
-
-#endif

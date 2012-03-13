@@ -35,10 +35,17 @@ void Win32OS::Cleanup()
 
 vector<DirectoryEntry> Win32OS::ReadDirectory(string path)
 {
+  
+  //NOTE: append *.* to the path received for this function to work!
+  
   vector<DirectoryEntry> contents;
   
   //TODO: wind stuff
   /*
+  
+  
+  
+  
   while(n_direntries) deletedirentry(0);
   
   char filename[MAX_PATH];

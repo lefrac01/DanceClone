@@ -1,4 +1,4 @@
-//      Screen.h
+//      Container.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,35 +17,48 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#ifndef GUI_SCREEN_H
-#define GUI_SCREEN_H
+#ifndef GUI_CONTAINER_H
+#define GUI_CONTAINER_H
 
 #include <vector>
 using std::vector;
 
 #include "../Platform/LOG.H"
+#include "../Platform/Tools.h"
 
 #include "Element.h"
 #include "Image.h"
 #include "Button.h"
 #include "Container.h"
+#include "Label.h"
+#include "SimpleSongScroller.h"
 
 namespace Gooey
 {
-  
-class Screen
-{
-private:
+class Container;
 
+class Container : public Element
+{
+protected:
+  vector<Container> containers;
+  vector<SimpleSongScroller> simpleSongScrollers;
   vector<Image> images;
   vector<Button> buttons;
+  vector<Label> labels;
   
+
 public:
-  ~Screen();
+  Container();
+  virtual ~Container();
+  Container(int _x, int _y, int _w, int _h, int ta = -1);
+  vector<Container>& Containers();  
+  vector<SimpleSongScroller>& SimpleSongScrollers();
   vector<Image>& Images();
   vector<Button>& Buttons();
-  //vector<Element*>& Elements();
+  vector<Button> AllButtons();
+  vector<Label>& Labels();
   void Add(Element& e);
+  bool Clicked(int testx, int testy);
 };
 
 

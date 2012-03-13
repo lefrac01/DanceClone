@@ -63,13 +63,13 @@ int main(int argc, char* argv[])
     if (!dash.Visible())
     {
       game.Run();
+      
+      if (game.State() != Game::PLAY_PREP1 && game.State() != Game::PLAY_PREP2)
+      {
+        gui.Update();
+      }
     }
-    
-    if (game.State() != Game::PLAY_PREP1 && game.State() != Game::PLAY_PREP2)
-    {
-      gui.Update();
-    }
-    
+        
     SDL_Event event;
     
     LOG(DEBUG_GUTS, "Entering main loop" << endl)

@@ -37,11 +37,11 @@ bool Graphics::Init()
 {
   LOG(DEBUG_BASIC, "Gooey::Graphics::Init()" << endl)
 
-  cursorImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Cursor.png");;
-  fontImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Font.png");;
-  buttonImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Button.png");;
-  fontImageColored = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Font.png");;
-  arrowsImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Arrows.png");;
+  cursorImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Cursor.png");
+  fontImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Font.png");
+  buttonImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Button.png");
+  fontImageColored = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Font.png");
+  arrowsImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Arrows.png");
   
   //WDfontimage       = LoadOptimizeAlpha("Media/WiiDash/Font.png");
   

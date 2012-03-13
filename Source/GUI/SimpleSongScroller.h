@@ -1,4 +1,4 @@
-//      Screen.h
+//      SimpleSongScroller.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,35 +17,40 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#ifndef GUI_SCREEN_H
-#define GUI_SCREEN_H
+#ifndef GUI_SIMPLE_SONG_SCROLLER_H
+#define GUI_SIMPLE_SONG_SCROLLER_H
 
 #include <vector>
 using std::vector;
 
 #include "../Platform/LOG.H"
 
-#include "Element.h"
-#include "Image.h"
 #include "Button.h"
-#include "Container.h"
 
 namespace Gooey
 {
   
-class Screen
+class SimpleSongScroller : public Element
 {
 private:
-
-  vector<Image> images;
   vector<Button> buttons;
+  vector<string> songChoices;
+  vector<int> songChoiceTags;
+  int currentOffset;
+  int selectionOffset;
+  int scrollOffset;
+  const static int scrollUpTag = 1;
+  const static int scrollDownTag = 2;
   
 public:
-  ~Screen();
-  vector<Image>& Images();
+  SimpleSongScroller();
+  virtual ~SimpleSongScroller();
+  SimpleSongScroller(int _x, int _y, int _w, int _h, int ta = -1);
+  bool Clicked(int testx, int testy);
+  void AddSongChoice(string s, int t);
+  void Recalculate(int startOffset = -1);
+  int GetSelectionOffset();
   vector<Button>& Buttons();
-  //vector<Element*>& Elements();
-  void Add(Element& e);
 };
 
 

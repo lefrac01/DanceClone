@@ -529,6 +529,17 @@ void Dash::RunMenu()
   y+=50;
 //  #endif
 
+
+
+
+  //TODO: fix this duplication of GUI::Update() code
+  // draw cursor
+  for(int a=0;a<4;a++){
+    if(sys.input.ir[a].valid && sys.input.wiimoteactive[a])
+    {
+      sys.vid.ApplySurface(sys.input.cursorx[a]-48,sys.input.cursory[a]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[3]);
+    }
+  }
 }
 
 void Dash::RunTopBottomBars()

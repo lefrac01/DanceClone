@@ -28,31 +28,17 @@ namespace Gooey
 
 class Element
 {
-public:
-  // having tried RTTI dynamic_cast approach and failed, using types!!!
-  // this is lame and 100% my failure to care why the dynamic cast won't 
-  // work
-  enum ElementType
-  {
-    TEXT,
-    IMAGE,
-    BUTTON
-  };
-
-
 private:
 
-  Element();
 
 
 public:
   
 
+  Element();
   virtual ~Element(){};
-  Element(int t = -1);
   Element(int _x, int _y, int _w, int _h, bool v, bool a, bool c, string tx, int t = -1);
-  
-  ElementType type;
+
   int tag;
   int x;
   int y;
@@ -62,7 +48,7 @@ public:
   bool active;
   bool clicked;
   string text;
-
+  virtual bool Clicked(int testx, int testy) = 0;
 };
 
 

@@ -30,7 +30,7 @@ void Input::Init()
   SDL_ShowCursor(SDL_DISABLE);
 }
 
-void Input::WiiSetScreenExtents(int h, int w)
+void Input::WiiSetScreenExtents(int w, int h)
 {
   screenWidth = w;
   screenHeight = h;
@@ -66,7 +66,7 @@ void Input::Update()
     wiimoteactive[1]=(WPAD_Probe(WPAD_CHAN_1,&ext)!=WPAD_ERR_NO_CONTROLLER);
     wiimoteactive[2]=(WPAD_Probe(WPAD_CHAN_2,&ext)!=WPAD_ERR_NO_CONTROLLER);
     wiimoteactive[3]=(WPAD_Probe(WPAD_CHAN_3,&ext)!=WPAD_ERR_NO_CONTROLLER);
-    LOG(DEBUG_GUTS, "wiimoteactive[0]:" << wiimoteactive[0] << " [1]:" << wiimoteactive[1] << " [2]:" << wiimoteactive[2] << "[3]:" << wiimoteactive[3] << endl)
+//    LOG(DEBUG_GUTS, "wiimoteactive[0]:" << wiimoteactive[0] << " [1]:" << wiimoteactive[1] << " [2]:" << wiimoteactive[2] << "[3]:" << wiimoteactive[3] << endl)
 
     WiiButtonsHeld[0]=WPAD_ButtonsHeld(WPAD_CHAN_0);
     WiiButtonsDown[0]=WPAD_ButtonsDown(WPAD_CHAN_0);
@@ -84,7 +84,7 @@ void Input::Update()
     WPAD_IR(WPAD_CHAN_1,&ir[1]);
     WPAD_IR(WPAD_CHAN_2,&ir[2]);
     WPAD_IR(WPAD_CHAN_3,&ir[3]);
-    LOG(DEBUG_GUTS, "ir[0].valid:" << ir[0].valid << " [1]:" << ir[1].valid << " [2]:" << ir[2].valid << "[3]:" << ir[3].valid << endl)
+//    LOG(DEBUG_GUTS, "ir[0].valid:" << ir[0].valid << " [1]:" << ir[1].valid << " [2]:" << ir[2].valid << "[3]:" << ir[3].valid << endl)
     
     WPAD_Expansion(WPAD_CHAN_0,&expans[0]);
     WPAD_Expansion(WPAD_CHAN_1,&expans[1]);
@@ -104,14 +104,14 @@ void Input::Update()
     if(ir[1].valid){cursorx[1]=ir[1].x*1.25-80;cursory[1]=ir[1].y*1.25-60;}
     if(ir[2].valid){cursorx[2]=ir[2].x*1.25-80;cursory[2]=ir[2].y*1.25-60;}
     if(ir[3].valid){cursorx[3]=ir[3].x*1.25-80;cursory[3]=ir[3].y*1.25-60;}
-    LOG(DEBUG_GUTS, "raw cursorx[0]:" << cursorx[0] << " cursory[0]:" << cursory[1] << endl)
+//  LOG(DEBUG_GUTS, "raw irx y: " << ir[0].x << " " << ir[0].y << " cursorx y:" << cursorx[0] << " " << cursory[0] << endl)
     for(int a=0;a<4;a++){
       if(cursorx[a]<0)cursorx[a]=0;
       if(cursorx[a]>screenWidth)cursorx[a]=screenWidth;
       if(cursory[a]<0)cursory[a]=0;
       if(cursory[a]>screenHeight)cursory[a]=screenHeight;
     }
-    LOG(DEBUG_GUTS, "fin cursorx[0]:" << cursorx[0] << " cursory[0]:" << cursory[1] << endl)
+//    LOG(DEBUG_GUTS, "fin cursorx[0]:" << cursorx[0] << " cursory[0]:" << cursory[0] << endl)
 //  #endif
 }
 

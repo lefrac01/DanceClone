@@ -22,13 +22,12 @@
 namespace Gooey
 {
 
-Element::Element(int t) :
-  type(TEXT),
-  tag(t),
-  x(0),
-  y(0),
-  w(0),
-  h(0),
+Element::Element() :
+  tag(-1),
+  x(-1),
+  y(-1),
+  w(-1),
+  h(-1),
   visible(true),
   active(true),
   clicked(false),
@@ -37,7 +36,6 @@ Element::Element(int t) :
 }
 
 Element::Element(int _x, int _y, int _w, int _h, bool v, bool a, bool c, string tx, int t) :
-  type(TEXT),
   tag(t),
   x(_x),
   y(_y),

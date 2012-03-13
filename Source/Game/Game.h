@@ -20,19 +20,28 @@
 
 #include <string>
 using std::string;
+#include <vector>
+using std::vector;
+
 #include <fstream>
 using std::ofstream;
 using std::ifstream;
 using std::endl;
 
+#include <boost/algorithm/string.hpp>
+
 #include "../Platform/OS.h"
 using Platform::OS;
+using Platform::DirectoryEntry;
 #include "../GUI/GUI.h"
 using Gooey::GUI;
-using Gooey::Screen;
+using Gooey::Container;
 using Gooey::Element;
 using Gooey::Button;
 using Gooey::Image;
+using Gooey::Label;
+#include "../GUI/SimpleSongScroller.h"
+using Gooey::SimpleSongScroller;
 #include "Constants.h"
 #include "Sound.h"
 #include "Graphics.h"
@@ -80,7 +89,9 @@ public:
   void Run();
   GameState State();
   void RunTitleScreen();
+  void RunCreditsScreen();
   void RunDebugScreen();
+  void RunSongSelect1();
 };
 
 }

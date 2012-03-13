@@ -19,7 +19,7 @@ TARGET		:=	boot
 BUILD		:=	build
 SOURCES		:=	Source Source/Game Source/Platform Source/GUI Source/Dash
 DATA		:=	data  
-INCLUDES	:=
+INCLUDES	:=	
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -87,7 +87,8 @@ export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
 export INCLUDE	:=	$(foreach dir,$(INCLUDES), -iquote $(CURDIR)/$(dir)) \
 					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 					-I$(CURDIR)/$(BUILD) \
-					-I$(LIBOGC_INC)
+					-I$(LIBOGC_INC) \
+					-I /usr/local/boost_1_49_0 
 					
 #---------------------------------------------------------------------------------
 # build a list of library paths
@@ -100,7 +101,8 @@ export OUTPUT	:=	$(CURDIR)/$(TARGET)
 
 #---------------------------------------------------------------------------------
 $(BUILD):
-#	echo w00t the CPPFILES IZZ: $(CPPFILES) whiches wuz found in source dirs: $(SOURCES)
+#	@echo CPPFILES: $(CPPFILES) whiches wuz found in source dirs: $(SOURCES)
+#	@echo INCLUDES: $(INCLUDE)
 	@[ -d $@ ] || mkdir -p $@
 	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 

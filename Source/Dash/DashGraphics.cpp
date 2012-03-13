@@ -24,7 +24,8 @@ DashGraphics::DashGraphics(OS& os) :
   background(NULL),
   backgroundBlurred(NULL),
   borderImage(NULL),
-  topBottomBorderImage(NULL)
+  topBottomBorderImage(NULL),
+  cursorImage(NULL)
 {
 }
 
@@ -41,6 +42,14 @@ bool DashGraphics::Init()
   borderImage = sys.vid.LoadOptimize("Media/WiiDash/Border.png");
   topBottomBorderImage = sys.vid.LoadOptimize("Media/WiiDash/TopBottomBorder.png");
   
+  cursorImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Cursor.png");
+  for(int a = 0; a < 16; a++)
+  {
+    cursorFrames[a].x = a*96;
+    cursorFrames[a].y = 0;
+    cursorFrames[a].w = 96;
+    cursorFrames[a].h = 96;
+  }
 
   return (background && backgroundBlurred && borderImage && topBottomBorderImage);
 }
