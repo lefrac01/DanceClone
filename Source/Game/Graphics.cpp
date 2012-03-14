@@ -68,11 +68,22 @@ bool Graphics::Init(string configFilePath)
 
   try
   {
-    //TODO: nice error log instead of hard crash when something is missing
+    string backgroundImagePath = "Media/Game/background.png";
+    string titleImagePath = "Media/Game/title.png";
+    string getReadyImagePath = "Media/Game/getready.png";
+  
     //TODO: fix hard-coded constants
-    background_image = sys.vid.LoadOptimize("Media/Game/background.png");
-    title_image = IMG_Load("Media/Game/title.png");
-    get_ready_image = IMG_Load("Media/Game/getready.png");
+    //background_image = sys.vid.LoadOptimize("Media/Game/background.png");
+    background_image = sys.vid.LoadOptimizeAlpha(backgroundImagePath.c_str());
+    if (!background_image) LOG(DEBUG_BASIC, "failed to load \"" << backgroundImagePath << "\"" << endl)
+
+    //title_image = IMG_Load("Media/Game/title.png");
+    title_image = sys.vid.LoadOptimizeAlpha(titleImagePath.c_str());
+    if (!title_image) LOG(DEBUG_BASIC, "failed to load \"" << titleImagePath << "\"" << endl)
+    
+    //get_ready_image = IMG_Load("Media/Game/getready.png");
+    get_ready_image = sys.vid.LoadOptimizeAlpha(getReadyImagePath.c_str());
+    if (!get_ready_image) LOG(DEBUG_BASIC, "failed to load \"" << getReadyImagePath << "\"" << endl)
     
     // expand source PNGs creating other arrow directions
     //optimistically using SDL_HWSURFACE but not all these can fit into the hardware memory ;)
@@ -124,8 +135,18 @@ bool Graphics::Init(string configFilePath)
 
 
     // freeze arrow graphics do not use the same source layout nor are they animated
-    freeze_hit_image = IMG_Load("Media/Game/freezehit.png");
-    freeze_arrows_head_image = IMG_Load("Media/Game/freezehead.png");
+    string freezeHitImagePath = "Media/Game/freezehit.png";
+    string freezeHeadImagePath = "Media/Game/freezehead.png";
+    string freezeBodyImagePath = "Media/Game/freezebody.png";
+    string freezeTailImagePath = "Media/Game/freezetail.png";
+ 
+    //freeze_hit_image = IMG_Load("Media/Game/freezehit.png");
+    //freeze_arrows_head_image = IMG_Load("Media/Game/freezehead.png");
+    freeze_hit_image = sys.vid.LoadOptimizeAlpha(freezeHitImagePath.c_str());
+    if (!freeze_hit_image) LOG(DEBUG_BASIC, "failed to load \"" << freezeHitImagePath << "\"" << endl)
+    freeze_arrows_head_image = sys.vid.LoadOptimizeAlpha(freezeHeadImagePath.c_str());
+    if (!freeze_arrows_head_image) LOG(DEBUG_BASIC, "failed to load \"" << freezeHeadImagePath << "\"" << endl)
+
     for(int b = 0; b < 4; b++)
     {
       for(int a = 0; a < 4; a++)
@@ -134,8 +155,13 @@ bool Graphics::Init(string configFilePath)
         freeze_head_frames[b*4 + a].w = 64;   freeze_head_frames[b*4 + a].h = 64;
       }
     }
-    freeze_arrows_body_image = IMG_Load("Media/Game/freezebody.png");
-    freeze_arrows_tail_image = IMG_Load("Media/Game/freezetail.png");
+    //freeze_arrows_body_image = IMG_Load("Media/Game/freezebody.png");
+    //freeze_arrows_tail_image = IMG_Load("Media/Game/freezetail.png");
+    freeze_arrows_body_image = sys.vid.LoadOptimizeAlpha(freezeBodyImagePath.c_str());
+    if (!freeze_arrows_body_image) LOG(DEBUG_BASIC, "failed to load \"" << freezeBodyImagePath << "\"" << endl)
+    freeze_arrows_tail_image = sys.vid.LoadOptimizeAlpha(freezeTailImagePath.c_str());
+    if (!freeze_arrows_tail_image) LOG(DEBUG_BASIC, "failed to load \"" << freezeTailImagePath << "\"" << endl)
+    
     for(int b = 0; b < 3; b++)
     {
       for(int a = 0; a < 4; a++)
@@ -163,7 +189,7 @@ bool Graphics::Init(string configFilePath)
     throw e;
   }
   
-  return true;
+  return (background_image && title_image && get_ready_image && freeze_hit_image && freeze_arrows_head_image && freeze_arrows_body_image && freeze_arrows_tail_image);
 }
 
 void Graphics::SetArrowFrame(SDL_Rect* dest, int index, int x, int y, int w, int h)

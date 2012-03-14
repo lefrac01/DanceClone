@@ -1,15 +1,3 @@
-//TODO: correct cross-platform control input needs some thought.  for the wii,
-// gamecube pads should be present.  however if for example 2 player mode is
-// supported in a mac os version then the base input class should be able to
-// send out player inputs that were gathered by a subclass-specific method.
-// if the base class stores multiple player inputs in a generic format and
-// the subclasses update these base class data per their specific gathering 
-// method, then it should all work.
-
-// i.e. make a WiiInput subclass to encapsulate current code 
-// and devise the base class generic data type
-
-
 //      Input.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
@@ -32,56 +20,73 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include <vector>
+using std::vector;
 
-#include <SDL/SDL.h>
-#include <gccore.h>
-#include <wiiuse/wpad.h>
+#include <SDL.h>
 #include "LOG.H"
 
 namespace Platform
 {
 
+class InputChannel
+{
+public:
+  enum InputDirection
+  {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    NUM_DIRECTIONS
+  };
+  
+  enum InputButton
+  {
+    Button1,
+    Button2,
+    Button3,
+    Button4,
+    Button5,
+    Button6,
+    Button7,
+    NUM_BUTTONS
+  };
+                    
+  bool active;
+  
+  int cursorX;
+  int cursorY;
+
+  bool directionDown[NUM_DIRECTIONS];
+  bool directionHeld[NUM_DIRECTIONS];
+//  bool directionUp[NUM_DIRECTIONS];
+  bool buttonDown[NUM_BUTTONS];
+  bool buttonHeld[NUM_BUTTONS];
+//  bool buttonUp[NUM_BUTTONS];
+};
+
 class Input
 {
-private:
-
-  //TODO: subclassing
-  int screenWidth;
-  int screenHeight;
-
-  
 public:
 
-  void Init();
-  void Update();
-  void Cleanup();
+  virtual void Init();
+  virtual void Update() = 0;
+  virtual void Cleanup();
 
-  int cursorx[4];
-  int cursory[4];
+  vector<InputChannel> inputChannels;
 
   static const int keycount = 500;
   int keystate[keycount];
   static const int mousecount = 10;
   int mousestate[mousecount];
 
-//TODO: subclassing
-  void WiiSetScreenExtents(int w, int h);
-//#ifdef WII
-  bool wiimoteactive[4];
-  u32 WiiButtonsHeld[4];
-  u32 WiiButtonsDown[4];
-  u32 WiiButtonsUp[4];
-  u16 GCButtonsHeld[4];
-  u16 GCButtonsDown[4];
-  u16 GCButtonsUp[4];
-  ir_t ir[4];
-  expansion_t expans[4];
-  #ifdef USEACCELEROMETER
-  gforce_t gforce[4];
-  #endif
-//#endif
-
-
+  bool ButtonDown(int c, InputChannel::InputButton b);
+  bool ButtonHeld(int channel, InputChannel::InputButton b);
+  bool DirectionDown(int channel, InputChannel::InputDirection d);
+  bool DirectionUp(int channel, InputChannel::InputDirection d);
+  bool CursorX(int channel);
+  bool CursorY(int channel);
 };
 
 }

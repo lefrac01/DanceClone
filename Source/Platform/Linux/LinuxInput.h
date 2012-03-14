@@ -1,4 +1,4 @@
-//      Element.h
+//      LinuxInput.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,42 +17,28 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#ifndef GUI_ELEMENT_H
-#define GUI_ELEMENT_H
+#ifndef LINUXINPUT_H
+#define LINUXINPUT_H
 
-#include <string>
-using std::string;
+#include <vector>
+using std::vector;
 
-namespace Gooey
+#include <SDL.h>
+#include "../LOG.H"
+
+#include "../Input.h"
+
+namespace Platform
 {
 
-class Element
+class LinuxInput : public Input
 {
-private:
-
-
-
 public:
-  
 
-  Element();
-  virtual ~Element(){};
-  Element(int _x, int _y, int _w, int _h, bool v, bool a, bool c, string tx, int t = -1);
-
-  int tag;
-  int x;
-  int y;
-  int w;
-  int h;
-  bool visible;
-  bool active;
-  bool clicked;
-  string text;
-  virtual bool Clicked(int testx, int testy) = 0;
-  virtual void CursorAt(int testx, int testy) = 0;
+  void Init();
+  void Update();
+  void Cleanup();
 };
 
-
 }
-
 #endif

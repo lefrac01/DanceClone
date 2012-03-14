@@ -24,7 +24,7 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
-#include <SDL/SDL.h>
+#include <SDL.h>
 
 
 int getnumberfromchar(char text);

@@ -64,6 +64,9 @@ vector<Label>& Container::Labels()
 
 void Container::Add(Element& e)
 {
+  // offset child to self
+  e.x += x;
+  e.y += y;
   try 
   {
     Container& c = dynamic_cast<Container&>(e);
@@ -85,7 +88,7 @@ void Container::Add(Element& e)
     // center in-place during add
     
     Button& b = dynamic_cast<Button&>(e);
-    b.x=b.x-b.w/2;b.y=b.y-b.h/2;
+    //b.x=b.x-b.w/2;b.y=b.y-b.h/2;
     buttons.push_back(b);
     LOG(DEBUG_MINOR, "Container::Add() button b: x: " << b.x << " y: " << b.y << " w: " << b.w << " h: " << b.h << " text: " << b.text << " tag: " << b.tag << endl)
   }
@@ -111,7 +114,7 @@ void Container::Add(Element& e)
 
 bool Container::Clicked(int testx, int testy)
 {
-  LOG(DEBUG_DETAIL, "Container::Clicked() x: " << testx << " y: " << testy << endl)
+  LOG(DEBUG_GUTS, "Container::Clicked() x: " << testx << " y: " << testy << endl)
   //opt, if outside self extent, no need to check
   SDL_Rect r;
   r.x = x;
@@ -120,7 +123,7 @@ bool Container::Clicked(int testx, int testy)
   r.h = h;
   if (!PointInSDLRect(testx, testy, r))
   {
-    LOG(DEBUG_DETAIL, "Container::Clicked() rejected point not in self" << endl)
+    LOG(DEBUG_GUTS, "Container::Clicked() rejected point not in self" << endl)
     return false;
   }
   
@@ -152,6 +155,38 @@ bool Container::Clicked(int testx, int testy)
   return false;
 }
 
+
+void Container::CursorAt(int testx, int testy)
+{
+  LOG(DEBUG_GUTS, "Container::CursorAt() x: " << testx << " y: " << testy << endl)
+  //opt, if outside self extent, no need to proceed
+  SDL_Rect r;
+  r.x = x;
+  r.y = y;
+  r.w = w;
+  r.h = h;
+  if (!PointInSDLRect(testx, testy, r))
+  {
+    LOG(DEBUG_GUTS, "Container::CursorAt() rejected point not in self" << endl)
+    return;
+  }
+  
+  for (unsigned int i = 0; i < containers.size(); i++)
+  {
+    containers[i].CursorAt(testx, testy);
+  }
+  
+  for (unsigned int i = 0; i < simpleSongScrollers.size(); i++)
+  {
+    simpleSongScrollers[i].CursorAt(testx, testy);
+  }
+  
+  // check self
+  for (unsigned int i = 0; i < buttons.size(); i++)
+  {
+    buttons[i].CursorAt(testx, testy);
+  }
+}
 
 // return all buttons in self and any child containers
 // functionality separate from Buttons() because that function is

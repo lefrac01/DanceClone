@@ -21,13 +21,13 @@
 
 #include <string>
 using std::string;
-#include <SDL/SDL_rotozoom.h>
-#include <SDL/SDL_image.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_mixer.h>
+#include <SDL_rotozoom.h>
+#include <SDL_image.h>
+#include <SDL.h>
+#include <SDL_mixer.h>
 #include <exception>
 using std::exception;
-#include <gccore.h>
+//#include <gccore.h>
 
 #include "../Platform/OS.h"
 using Platform::OS;

@@ -59,6 +59,7 @@ public:
   vector<Label>& Labels();
   void Add(Element& e);
   bool Clicked(int testx, int testy);
+  void CursorAt(int testx, int testy);
 };
 
 

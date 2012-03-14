@@ -1,4 +1,4 @@
-//      Element.h
+//      WiiOS.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -16,43 +16,36 @@
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
+#ifndef WIIPLATFORM_H
+#define WIIPLATFORM_H
 
-#ifndef GUI_ELEMENT_H
-#define GUI_ELEMENT_H
+#include "../OS.h"
 
-#include <string>
-using std::string;
+#include <gccore.h>
+#include <fat.h>
+#include <dirent.h>
+#include <unistd.h>
 
-namespace Gooey
+#include "WiiVideo.h"
+#include "WiiInput.h"
+       
+namespace Platform
 {
 
-class Element
+class WiiOS : public OS
 {
 private:
-
-
+  static void WiiResetPressed();
+  static void WiiPowerPressed();
+  static void WiimotePowerPressed(s32 chan);
 
 public:
-  
-
-  Element();
-  virtual ~Element(){};
-  Element(int _x, int _y, int _w, int _h, bool v, bool a, bool c, string tx, int t = -1);
-
-  int tag;
-  int x;
-  int y;
-  int w;
-  int h;
-  bool visible;
-  bool active;
-  bool clicked;
-  string text;
-  virtual bool Clicked(int testx, int testy) = 0;
-  virtual void CursorAt(int testx, int testy) = 0;
+  WiiOS();
+  void Init();
+  void Cleanup();
+  void Pump();
+  vector<DirectoryEntry> ReadDirectory(string path);
 };
 
-
 }
-
 #endif

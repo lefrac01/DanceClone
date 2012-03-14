@@ -1,4 +1,4 @@
-//      WiiOS.cpp
+//      LinuxOS.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -18,57 +18,38 @@
 //      MA 02110-1301, USA.
 
 
-#include "WiiOS.h"
+#include "LinuxOS.h"
 
 
 
 namespace Platform
 {
 
-s8 HWButton;
+LinuxVideo linuxVideo;
+LinuxInput linuxInput;
 
-void WiiOS::WiiResetPressed(){HWButton = SYS_RETURNTOMENU;}
-void WiiOS::WiiPowerPressed(){HWButton = SYS_POWEROFF;}
-void WiiOS::WiimotePowerPressed(s32 chan){HWButton = SYS_POWEROFF;}
+LinuxOS::LinuxOS() :
+  OS(linuxVideo, linuxInput)
+{
+}
 
-void WiiOS::Init()
+
+void LinuxOS::Init()
 {  
   OS::Init();
-  HWButton = -1;
-  input.WiiSetScreenExtents(vid.ScreenWidth(), vid.ScreenHeight());
-  //TODO: call this function until a successful file read can be done
-  fatInitDefault();
-  //TEMP
-  sleep(2);
-
-  WPAD_Init();
-  WPAD_SetVRes(WPAD_CHAN_ALL,vid.ScreenWidth(),vid.ScreenHeight());  
-  WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);  
-  
-  SYS_SetResetCallback(WiiResetPressed);
-  SYS_SetPowerCallback(WiiPowerPressed);
-  WPAD_SetPowerButtonCallback(WiimotePowerPressed);  
 }
 
-void WiiOS::Pump()
+void LinuxOS::Pump()
 {
   OS::Pump();
-//    SYS_SetResetCallback(WiiResetPressed);  //TODO:???
-//    SYS_SetPowerCallback(WiiPowerPressed);  //TODO:???
-//    WPAD_SetPowerButtonCallback(WiimotePowerPressed); //TODO:???
-  if (HWButton != -1)
-  {
-    SYS_ResetSystem(HWButton, 0, 0);
-  }
 }
 
-void WiiOS::Cleanup()
+void LinuxOS::Cleanup()
 {
   OS::Cleanup();
-  fatUnmount(0); 
 }
 
-vector<DirectoryEntry> WiiOS::ReadDirectory(string path)
+vector<DirectoryEntry> LinuxOS::ReadDirectory(string path)
 {
   vector<DirectoryEntry> contents;
 
@@ -78,7 +59,8 @@ vector<DirectoryEntry> WiiOS::ReadDirectory(string path)
 
   if ((dirStruct = opendir(path.c_str())))
   {
-    if(dirStruct->dirData != NULL)
+//    if(dirStruct->dirData != NULL)
+    if(dirStruct != NULL)
     {
       while(  (dirEntry = readdir(dirStruct)) != NULL ) 
       {

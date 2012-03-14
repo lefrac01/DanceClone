@@ -29,6 +29,13 @@ extrainfoint(extra)
 {
 }
 
+
+OS::OS(Video& v, Input& i) :
+  vid(v),
+  input(i)
+{
+}
+
 //TODO: bool
 void OS::Init()
 {

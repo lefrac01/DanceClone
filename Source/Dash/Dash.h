@@ -20,9 +20,9 @@
 #ifndef DASH_H
 #define DASH_H
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <SDL/SDL_mixer.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_mixer.h>
 #include "../Platform/OS.h"
 using Platform::OS;
 #include "../Platform/LOG.H"
@@ -30,7 +30,9 @@ using Platform::OS;
 #include "../GUI/GUI.h"
 using Gooey::GUI;
 #include "DashGraphics.h"
-
+#ifdef WII
+#include <gccore.h>
+#endif
 
 class Dash
 {

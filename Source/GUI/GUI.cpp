@@ -36,6 +36,7 @@ bool GUI::Init()
 
   if (!gfx.Init())
   {
+    LOG(DEBUG_BASIC, "ERROR: GUI::Init()   gfx.Init() failed" << endl)
     return false;
   }
 
@@ -46,65 +47,32 @@ void GUI::Update()
 {
   LOG(DEBUG_GUTS, "GUI::Update()" << endl)
 
-  //TODO: 1, Wii specific code
-  //TODO: 2, input specific code
-
-
-  
   //TODO: support cursor and "select" action for use with dance mat
-  //TODO: tighten.  Users at platform level have inputs that may or may not be
-  // mapped to Players at the game level
-  int numPlayers = 1;
-  for (int i = 0; i < numPlayers; i++)
+  int numUsers = 1;
+  for (int i = 0; i < numUsers; i++)
   {
-    if(sys.input.WiiButtonsDown[i] & WPAD_BUTTON_A)
+    InputChannel& chan = sys.input.inputChannels[0];
+    screen.CursorAt(chan.cursorX, chan.cursorY);
+    if (chan.buttonDown[InputChannel::Button4])
     {
-      screen.Clicked(sys.input.cursorx[i], sys.input.cursory[i]);
+      screen.Clicked(chan.cursorX, chan.cursorY);
     }
   }
   
   Render(screen); // render screen first
   
   // draw cursor
-  for(int a = 0; a < 4; a++)
+  for (unsigned int i = 0; i < sys.input.inputChannels.size(); i++)
   {
-    useCursor[a] = 0;
-  }
-  
-  if(useCursors){
-//    #ifdef WII
-    for(int a=0;a<4;a++){
-      if(sys.input.ir[a].valid){
-//        LOG(DEBUG_GUTS, "GUI::Update() ir[a] is valid" << endl)
-        useCursor[a]=1;
-      }else if(sys.input.expans[a].type==WPAD_EXP_CLASSIC){
-        useCursor[a]=1;
-        double mag = sys.input.expans[a].classic.rjs.mag;
-        double ang = sys.input.expans[a].classic.rjs.ang;
-        if(mag>0){
-          ang=(ang-90)*0.0174532925;
-          sys.input.cursorx[a]+=mag*cos(ang)*15;
-          sys.input.cursory[a]+=mag*sin(ang)*15;
-        }
-      }
+    InputChannel& chan = sys.input.inputChannels[i];
+    if (chan.active)
+    {
+      char buf[100];
+      sprintf(buf, "%lX", (unsigned long)gfx.cursorImage);
+      LOG(DEBUG_GUTS, "cursor("<< buf <<") to x: " << chan.cursorX-48 << " y: " << chan.cursorY-48 << " using src rect x:" << gfx.cursorFrames[6+i*3].x <<"  y: " <<gfx.cursorFrames[6+i*3].y<<" w: " << gfx.cursorFrames[6+i*3].w << " h: " <<gfx.cursorFrames[6+i*3].h << " whew!E" << endl)
+      sys.vid.ApplySurface(chan.cursorX-48, chan.cursorY-48, gfx.cursorImage, sys.vid.screen, &gfx.cursorFrames[6+i*3]);
     }
-    if(sys.input.wiimoteactive[0] && !sys.input.wiimoteactive[1] && !sys.input.wiimoteactive[2] && !sys.input.wiimoteactive[3]){
-//      LOG(DEBUG_GUTS, "CURSOR: cursorx[0]-48:" << sys.input.cursorx[0]-48 << " cursory[0]-48:" << sys.input.cursory[0]-48 << endl)
-      if(useCursor[0])sys.vid.ApplySurface(sys.input.cursorx[0]-48,sys.input.cursory[0]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[3]);
-    }else{
-      if(useCursor[0])sys.vid.ApplySurface(sys.input.cursorx[0]-48,sys.input.cursory[0]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[6]);
-      if(useCursor[1])sys.vid.ApplySurface(sys.input.cursorx[1]-48,sys.input.cursory[1]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[9]);
-      if(useCursor[2])sys.vid.ApplySurface(sys.input.cursorx[2]-48,sys.input.cursory[2]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[12]);
-      if(useCursor[3])sys.vid.ApplySurface(sys.input.cursorx[3]-48,sys.input.cursory[3]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[15]);
-    }
-//    #endif
-//   #ifdef WIN
-//    if(SDL_GetAppState() & SDL_APPMOUSEFOCUS)useCursor[0]=1;
-//    if(useCursor[0])sys.vid.ApplySurface(sys.input.cursorx[0]-48,cursory[0]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[3]);
-//    #endif    
   }
-  
-  useCursors = true;
 }
 
 void GUI::SetScreen(Container& c)
@@ -122,7 +90,8 @@ void GUI::SetScreen(Container& c)
   LOG(DEBUG_MINOR, "GUI::SetScreen() screen button count now: " << screen.AllButtons().size() << endl)
 }
 
-void GUI::Render(Container &c, int basex, int basey)
+//void GUI::Render(Container &c, int basex, int basey)
+void GUI::Render(Container &c)
 {
   LOG(DEBUG_GUTS, "GUI::Render() " << endl)
   
@@ -131,28 +100,25 @@ void GUI::Render(Container &c, int basex, int basey)
   {
     Image& im = c.Images()[i];
     LOG(DEBUG_GUTS, "GUI::Render() element is image " << endl)
-    sys.vid.ApplySurface(basex + im.x, basey + im.y, im.surface, NULL, NULL);
+    sys.vid.ApplySurface(im.x, im.y, im.surface, NULL, NULL);
   }
   for (unsigned int i = 0; i < c.Labels().size(); i++)
   {
     Label& l = c.Labels()[i];
     LOG(DEBUG_GUTS, "GUI::Render() element is label " << endl)
-    DrawSpriteText(basex + l.x, basey + l.y,(char*) l.text.c_str(), 1);
+    DrawSpriteText(l.x, l.y,(char*) l.text.c_str(), 1);
   }
   for (unsigned int i = 0; i < c.Buttons().size(); i++)
   {
     Button& b = c.Buttons()[i];
     LOG(DEBUG_GUTS, "GUI::Render() element is button " << endl)
-    if (DoButton(basex + b.x, basey + b.y, b.w, b.h, false, true, (char*)b.text.c_str()))  //NOTE: first true is center
-    {
-      //b.clicked = true;   //TODO: clean up original code after clicking handled by new GUI
-    }
+    DrawButton(b);
   }
   for (unsigned int i = 0; i < c.Containers().size(); i++)
   {
     Container& innerc = c.Containers()[i];
     LOG(DEBUG_GUTS, "GUI::Render() element is container " << endl)
-    Render(innerc, basex + innerc.x, basey + innerc.y);
+    Render(innerc);
   }
   for (unsigned int i = 0; i < c.SimpleSongScrollers().size(); i++)
   {
@@ -162,10 +128,7 @@ void GUI::Render(Container &c, int basex, int basey)
     {
       Button& b = sss.Buttons()[j];
       LOG(DEBUG_GUTS, "GUI::Render() sss element is button " << endl)
-      if (DoButton(basex + b.x, basey + b.y, b.w, b.h, true, true, (char*)b.text.c_str()))  //NOTE: first true is center
-      {
-        //b.clicked = true;   //TODO: clean up original code after clicking handled by new GUI
-      }
+      DrawButton(b);
     }
   }
 }
@@ -191,44 +154,68 @@ void GUI::DrawSpriteText(int posx,int posy,char* texttosprite,int leftmiddlerigh
   }
 }
 
-void GUI::DrawButton(int x, int y,int w,int h,bool glow)
+//void GUI::DrawButton(int x, int y,int w,int h,bool glow)
+void GUI::DrawButton(Button& b)
 {
-  LOG(DEBUG_GUTS, "GUI::DrawButton(" << x << ", " << y << ", " << w << ", " << h << ", " << glow << ")" << endl)
+  LOG(DEBUG_GUTS, "GUI::DrawButton(" << b.x << ", " << b.y << ", " << b.w << ", " << b.h << endl)
+  
+  // is it glowing?
+//  if(useCursor[a] && sys.input.cursorx[a]>x-14 && sys.input.cursory[a]>y-14 && sys.input.cursorx[a]<x+w+13 && sys.input.cursory[a]<y+h+13){
+  bool glow = b.state == Button::HOVER;
+  //#bool glow = false;
+  //#for (unsigned int i = 0; i < sys.input.inputChannels.size(); i++)
+  //#{
+    //#InputChannel& chan = sys.input.inputChannels[i];
+    //#if (chan.active && chan.cursorX>b.x-14 && chan.cursorY>b.y-14 && chan.cursorX<b.x+b.w+13 && chan.cursorY<b.y+b.h+13)
+    //#{
+      //#glow = true;
+      //#break;
+    //#}      
+  //#}
+  
   //corners
-  sys.vid.ApplySurface(x-21, y-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[0+glow*9]);
-  sys.vid.ApplySurface(x-21, y+h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[1+glow*9]);
-  sys.vid.ApplySurface(x+w,  y-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[2+glow*9]);
-  sys.vid.ApplySurface(x+w,  y+h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[3+glow*9]);
+  sys.vid.ApplySurface(b.x-21, b.y-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[0+glow*9]);
+  sys.vid.ApplySurface(b.x-21, b.y+b.h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[1+glow*9]);
+  sys.vid.ApplySurface(b.x+b.w,  b.y-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[2+glow*9]);
+  sys.vid.ApplySurface(b.x+b.w,  b.y+b.h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[3+glow*9]);
   //edges
-  for(int a=0; a<w/21; a++)
-    sys.vid.ApplySurface(x+a*21,y+h,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[4+glow*9]);
-  SDL_Rect temprect1={4*21,glow*21,w-w/21*21,21};
-  sys.vid.ApplySurface(x+w/21*21,y+h,gfx.buttonImage,sys.vid.screen,&temprect1);
-  for(int a=0; a<h/21; a++)
-    sys.vid.ApplySurface(x+w,y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[5+glow*9]);
-  SDL_Rect temprect2={5*21,glow*21,21,h-h/21*21};
-  sys.vid.ApplySurface(x+w,y+h/21*21,gfx.buttonImage,sys.vid.screen,&temprect2);
-  for(int a=0; a<w/21; a++)
-    sys.vid.ApplySurface(x+a*21,y-21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[6+glow*9]);
-  SDL_Rect temprect3={6*21,glow*21,w-w/21*21,21};
-  sys.vid.ApplySurface(x+w/21*21,y-21,gfx.buttonImage,sys.vid.screen,&temprect3);
-  for(int a=0; a<h/21; a++)
-    sys.vid.ApplySurface(x-21,y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[7+glow*9]);
-  SDL_Rect temprect4={7*21,glow*21,21,h-h/21*21};
-  sys.vid.ApplySurface(x-21,y+h/21*21,gfx.buttonImage,sys.vid.screen,&temprect4);
+  for(int a=0; a<b.w/21; a++)
+    sys.vid.ApplySurface(b.x+a*21,b.y+b.h,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[4+glow*9]);
+  SDL_Rect temprect1={4*21,glow*21,b.w-b.w/21*21,21};
+  sys.vid.ApplySurface(b.x+b.w/21*21,b.y+b.h,gfx.buttonImage,sys.vid.screen,&temprect1);
+  for(int a=0; a<b.h/21; a++)
+    sys.vid.ApplySurface(b.x+b.w,b.y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[5+glow*9]);
+  SDL_Rect temprect2={5*21,glow*21,21,b.h-b.h/21*21};
+  sys.vid.ApplySurface(b.x+b.w,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect2);
+  for(int a=0; a<b.w/21; a++)
+    sys.vid.ApplySurface(b.x+a*21,b.y-21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[6+glow*9]);
+  SDL_Rect temprect3={6*21,glow*21,b.w-b.w/21*21,21};
+  sys.vid.ApplySurface(b.x+b.w/21*21,b.y-21,gfx.buttonImage,sys.vid.screen,&temprect3);
+  for(int a=0; a<b.h/21; a++)
+    sys.vid.ApplySurface(b.x-21,b.y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[7+glow*9]);
+  SDL_Rect temprect4={7*21,glow*21,21,b.h-b.h/21*21};
+  sys.vid.ApplySurface(b.x-21,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect4);
   //insides
-  for(int a=0; a<h/21; a++)for(int b=0; b<w/21; b++)
-    sys.vid.ApplySurface(x+b*21,y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[8+glow*9]);
-  SDL_Rect temprect5={8*21,glow*21,w-w/21*21,21};
-  for(int a=0; a<h/21; a++)
-    sys.vid.ApplySurface(x+w/21*21,y+a*21,gfx.buttonImage,sys.vid.screen,&temprect5);
-  SDL_Rect temprect6={8*21,glow*21,21,h-h/21*21};
-  for(int a=0; a<w/21; a++)
-    sys.vid.ApplySurface(x+a*21,y+h/21*21,gfx.buttonImage,sys.vid.screen,&temprect6);
-  SDL_Rect temprect7={8*21,glow*21,w-w/21*21,h-h/21*21};
-  sys.vid.ApplySurface(x+w/21*21,y+h/21*21,gfx.buttonImage,sys.vid.screen,&temprect7);
+  for(int a=0; a<b.h/21; a++)for(int i=0; i<b.w/21; i++)
+    sys.vid.ApplySurface(b.x+i*21,b.y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[8+glow*9]);
+  SDL_Rect temprect5={8*21,glow*21,b.w-b.w/21*21,21};
+  for(int a=0; a<b.h/21; a++)
+    sys.vid.ApplySurface(b.x+b.w/21*21,b.y+a*21,gfx.buttonImage,sys.vid.screen,&temprect5);
+  SDL_Rect temprect6={8*21,glow*21,21,b.h-b.h/21*21};
+  for(int a=0; a<b.w/21; a++)
+    sys.vid.ApplySurface(b.x+a*21,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect6);
+  SDL_Rect temprect7={8*21,glow*21,b.w-b.w/21*21,b.h-b.h/21*21};
+  sys.vid.ApplySurface(b.x+b.w/21*21,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect7);
+  
+  // draw text!
+  int tempx = b.x+b.w/2; 
+  int tempy = b.y+b.h/2;
+  //x=x+w/2;y=y+h/2;
+  //DrawSpriteText(x,y-21/2,text,2);
+  DrawSpriteText(tempx,tempy-21/2,(char*)b.text.c_str(),2);
 }
 
+/*
 bool GUI::DoButton(int x, int y,int w,int h,bool center,bool clickable,char* text)
 {
   LOG(DEBUG_GUTS, "GUI::DoButton(" << x << ", " << y << ", " << w << ", " << h << ", " << center << ", " << clickable << ", " << text << ")" << endl)
@@ -267,6 +254,7 @@ bool GUI::DoButton(int x, int y,int w,int h,bool center,bool clickable,char* tex
   DrawSpriteText(x,y-21/2,text,2);
   return clicked;
 }
+*/
 
 void GUI::SetSpriteTextColored(Uint32 color)
 {
@@ -368,6 +356,8 @@ void WiiDash_savebmpscreenshot(){
 */
 void GUI::SavePngScreenshot()
 {
+  //TODO: save png
+  /*
   #ifdef WII
   ifstream test;char filename[64];int filenumber=1;
   sprintf(filename,"sd:/screenshot%d.png",filenumber);
@@ -379,8 +369,9 @@ void GUI::SavePngScreenshot()
       test.open(filename);test.close();
     }
   }
-  IMG_SavePNG((char*)filename,WDbackground,Z_BEST_COMPRESSION);
+  IMG_SavePNG((char*)filename, gfx.background, Z_BEST_COMPRESSION);
   #endif
+  */
 }
 
 }

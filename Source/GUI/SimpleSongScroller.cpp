@@ -78,6 +78,18 @@ bool SimpleSongScroller::Clicked(int testx, int testy)
   return false;
 }
 
+void SimpleSongScroller::CursorAt(int testx, int testy)
+{
+  LOG(DEBUG_GUTS, "SimpleSongScroller::CursorAt() ..." << endl)
+  //internal ui handling.  if button hovered...
+  for (unsigned int i = 0; i < buttons.size(); i++)
+  {
+    Button& b = buttons[i];
+    b.CursorAt(testx, testy);
+  }
+}
+
+
 vector<Button>& SimpleSongScroller::Buttons()
 {
   return buttons;
@@ -101,7 +113,7 @@ void SimpleSongScroller::Recalculate(int startOffset)
   // calculate limits based on item size and self extents
   //TODO: for now using original hardcoded values
 //  int maxItems = 8;
-  unsigned int maxItems = 4; //TODO: temp for testing
+  unsigned int maxItems = 8; //TODO: temp for testing
   
   if (startOffset != -1 && startOffset <= (int)songChoices.size())
   {

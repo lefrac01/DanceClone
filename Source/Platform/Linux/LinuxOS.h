@@ -1,4 +1,4 @@
-//      Element.h
+//      LinuxOS.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -16,43 +16,38 @@
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
+#ifndef LINUXOS_H
+#define LINUXOS_H
 
-#ifndef GUI_ELEMENT_H
-#define GUI_ELEMENT_H
+#include "../OS.h"
+/*
+#include <gccore.h>
+#include <fat.h>
+#include <unistd.h>
+*/
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
 
-#include <string>
-using std::string;
-
-namespace Gooey
+#include "LinuxVideo.h"
+#include "LinuxInput.h"
+       
+namespace Platform
 {
 
-class Element
+class LinuxOS : public OS
 {
 private:
 
 
-
 public:
-  
 
-  Element();
-  virtual ~Element(){};
-  Element(int _x, int _y, int _w, int _h, bool v, bool a, bool c, string tx, int t = -1);
-
-  int tag;
-  int x;
-  int y;
-  int w;
-  int h;
-  bool visible;
-  bool active;
-  bool clicked;
-  string text;
-  virtual bool Clicked(int testx, int testy) = 0;
-  virtual void CursorAt(int testx, int testy) = 0;
+  LinuxOS();
+  void Init();
+  void Cleanup();
+  void Pump();
+  vector<DirectoryEntry> ReadDirectory(string path);
 };
 
-
 }
-
 #endif

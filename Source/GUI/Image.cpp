@@ -39,4 +39,8 @@ bool Image::Clicked(int testx, int testy)
   return false;
 }
 
+void Image::CursorAt(int testx, int testy)
+{
+}
+
 }

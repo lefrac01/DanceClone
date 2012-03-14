@@ -17,6 +17,12 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
+
+//#define WIN
+#define WII
+//#define LINUX
+
+
 #ifndef OS_H
 #define OS_H
 
@@ -29,9 +35,9 @@ using std::vector;
 #include <string>
 #include <math.h>
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <SDL/SDL_mixer.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_mixer.h>
 
 #include "Input.h"
 #include "Video.h"
@@ -56,11 +62,13 @@ class OS
 {
 private:
   
+  OS();
   
 public:
 
-  Video vid;
-  Input input;
+  Video& vid;
+  Input& input;
+  OS(Video& v, Input& i);
 
   virtual void Init();
   virtual void Cleanup();

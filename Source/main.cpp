@@ -1,7 +1,4 @@
-
-//#define WIN
-#define WII
-//#define USEACCELEROMETER
+#include "Platform/OS.h"
 
 #define GAMEVERSIONSTRING "DanceClone v0.58"
 
@@ -10,13 +7,18 @@
 using DanceClone::Game;
 
 #ifdef WIN
-#include "Platform/Win32OS.h"
+#include "Platform/Win32/Win32OS.h"
 using Platform::Win32OS;
 #endif
 
 #ifdef WII
-#include "Platform/WiiOS.h"
+#include "Platform/Wii/WiiOS.h"
 using Platform::WiiOS;
+#endif
+
+#ifdef LINUX
+#include "Platform/Linux/LinuxOS.h"
+using Platform::LinuxOS;
 #endif
 
 #include "GUI/GUI.h"
@@ -32,6 +34,9 @@ int main(int argc, char* argv[])
   #ifdef WII
   WiiOS sys;
   #endif
+  #ifdef LINUX
+  LinuxOS sys;
+  #endif
 
   //TODO: failure cases
   sys.Init();
@@ -41,13 +46,31 @@ int main(int argc, char* argv[])
   FLUSH_LOG
 
   GUI gui(sys);
-  gui.Init();
+  if (!gui.Init())
+  {
+    LOG(DEBUG_BASIC, "ERROR: gui.Init() failed" << endl)
+    gui.Cleanup();
+    sys.Cleanup();
+    exit(-1);
+  } 
   
   Dash dash(sys, gui);
-  dash.Init();
+  if (!dash.Init())
+  {
+    LOG(DEBUG_BASIC, "ERROR: dash.Init() failed" << endl)
+    gui.Cleanup();
+    sys.Cleanup();
+    exit(-2);
+  }
   
   Game game(sys, gui);
-  game.Init();
+  if (!game.Init())
+  {
+    LOG(DEBUG_BASIC, "ERROR: game.Init() failed" << endl)
+    gui.Cleanup();
+    sys.Cleanup();
+    exit(-3);
+  }
 
   bool done = false;
   while(!done)

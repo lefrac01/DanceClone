@@ -37,6 +37,7 @@ public:
   Label(string s);
   Label(string s, int _x, int _y, int _w, int _h, int t = -1);
   bool Clicked(int testx, int testy);
+  void CursorAt(int testx, int testy);
 };
 
 

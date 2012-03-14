@@ -47,6 +47,7 @@ public:
   virtual ~SimpleSongScroller();
   SimpleSongScroller(int _x, int _y, int _w, int _h, int ta = -1);
   bool Clicked(int testx, int testy);
+  void CursorAt(int testx, int testy);
   void AddSongChoice(string s, int t);
   void Recalculate(int startOffset = -1);
   int GetSelectionOffset();

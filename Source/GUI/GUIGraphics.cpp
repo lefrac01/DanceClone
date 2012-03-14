@@ -37,11 +37,28 @@ bool Graphics::Init()
 {
   LOG(DEBUG_BASIC, "Gooey::Graphics::Init()" << endl)
 
-  cursorImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Cursor.png");
-  fontImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Font.png");
-  buttonImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Button.png");
-  fontImageColored = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Font.png");
-  arrowsImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Arrows.png");
+  string cursorImagePath = "Media/WiiDash/Cursor.PNG";
+  string fontImagePath = "Media/WiiDash/Font.png";
+  string buttonImagePath = "Media/WiiDash/Button.png";
+  string fontImageColouredPath = "Media/WiiDash/Font.png";
+  string arrowsImagePath = "Media/WiiDash/Arrows.png";
+  
+  
+  cursorImage = sys.vid.LoadOptimizeAlpha(cursorImagePath.c_str());
+  if (!cursorImage) LOG(DEBUG_BASIC, "failed to load \"" << cursorImagePath << "\"" << endl)
+
+  fontImage = sys.vid.LoadOptimizeAlpha(fontImagePath.c_str());
+  if (!fontImage) LOG(DEBUG_BASIC, "failed to load \"" << fontImagePath << "\"" << endl)
+
+  buttonImage = sys.vid.LoadOptimizeAlpha(buttonImagePath.c_str());
+  if (!buttonImage) LOG(DEBUG_BASIC, "failed to load \"" << buttonImagePath << "\"" << endl)
+
+  fontImageColored = sys.vid.LoadOptimizeAlpha(fontImageColouredPath.c_str());
+  if (!fontImageColored) LOG(DEBUG_BASIC, "failed to load \"" << fontImageColouredPath << "\"" << endl)
+
+  arrowsImage = sys.vid.LoadOptimizeAlpha(arrowsImagePath.c_str());
+  if (!arrowsImage) LOG(DEBUG_BASIC, "failed to load \"" << arrowsImagePath << "\"" << endl)
+
   
   //WDfontimage       = LoadOptimizeAlpha("Media/WiiDash/Font.png");
   

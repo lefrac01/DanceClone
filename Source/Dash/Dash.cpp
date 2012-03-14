@@ -39,6 +39,7 @@ bool Dash::Init()
   LOG(DEBUG_BASIC, "Dash::Init()" << endl)
   if (!gfx.Init())
   {
+    LOG(DEBUG_DETAIL, "Dash::Init() returning false cause gfx.Init() failed" << endl)
     return false;
   }
   
@@ -47,6 +48,7 @@ bool Dash::Init()
   prgb1 = (Uint8*)malloc(screenWidth * screenHeight * 3 * sizeof(Uint8));
   prgb2 = (Uint8*)malloc(screenWidth * screenHeight * 3 * sizeof(Uint8));
   
+  LOG(DEBUG_DETAIL, "Dash::Init() setting onOff to default value 0" << endl)
   onOff = 0;
   onOffPercent = 0.0;
 
@@ -65,12 +67,12 @@ void Dash::Run()
   runTime=SDL_GetTicks();
   frameTime=runTime-oldRunTime;
   //frameRate=(int)(1000/(double)frameTime);
-  if(onOffPercent==0)gameTime=gameTime+frameTime;
+  if(double_same(onOffPercent,0))gameTime=gameTime+frameTime;
   //if(onOffPercent==0)timeSpeed=(double)framecap/(double)frameRate;
   //if(onOffPercent!=0)timeSpeed=60/(double)frameRate;
 
   RunOnOff();
-  if(onOffPercent!=0){
+  if(!double_same(onOffPercent,0)){
     time_t now;
     now = time(NULL);
     dashTime = localtime(&now);
@@ -103,14 +105,17 @@ void Dash::RunOnOff()
 //  if(keystate[SDLK_ESCAPE]==2){
 //  #endif
 //  #ifdef WII
-  if((sys.input.WiiButtonsDown[0] & WPAD_BUTTON_HOME) || (sys.input.WiiButtonsDown[0] & WPAD_CLASSIC_BUTTON_HOME)
-  || (sys.input.WiiButtonsDown[1] & WPAD_BUTTON_HOME) || (sys.input.WiiButtonsDown[1] & WPAD_CLASSIC_BUTTON_HOME)
-  || (sys.input.WiiButtonsDown[2] & WPAD_BUTTON_HOME) || (sys.input.WiiButtonsDown[2] & WPAD_CLASSIC_BUTTON_HOME)
-  || (sys.input.WiiButtonsDown[3] & WPAD_BUTTON_HOME) || (sys.input.WiiButtonsDown[3] & WPAD_CLASSIC_BUTTON_HOME)){
+  if (sys.input.ButtonDown(-1, InputChannel::Button6))
+  {
+//  if((sys.input.WiiButtonsDown[0] & WPAD_BUTTON_HOME) || (sys.input.WiiButtonsDown[0] & WPAD_CLASSIC_BUTTON_HOME)
+//  || (sys.input.WiiButtonsDown[1] & WPAD_BUTTON_HOME) || (sys.input.WiiButtonsDown[1] & WPAD_CLASSIC_BUTTON_HOME)
+//  || (sys.input.WiiButtonsDown[2] & WPAD_BUTTON_HOME) || (sys.input.WiiButtonsDown[2] & WPAD_CLASSIC_BUTTON_HOME)
+//  || (sys.input.WiiButtonsDown[3] & WPAD_BUTTON_HOME) || (sys.input.WiiButtonsDown[3] & WPAD_CLASSIC_BUTTON_HOME)){
 //  #endif
   if(onOff==0){
+    LOG(DEBUG_GUTS, "Dash::RunOnOff() setting onOff to 1 because it is 0" << endl)
     onOff=1;
-    if(onOffPercent==0){
+    if(double_same(onOffPercent,0)){
       sys.vid.ApplySurface(0,0,sys.vid.screen,gfx.background,NULL);
 //      #ifdef WIN
 //      for(int x=0;x<screenWidth;x++)for(int y=0;y<screenHeight;y++)
@@ -346,8 +351,8 @@ void Dash::RunOnOff()
   }else{onOff=0;}
 }
 
-if(onOffPercent==0){
-}else if(onOffPercent==100){
+if(double_same(onOffPercent,0)){
+}else if(double_same(onOffPercent,100)){
   sys.vid.ApplySurface(0,0,gfx.backgroundBlurred,sys.vid.screen,NULL);
 }else{
 //#ifdef WIN
@@ -369,7 +374,7 @@ if(onOffPercent==0){
 //#endif
 //#ifdef WII
 
-  LOG(DEBUG_GUTS, "perform wiidash open/close animation" << endl)
+  LOG(DEBUG_GUTS, "perform wiidash open/close animation because onOffPercent = " << onOffPercent << endl)
 
   /*
   Uint8 r,g,b;
@@ -455,10 +460,13 @@ if(onOffPercent==0){
 }
 
 if(onOff==0){
+
   onOffPercent=(onOffPercent*14+0*1)/15-0.5;
+LOG(DEBUG_GUTS, "updated onOffPercent to :" << onOffPercent << " because onOff is 0" << endl)
   if(onOffPercent<0)onOffPercent=0;}
 if(onOff==1){
   onOffPercent=(onOffPercent*14+100*1)/15+0.5;
+LOG(DEBUG_GUTS, "updated onOffPercent to :" << onOffPercent << " because onOff is 1" << endl)
   if(onOffPercent>100)onOffPercent=100;}
 
 }
@@ -493,6 +501,8 @@ void Dash::RunMenu()
 {
   int y = OnOffSlide(screenHeight/2-125,screenHeight/2-125+screenHeight);
 
+//TODO: reimplement properly.  original redesign failed.
+/*
   if(gui.DoButton(screenWidth/2,y,300,15,1,1,(char*)"Resume game"))onOff=0;
   y+=50;
 
@@ -501,13 +511,13 @@ void Dash::RunMenu()
 //  y+=50;
 //  #endif
 
-//  #ifdef WII
   if(gui.DoButton(screenWidth/2,y,300,15,1,1,(char*)"Exit to loader"))
   {
     userWantsOut = true;
   }
   y+=50;
 
+  #ifdef WII
   if(gui.DoButton(screenWidth/2,y,300,15,1,1,(char*)"Restart Wii"))
   {
     SYS_ResetSystem(SYS_RESTART,0,0);
@@ -519,7 +529,7 @@ void Dash::RunMenu()
     SYS_ResetSystem(SYS_POWEROFF,0,0);
   }
   y+=50;
-//  #endif
+  #endif
 
 //  if(gui.DoButton(screenWidth/2,y,300,15,1,1,(char*)"Save BMP screenshot"))WiiDash_savebmpscreenshot();
 //  y+=50;
@@ -534,12 +544,24 @@ void Dash::RunMenu()
 
   //TODO: fix this duplication of GUI::Update() code
   // draw cursor
-  for(int a=0;a<4;a++){
-    if(sys.input.ir[a].valid && sys.input.wiimoteactive[a])
+  //#
+  //#for(int a=0;a<4;a++){
+    //#if(sys.input.ir[a].valid && sys.input.wiimoteactive[a])
+    //#{
+      //#sys.vid.ApplySurface(sys.input.cursorx[a]-48,sys.input.cursory[a]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[3]);
+    //#}
+  //#}
+  //#
+  for (unsigned int i = 0; i < sys.input.inputChannels.size(); i++)
+  {
+    InputChannel& chan = sys.input.inputChannels[i];
+    if (chan.active)
     {
-      sys.vid.ApplySurface(sys.input.cursorx[a]-48,sys.input.cursory[a]-48,gfx.cursorImage,sys.vid.screen,&gfx.cursorFrames[3]);
-    }
+      LOG(DEBUG_DETAIL, "GUI::Update() chan[" << i <<"] ACTIVE" << endl)
+      sys.vid.ApplySurface(chan.cursorX-48, chan.cursorY-48, gfx.cursorImage, NULL, &gfx.cursorFrames[6+i*3]);
+    }      
   }
+  */
 }
 
 void Dash::RunTopBottomBars()

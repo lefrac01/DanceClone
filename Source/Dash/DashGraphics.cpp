@@ -33,16 +33,23 @@ bool DashGraphics::Init()
 {
   LOG(DEBUG_BASIC, "DashGraphics::Init()" << endl)
 
-//WDborderimage       = LoadOptimize("Media/WiiDash/Border.png");
-//WDtopbottomborderimage  = LoadOptimize("Media/WiiDash/TopBottomBorder.png");
-//WDbackground
-//WDbackgroundblurred
   background = SDL_DisplayFormat(sys.vid.screen);
   backgroundBlurred = SDL_DisplayFormat(sys.vid.screen);
-  borderImage = sys.vid.LoadOptimize("Media/WiiDash/Border.png");
-  topBottomBorderImage = sys.vid.LoadOptimize("Media/WiiDash/TopBottomBorder.png");
   
-  cursorImage = sys.vid.LoadOptimizeAlpha("Media/WiiDash/Cursor.png");
+  
+  string borderImagePath ="Media/WiiDash/Border.png";
+  string topBottomBorderImagePath = "Media/WiiDash/TopBottomBorder.png";
+  string cursorImageImagePath = "Media/WiiDash/Cursor.PNG";
+
+  borderImage = sys.vid.LoadOptimize(borderImagePath.c_str());
+  if (!borderImage) LOG(DEBUG_BASIC, "failed to load \"" << borderImagePath << "\"" << endl)
+  
+  topBottomBorderImage = sys.vid.LoadOptimize(topBottomBorderImagePath.c_str());
+  if (!topBottomBorderImage) LOG(DEBUG_BASIC, "failed to load \"" << topBottomBorderImagePath << "\"" << endl)
+  
+  cursorImage = sys.vid.LoadOptimizeAlpha(cursorImageImagePath.c_str());
+  if (!cursorImage) LOG(DEBUG_BASIC, "failed to load \"" << cursorImageImagePath << "\"" << endl)
+  
   for(int a = 0; a < 16; a++)
   {
     cursorFrames[a].x = a*96;
@@ -51,7 +58,7 @@ bool DashGraphics::Init()
     cursorFrames[a].h = 96;
   }
 
-  return (background && backgroundBlurred && borderImage && topBottomBorderImage);
+  return (background && backgroundBlurred && borderImage && topBottomBorderImage && cursorImage);
 }
 
 void DashGraphics::Cleanup()

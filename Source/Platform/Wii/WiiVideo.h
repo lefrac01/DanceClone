@@ -1,4 +1,4 @@
-//      Element.h
+//      WiiVideo.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,42 +17,35 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#ifndef GUI_ELEMENT_H
-#define GUI_ELEMENT_H
-
 #include <string>
 using std::string;
+#include <SDL_rotozoom.h>
+#include <SDL_image.h>
+#include <SDL.h>
+#include <SDL_mixer.h>
+#include <exception>
+using std::exception;
+#include <gccore.h>
 
-namespace Gooey
+#include "../LOG.H"
+
+#include "../Video.h"
+
+namespace Platform
 {
 
-class Element
+
+class WiiVideo : public Video
 {
 private:
-
-
-
+ 
 public:
-  
+  GXRModeObj* rmode;
 
-  Element();
-  virtual ~Element(){};
-  Element(int _x, int _y, int _w, int _h, bool v, bool a, bool c, string tx, int t = -1);
-
-  int tag;
-  int x;
-  int y;
-  int w;
-  int h;
-  bool visible;
-  bool active;
-  bool clicked;
-  string text;
-  virtual bool Clicked(int testx, int testy) = 0;
-  virtual void CursorAt(int testx, int testy) = 0;
+  WiiVideo();
+  bool Init();
+  void Cleanup();
+  void Pump();
 };
 
-
 }
-
-#endif

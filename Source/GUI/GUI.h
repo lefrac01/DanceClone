@@ -19,12 +19,13 @@
 #ifndef GUI_H
 #define GUI_H
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <SDL/SDL_mixer.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_mixer.h>
 
 #include "../Platform/OS.h"
 using Platform::OS;
+using Platform::InputChannel;
 #include "GUIGraphics.h"
 #include "../Platform/Tools.h"
 #include "Container.h"
@@ -49,7 +50,8 @@ public:
   void Update();
   void Cleanup();
   void DrawSpriteText(int posx,int posy,char* texttosprite,int leftmiddleright);
-  void DrawButton(int x, int y,int w,int h,bool glow);
+  //void DrawButton(int x, int y,int w,int h,bool glow);
+  void DrawButton(Button& b);
   bool DoButton(int x, int y,int w,int h,bool center,bool clickable,char* text);
   int SpriteTextWrapped(int posx,int posy,char* texttosprite,int length);
   void SpriteText(int posx,int posy,char* texttosprite,int leftmiddleright);
@@ -57,7 +59,8 @@ public:
   void SetSpriteTextColored(Uint32 color);
   void SavePngScreenshot();
   void SetScreen(Container& c);
-  void Render(Container& c, int basex = 0, int basey = 0);
+//  void Render(Container& c, int basex = 0, int basey = 0);
+  void Render(Container& c);
   Container screen;  // clash with sys.vid concept
   //void WiiDash_savebmpscreenshot();
 };

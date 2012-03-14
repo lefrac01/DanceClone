@@ -1,4 +1,4 @@
-//      WiiOS.h
+//      LinuxVideo.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -16,32 +16,35 @@
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
-#ifndef WIIPLATFORM_H
-#define WIIPLATFORM_H
 
-#include "OS.h"
+#include <string>
+using std::string;
+#include <SDL_rotozoom.h>
+#include <SDL_image.h>
+#include <SDL.h>
+#include <SDL_mixer.h>
+#include <exception>
+using std::exception;
 
-#include <gccore.h>
-#include <fat.h>
-#include <dirent.h>
-#include <unistd.h>
+#include "../LOG.H"
+
+#include "../Video.h"
 
 namespace Platform
 {
 
-class WiiOS : public OS
+
+class LinuxVideo : public Video
 {
 private:
-  static void WiiResetPressed();
-  static void WiiPowerPressed();
-  static void WiimotePowerPressed(s32 chan);
 
+ 
 public:
-  void Init();
+
+  LinuxVideo();
+  bool Init();
   void Cleanup();
   void Pump();
-  vector<DirectoryEntry> ReadDirectory(string path);
 };
 
 }
-#endif

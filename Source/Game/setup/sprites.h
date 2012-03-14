@@ -5,7 +5,7 @@
 //
 #include <string>
 using std::string;
-#include <SDL/SDL_rotozoom.h>
+#include <SDL_rotozoom.h>
 
 SDL_Surface* backgroundimage = NULL;
 SDL_Surface* titleimage = NULL;

@@ -34,7 +34,10 @@ bool Game::Init(string ConfigFilePath)
   try
   {
     constants.Init();
-    gfx.Init();
+    if (!gfx.Init())
+    {
+      return false;
+    }
   }
   catch (exception& e)
   {
@@ -164,17 +167,18 @@ void Game::RunTitleScreen()
     
     // FOR NOW, IDEA 1.
     Container title;
-
+    int border = 40;
+    
     Image titleImage(gfx.title_image, sys.vid.ScreenWidth()/2-300/2, 30, 0, 0);
     title.Add(titleImage);
 
-    Button play("Play", sys.vid.ScreenWidth()/2,55+4*40,sys.vid.ScreenWidth()-40,10, playTag);
+    Button play("Play", border,55+4*40,sys.vid.ScreenWidth()-border*2,10, playTag);
     title.Add(play);
 
-    Button credits("Credits", sys.vid.ScreenWidth()/2,55+5*40,sys.vid.ScreenWidth()-40,10, creditsTag);
+    Button credits("Credits", border,55+5*40,sys.vid.ScreenWidth()-border*2,10, creditsTag);
     title.Add(credits);
 
-    Button debug("Debug", sys.vid.ScreenWidth()/2,55+6*40,sys.vid.ScreenWidth()-40,10, debugTag);
+    Button debug("Debug", border,55+6*40,sys.vid.ScreenWidth()-border*2,10, debugTag);
     title.Add(debug);
     
     //title.SetRenderAnimation(GUI::SCREEN_WIPE); // FADE_IN // FADING_WIPE, etc

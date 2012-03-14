@@ -38,5 +38,9 @@ bool Label::Clicked(int testx, int testy)
   return false;
 }
 
+void Label::CursorAt(int testx, int testy)
+{
+}
+
 
 }
