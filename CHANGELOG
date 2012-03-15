@@ -1,5 +1,8 @@
 changelog
 --
+v0.60
+-test after funky commands to purge debug log from git history
+
 v0.59 "almost sexy"
 -OO rewrite
 -new menu choice preload code and loading screen
