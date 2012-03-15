@@ -1,6 +1,6 @@
 #include "Platform/OS.h"
 
-#define GAMEVERSIONSTRING "DanceClone v0.58"
+#define GAMEVERSIONSTRING "DanceClone v0.59"
 
 
 #include "Game/Game.h"
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
   LinuxOS sys;
   #endif
 
-  //TODO: failure cases
+  //TODO: all failure cases
   sys.Init();
 
   INIT_LOG
@@ -77,6 +77,7 @@ int main(int argc, char* argv[])
   {
     sys.Pump();
     
+    if (game.State() != Game::PLAY_PREP2 && game.State() != Game::PLAY)
     dash.Run();
     if (dash.UserWantsOut())
     {

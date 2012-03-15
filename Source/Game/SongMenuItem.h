@@ -1,4 +1,4 @@
-//      Sound.h
+//      SongMenuItem.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -19,39 +19,30 @@
 
 #include <string>
 using std::string;
+#include <vector>
+using std::vector;
+
+#include "SDL.h"
 
 #include "../Platform/LOG.H"
-#include "../Platform/OS.h"
 
-#ifdef WII
-#include <mp3player.h>
-#include <asndlib.h>
-#endif
+#include "Song.h"
 
 namespace DanceClone
 {
 
-class Sound
+class SongMenuItem
 {
 private:
-
-  #ifdef LINUX
-  Mix_Music* music;
-  #endif
-  #ifdef WIN32
-  Mix_Music* music;
-  #endif
-  char* mp3Buffer;
-  long mp3LSize;
-
+  SongMenuItem();
+  
 public:
-  void Init();
-  void Cleanup();
-  void PrepMusic(string path);
-  void StartMusic();
-  void StopMusic();
-  void FreeMusic();
-  bool MusicFinished();
+  SongMenuItem(Song& s);
+  SongMenuItem& operator=(const SongMenuItem& b);
+  
+  Song& song;
+  SDL_Surface* bannerImage;
+  
 };
 
 }

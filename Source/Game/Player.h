@@ -1,4 +1,4 @@
-//      Sound.h
+//      Player.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,41 +17,49 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#include <string>
-using std::string;
+#include <vector>
+using std::vector;
 
 #include "../Platform/LOG.H"
-#include "../Platform/OS.h"
+#include "../Platform/Input.h"
+using Platform::InputChannel;
 
-#ifdef WII
-#include <mp3player.h>
-#include <asndlib.h>
-#endif
+#include "Constants.h"
+#include "Arrow.h"
 
 namespace DanceClone
 {
 
-class Sound
+class Player
 {
 private:
-
-  #ifdef LINUX
-  Mix_Music* music;
-  #endif
-  #ifdef WIN32
-  Mix_Music* music;
-  #endif
-  char* mp3Buffer;
-  long mp3LSize;
+  Player();
 
 public:
-  void Init();
-  void Cleanup();
-  void PrepMusic(string path);
-  void StartMusic();
-  void StopMusic();
-  void FreeMusic();
-  bool MusicFinished();
+
+  Player& operator= (const Player& b);
+  Player(InputChannel& ic);
+  int playerNumber;
+  bool active;
+  InputChannel& inputs;
+  vector<long> directionDownTime;
+  vector<bool> directionJumpActive;
+
+  Constants::Difficulty difficulty;
+  //recordFileId      //note operator=
+  vector<Arrow> arrows;
+  int baseArrow;
+  int numArrows;
+  int nextOffscreenArrow; 
+  int longestCombo;
+  int combo;
+  //dance mode e.g. dance-single vs dance-double      //note operator=
+  int firstVisibleArrow;
+  int lastVisibleArrow;
+  
+  void Init(int n);
+  void Prepare();
+  void DoJumpProcessing(long songTime);
 };
 
 }

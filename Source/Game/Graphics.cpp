@@ -24,32 +24,31 @@ namespace DanceClone
 
 Graphics::Graphics(OS& os) :
   sys(os),
-  background_image(NULL),
-  title_image(NULL),
-  ratings_image(NULL),
-  get_ready_image(NULL),
-  temp_arrows_image_src(NULL), 
-  home_arrows_image(NULL), 
-  quarter_arrows_image(NULL), 
-  eighth_arrows_image(NULL), 
-  quarter_triplet_arrows_image(NULL), 
-  sixteenth_arrows_image(NULL), 
-  eighth_triplet_arrows_image(NULL), 
-  thirtysecond_arrows_image(NULL), 
-  sixteenth_triplet_arrows_image(NULL), 
-  sixtyfourth_arrows_image(NULL), 
-  sixtyfourth_triplet_arrows_image(NULL), 
-  freeze_arrows_body_image(NULL),
-  freeze_arrows_tail_image(NULL),
-  freeze_arrows_head_image(NULL),
-  marvellous_hit_image(NULL), 
-  perfect_hit_image(NULL), 
-  great_hit_image(NULL), 
-  good_hit_image(NULL), 
-  freeze_hit_image(NULL),
+  backgroundImage(NULL),
+  titleImage(NULL),
+  ratingsImage(NULL),
+  getReadyImage(NULL),
+  tempArrowsImageSrc(NULL), 
+  homeArrowsImage(NULL), 
+  quarterArrowsImage(NULL), 
+  eighthArrowsImage(NULL), 
+  quarterTripletArrowsImage(NULL), 
+  sixteenthArrowsImage(NULL), 
+  eighthTripletArrowsImage(NULL), 
+  thirtysecondArrowsImage(NULL), 
+  sixteenthTripletArrowsImage(NULL), 
+  sixtyfourthArrowsImage(NULL), 
+  sixtyfourthTripletArrowsImage(NULL), 
+  freezeArrowsBodyImage(NULL),
+  freezeArrowsTailImage(NULL),
+  freezeArrowsHeadImage(NULL),
+  marvellousHitImage(NULL), 
+  perfectHitImage(NULL), 
+  greatHitImage(NULL), 
+  goodHitImage(NULL), 
+  freezeHitImage(NULL),
   arrowWidth(64),
-  arrowHeight(64),
-  pixelsPerMsAt1BPM(0.0)
+  arrowHeight(64)
 {
 }
 
@@ -60,9 +59,9 @@ bool Graphics::Init(string configFilePath)
   screenWidth = sys.vid.ScreenWidth();
   screenHeight = sys.vid.ScreenHeight();
   
-  goalOffset = screenHeight / 4;
+  constants.goalOffset = screenHeight / 4;
   
-  pixelsPerMsAt1BPM = screenHeight / 4000.0 / 120.0; // calculate once screen height is known
+  constants.pixelsPerMsAt1Bpm = screenHeight / 4000.0 / 120.0; // calculate once screen height is known
 // based on the observed rate of 4000ms per screen height per quarter note
 // at 120 BPM
 
@@ -73,65 +72,65 @@ bool Graphics::Init(string configFilePath)
     string getReadyImagePath = "Media/Game/getready.png";
   
     //TODO: fix hard-coded constants
-    //background_image = sys.vid.LoadOptimize("Media/Game/background.png");
-    background_image = sys.vid.LoadOptimizeAlpha(backgroundImagePath.c_str());
-    if (!background_image) LOG(DEBUG_BASIC, "failed to load \"" << backgroundImagePath << "\"" << endl)
+    //backgroundImage = sys.vid.LoadOptimize("Media/Game/background.png");
+    backgroundImage = sys.vid.LoadOptimizeAlpha(backgroundImagePath.c_str());
+    if (!backgroundImage) LOG(DEBUG_BASIC, "failed to load \"" << backgroundImagePath << "\"" << endl)
 
-    //title_image = IMG_Load("Media/Game/title.png");
-    title_image = sys.vid.LoadOptimizeAlpha(titleImagePath.c_str());
-    if (!title_image) LOG(DEBUG_BASIC, "failed to load \"" << titleImagePath << "\"" << endl)
+    //titleImage = IMG_Load("Media/Game/title.png");
+    titleImage = sys.vid.LoadOptimizeAlpha(titleImagePath.c_str());
+    if (!titleImage) LOG(DEBUG_BASIC, "failed to load \"" << titleImagePath << "\"" << endl)
     
-    //get_ready_image = IMG_Load("Media/Game/getready.png");
-    get_ready_image = sys.vid.LoadOptimizeAlpha(getReadyImagePath.c_str());
-    if (!get_ready_image) LOG(DEBUG_BASIC, "failed to load \"" << getReadyImagePath << "\"" << endl)
+    //getReadyImage = IMG_Load("Media/Game/getready.png");
+    getReadyImage = sys.vid.LoadOptimizeAlpha(getReadyImagePath.c_str());
+    if (!getReadyImage) LOG(DEBUG_BASIC, "failed to load \"" << getReadyImagePath << "\"" << endl)
     
     // expand source PNGs creating other arrow directions
     //optimistically using SDL_HWSURFACE but not all these can fit into the hardware memory ;)
     //http://en.wikipedia.org/wiki/Wii states 3MB framebuffer of which 1.2 is used per screen + dbl buffering... not leaving much
-    home_arrows_image = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/home_arrows.png", home_arrows_image, arrows_frames, 4);
+    homeArrowsImage = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/home_arrows.png", homeArrowsImage, arrowsFrames, 4);
 
-    quarter_arrows_image = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/04thnote.png", quarter_arrows_image, arrows_frames, 4);
+    quarterArrowsImage = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/04thnote.png", quarterArrowsImage, arrowsFrames, 4);
 
-    eighth_arrows_image = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/08thnote.png", eighth_arrows_image, arrows_frames, 4);
+    eighthArrowsImage = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/08thnote.png", eighthArrowsImage, arrowsFrames, 4);
 
-    quarter_triplet_arrows_image = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/12thnote.png", quarter_triplet_arrows_image, arrows_frames, 4);
+    quarterTripletArrowsImage = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/12thnote.png", quarterTripletArrowsImage, arrowsFrames, 4);
 
-    sixteenth_arrows_image = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/16thnote.png", sixteenth_arrows_image, arrows_frames, 4);
+    sixteenthArrowsImage = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/16thnote.png", sixteenthArrowsImage, arrowsFrames, 4);
 
-    eighth_triplet_arrows_image = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/24thnote.png", eighth_triplet_arrows_image, arrows_frames, 4);
+    eighthTripletArrowsImage = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/24thnote.png", eighthTripletArrowsImage, arrowsFrames, 4);
 
-    thirtysecond_arrows_image = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/32ndnote.png", thirtysecond_arrows_image, arrows_frames, 4);
+    thirtysecondArrowsImage = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/32ndnote.png", thirtysecondArrowsImage, arrowsFrames, 4);
 
-    sixteenth_triplet_arrows_image = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/48thnote.png", sixteenth_triplet_arrows_image, arrows_frames, 4);
+    sixteenthTripletArrowsImage = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/48thnote.png", sixteenthTripletArrowsImage, arrowsFrames, 4);
 
-    sixtyfourth_arrows_image = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/64thnote.png", sixtyfourth_arrows_image, arrows_frames, 4);
+    sixtyfourthArrowsImage = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/64thnote.png", sixtyfourthArrowsImage, arrowsFrames, 4);
 
     //NOTE: same graphic used for 96th and 192nd notes
-    sixtyfourth_triplet_arrows_image = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/192ndnote.png", sixtyfourth_triplet_arrows_image, arrows_frames, 4);
+    sixtyfourthTripletArrowsImage = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/192ndnote.png", sixtyfourthTripletArrowsImage, arrowsFrames, 4);
 
 
     // hit animations, 1 row 8 col source to 8 row 8 col dest
-    marvellous_hit_image = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/marvelloushit.png", marvellous_hit_image, arrows_hit_frames, 8);
+    marvellousHitImage = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/marvelloushit.png", marvellousHitImage, arrowsHitFrames, 8);
 
-    perfect_hit_image = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/perfecthit.png", perfect_hit_image, arrows_hit_frames, 8);
+    perfectHitImage = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/perfecthit.png", perfectHitImage, arrowsHitFrames, 8);
 
-    great_hit_image = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/greathit.png", great_hit_image, arrows_hit_frames, 8);
+    greatHitImage = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/greathit.png", greatHitImage, arrowsHitFrames, 8);
 
-    good_hit_image = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-    ExpandArrows("Media/Game/goodhit.png", good_hit_image, arrows_hit_frames, 8);
+    goodHitImage = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/goodhit.png", goodHitImage, arrowsHitFrames, 8);
 
 
     // freeze arrow graphics do not use the same source layout nor are they animated
@@ -140,39 +139,39 @@ bool Graphics::Init(string configFilePath)
     string freezeBodyImagePath = "Media/Game/freezebody.png";
     string freezeTailImagePath = "Media/Game/freezetail.png";
  
-    //freeze_hit_image = IMG_Load("Media/Game/freezehit.png");
-    //freeze_arrows_head_image = IMG_Load("Media/Game/freezehead.png");
-    freeze_hit_image = sys.vid.LoadOptimizeAlpha(freezeHitImagePath.c_str());
-    if (!freeze_hit_image) LOG(DEBUG_BASIC, "failed to load \"" << freezeHitImagePath << "\"" << endl)
-    freeze_arrows_head_image = sys.vid.LoadOptimizeAlpha(freezeHeadImagePath.c_str());
-    if (!freeze_arrows_head_image) LOG(DEBUG_BASIC, "failed to load \"" << freezeHeadImagePath << "\"" << endl)
+    //freezeHitImage = IMG_Load("Media/Game/freezehit.png");
+    //freezeArrowsHeadImage = IMG_Load("Media/Game/freezehead.png");
+    freezeHitImage = sys.vid.LoadOptimizeAlpha(freezeHitImagePath.c_str());
+    if (!freezeHitImage) LOG(DEBUG_BASIC, "failed to load \"" << freezeHitImagePath << "\"" << endl)
+    freezeArrowsHeadImage = sys.vid.LoadOptimizeAlpha(freezeHeadImagePath.c_str());
+    if (!freezeArrowsHeadImage) LOG(DEBUG_BASIC, "failed to load \"" << freezeHeadImagePath << "\"" << endl)
 
     for(int b = 0; b < 4; b++)
     {
       for(int a = 0; a < 4; a++)
       {
-        freeze_head_frames[b*4 + a].x = a*64; freeze_head_frames[b*4 + a].y = b*64;
-        freeze_head_frames[b*4 + a].w = 64;   freeze_head_frames[b*4 + a].h = 64;
+        freezeHeadFrames[b*4 + a].x = a*64; freezeHeadFrames[b*4 + a].y = b*64;
+        freezeHeadFrames[b*4 + a].w = 64;   freezeHeadFrames[b*4 + a].h = 64;
       }
     }
-    //freeze_arrows_body_image = IMG_Load("Media/Game/freezebody.png");
-    //freeze_arrows_tail_image = IMG_Load("Media/Game/freezetail.png");
-    freeze_arrows_body_image = sys.vid.LoadOptimizeAlpha(freezeBodyImagePath.c_str());
-    if (!freeze_arrows_body_image) LOG(DEBUG_BASIC, "failed to load \"" << freezeBodyImagePath << "\"" << endl)
-    freeze_arrows_tail_image = sys.vid.LoadOptimizeAlpha(freezeTailImagePath.c_str());
-    if (!freeze_arrows_tail_image) LOG(DEBUG_BASIC, "failed to load \"" << freezeTailImagePath << "\"" << endl)
+    //freezeArrowsBodyImage = IMG_Load("Media/Game/freezebody.png");
+    //freezeArrowsTailImage = IMG_Load("Media/Game/freezetail.png");
+    freezeArrowsBodyImage = sys.vid.LoadOptimizeAlpha(freezeBodyImagePath.c_str());
+    if (!freezeArrowsBodyImage) LOG(DEBUG_BASIC, "failed to load \"" << freezeBodyImagePath << "\"" << endl)
+    freezeArrowsTailImage = sys.vid.LoadOptimizeAlpha(freezeTailImagePath.c_str());
+    if (!freezeArrowsTailImage) LOG(DEBUG_BASIC, "failed to load \"" << freezeTailImagePath << "\"" << endl)
     
     for(int b = 0; b < 3; b++)
     {
       for(int a = 0; a < 4; a++)
       {
-        freeze_body_frames[b*4 + a].x = a*64; freeze_body_frames[b*4 + a].y = b*128;
-        freeze_body_frames[b*4 + a].w = 64;   freeze_body_frames[b*4 + a].h = 128;
+        freezeBodyFrames[b*4 + a].x = a*64; freezeBodyFrames[b*4 + a].y = b*128;
+        freezeBodyFrames[b*4 + a].w = 64;   freezeBodyFrames[b*4 + a].h = 128;
       }
       for(int a = 0; a < 4; a++)
       {
-        freeze_tail_frames[b*4 + a].x = a*64; freeze_tail_frames[b*4 + a].y = b*64;
-        freeze_tail_frames[b*4 + a].w = 64;   freeze_tail_frames[b*4 + a].h = 64;
+        freezeTailFrames[b*4 + a].x = a*64; freezeTailFrames[b*4 + a].y = b*64;
+        freezeTailFrames[b*4 + a].w = 64;   freezeTailFrames[b*4 + a].h = 64;
       }
     }
     /*
@@ -189,7 +188,7 @@ bool Graphics::Init(string configFilePath)
     throw e;
   }
   
-  return (background_image && title_image && get_ready_image && freeze_hit_image && freeze_arrows_head_image && freeze_arrows_body_image && freeze_arrows_tail_image);
+  return (backgroundImage && titleImage && getReadyImage && freezeHitImage && freezeArrowsHeadImage && freezeArrowsBodyImage && freezeArrowsTailImage);
 }
 
 void Graphics::SetArrowFrame(SDL_Rect* dest, int index, int x, int y, int w, int h)
@@ -286,126 +285,126 @@ void Graphics::ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* des
 
 void Graphics::Cleanup()
 {
-  if (background_image)
+  if (backgroundImage)
   {
-    SDL_FreeSurface(background_image);
-    background_image = NULL;
+    SDL_FreeSurface(backgroundImage);
+    backgroundImage = NULL;
   }
-  if (title_image)
+  if (titleImage)
   {
-    SDL_FreeSurface(title_image);
-    title_image = NULL;
+    SDL_FreeSurface(titleImage);
+    titleImage = NULL;
   }
-  if (ratings_image)
+  if (ratingsImage)
   {
-    SDL_FreeSurface(ratings_image);
-    ratings_image = NULL;
+    SDL_FreeSurface(ratingsImage);
+    ratingsImage = NULL;
   }
-  if (get_ready_image)
+  if (getReadyImage)
   {
-    SDL_FreeSurface(get_ready_image);
-    get_ready_image = NULL;
+    SDL_FreeSurface(getReadyImage);
+    getReadyImage = NULL;
   }
-  if (temp_arrows_image_src)
+  if (tempArrowsImageSrc)
   {
-    SDL_FreeSurface(temp_arrows_image_src);
-    temp_arrows_image_src = NULL;
+    SDL_FreeSurface(tempArrowsImageSrc);
+    tempArrowsImageSrc = NULL;
   }
-  if (home_arrows_image)
+  if (homeArrowsImage)
   {
-    SDL_FreeSurface(home_arrows_image);
-    home_arrows_image = NULL;
+    SDL_FreeSurface(homeArrowsImage);
+    homeArrowsImage = NULL;
   }
-  if (quarter_arrows_image)
+  if (quarterArrowsImage)
   {
-    SDL_FreeSurface(quarter_arrows_image);
-    quarter_arrows_image = NULL;
+    SDL_FreeSurface(quarterArrowsImage);
+    quarterArrowsImage = NULL;
   }
-  if (eighth_arrows_image)
+  if (eighthArrowsImage)
   {
-    SDL_FreeSurface(eighth_arrows_image);
-    eighth_arrows_image = NULL;
+    SDL_FreeSurface(eighthArrowsImage);
+    eighthArrowsImage = NULL;
   }
-  if (quarter_triplet_arrows_image)
+  if (quarterTripletArrowsImage)
   {
-    SDL_FreeSurface(quarter_triplet_arrows_image);
-    quarter_triplet_arrows_image = NULL;
+    SDL_FreeSurface(quarterTripletArrowsImage);
+    quarterTripletArrowsImage = NULL;
   }
-  if (sixteenth_arrows_image)
+  if (sixteenthArrowsImage)
   {
-    SDL_FreeSurface(sixteenth_arrows_image);
-    sixteenth_arrows_image = NULL;
+    SDL_FreeSurface(sixteenthArrowsImage);
+    sixteenthArrowsImage = NULL;
   }
-  if (eighth_triplet_arrows_image)
+  if (eighthTripletArrowsImage)
   {
-    SDL_FreeSurface(eighth_triplet_arrows_image);
-    eighth_triplet_arrows_image = NULL;
+    SDL_FreeSurface(eighthTripletArrowsImage);
+    eighthTripletArrowsImage = NULL;
   }
-  if (thirtysecond_arrows_image)
+  if (thirtysecondArrowsImage)
   {
-    SDL_FreeSurface(thirtysecond_arrows_image);
-    thirtysecond_arrows_image = NULL;
+    SDL_FreeSurface(thirtysecondArrowsImage);
+    thirtysecondArrowsImage = NULL;
   }
-  if (sixteenth_triplet_arrows_image)
+  if (sixteenthTripletArrowsImage)
   {
-    SDL_FreeSurface(sixteenth_triplet_arrows_image);
-    sixteenth_triplet_arrows_image = NULL;
+    SDL_FreeSurface(sixteenthTripletArrowsImage);
+    sixteenthTripletArrowsImage = NULL;
   }
-  if (sixtyfourth_arrows_image)
+  if (sixtyfourthArrowsImage)
   {
-    SDL_FreeSurface(sixtyfourth_arrows_image);
-    sixtyfourth_arrows_image = NULL;
+    SDL_FreeSurface(sixtyfourthArrowsImage);
+    sixtyfourthArrowsImage = NULL;
   }
-  if (sixtyfourth_triplet_arrows_image)
+  if (sixtyfourthTripletArrowsImage)
   {
-    SDL_FreeSurface(sixtyfourth_triplet_arrows_image);
-    sixtyfourth_triplet_arrows_image = NULL;
+    SDL_FreeSurface(sixtyfourthTripletArrowsImage);
+    sixtyfourthTripletArrowsImage = NULL;
   }
-  if (freeze_arrows_body_image)
+  if (freezeArrowsBodyImage)
   {
-    SDL_FreeSurface(freeze_arrows_body_image);
-    freeze_arrows_body_image = NULL;
+    SDL_FreeSurface(freezeArrowsBodyImage);
+    freezeArrowsBodyImage = NULL;
   }
-  if (freeze_arrows_tail_image)
+  if (freezeArrowsTailImage)
   {
-    SDL_FreeSurface(freeze_arrows_tail_image);
-    freeze_arrows_tail_image = NULL;
+    SDL_FreeSurface(freezeArrowsTailImage);
+    freezeArrowsTailImage = NULL;
   }
-  if (freeze_arrows_head_image)
+  if (freezeArrowsHeadImage)
   {
-    SDL_FreeSurface(freeze_arrows_head_image);
-    freeze_arrows_head_image = NULL;
+    SDL_FreeSurface(freezeArrowsHeadImage);
+    freezeArrowsHeadImage = NULL;
   }
-  if (marvellous_hit_image)
+  if (marvellousHitImage)
   {
-    SDL_FreeSurface(marvellous_hit_image);
-    marvellous_hit_image = NULL;
+    SDL_FreeSurface(marvellousHitImage);
+    marvellousHitImage = NULL;
   }
-  if (perfect_hit_image)
+  if (perfectHitImage)
   {
-    SDL_FreeSurface(perfect_hit_image);
-    perfect_hit_image = NULL;
+    SDL_FreeSurface(perfectHitImage);
+    perfectHitImage = NULL;
   }
-  if (great_hit_image)
+  if (greatHitImage)
   {
-    SDL_FreeSurface(great_hit_image);
-    great_hit_image = NULL;
+    SDL_FreeSurface(greatHitImage);
+    greatHitImage = NULL;
   }
-  if (good_hit_image)
+  if (goodHitImage)
   {
-    SDL_FreeSurface(good_hit_image);
-    good_hit_image = NULL;
+    SDL_FreeSurface(goodHitImage);
+    goodHitImage = NULL;
   }
-  if (freeze_hit_image)
+  if (freezeHitImage)
   {
-    SDL_FreeSurface(freeze_hit_image);
-    freeze_hit_image = NULL;
+    SDL_FreeSurface(freezeHitImage);
+    freezeHitImage = NULL;
   }
 }
 
 void Graphics::DrawBackground()
 {
-  sys.vid.ApplySurface(0, 0, background_image, sys.vid.screen, NULL);
+  sys.vid.ApplySurface(0, 0, backgroundImage, sys.vid.screen, NULL);
 }
 
 }

@@ -44,7 +44,7 @@ SimpleSongScroller::~SimpleSongScroller()
 
 bool SimpleSongScroller::Clicked(int testx, int testy)
 {
-  LOG(DEBUG_DETAIL, "SimpleSongScroller::Clicked() ..." << endl)
+  LOG(DEBUG_GUTS, "SimpleSongScroller::Clicked() ..." << endl)
   //internal ui handling.  if scroll buttons clicked, scroll contents
   for (unsigned int i = 0; i < buttons.size(); i++)
   {

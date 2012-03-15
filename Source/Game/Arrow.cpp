@@ -1,4 +1,4 @@
-//      Sound.h
+//      Arrow.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,43 +17,29 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#include <string>
-using std::string;
-
-#include "../Platform/LOG.H"
-#include "../Platform/OS.h"
-
-#ifdef WII
-#include <mp3player.h>
-#include <asndlib.h>
-#endif
+#include "Arrow.h"
 
 namespace DanceClone
 {
 
-class Sound
+Arrow::Arrow(int d, long t, long y, long l, int ty) : 
+  direction(d),
+  time(t),
+  yPos(y),
+  length(l),
+  type(ty),
+  rating(RATING_NONE),
+  freezeRating(FREEZE_NONE),
+  jump(false),
+  hidden(false),
+  animStartTime(-1)
 {
-private:
-
-  #ifdef LINUX
-  Mix_Music* music;
-  #endif
-  #ifdef WIN32
-  Mix_Music* music;
-  #endif
-  char* mp3Buffer;
-  long mp3LSize;
-
-public:
-  void Init();
-  void Cleanup();
-  void PrepMusic(string path);
-  void StartMusic();
-  void StopMusic();
-  void FreeMusic();
-  bool MusicFinished();
-};
-
 }
 
+  
+void Arrow::Init()
+{
+  LOG(DEBUG_MINOR, "DanceClone::Arrow::Init()" << endl)
+}
 
+}

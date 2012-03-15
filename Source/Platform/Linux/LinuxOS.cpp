@@ -51,6 +51,7 @@ void LinuxOS::Cleanup()
 
 vector<DirectoryEntry> LinuxOS::ReadDirectory(string path)
 {
+  LOG(DEBUG_MINOR, "LinuxOS::ReadDirectory(" << path << ")" << endl)
   vector<DirectoryEntry> contents;
 
   struct stat st;
@@ -59,6 +60,7 @@ vector<DirectoryEntry> LinuxOS::ReadDirectory(string path)
 
   if ((dirStruct = opendir(path.c_str())))
   {
+    LOG(DEBUG_DETAIL, "LinuxOS::ReadDirectory opendir succeeded on " << path << endl)
 //    if(dirStruct->dirData != NULL)
     if(dirStruct != NULL)
     {

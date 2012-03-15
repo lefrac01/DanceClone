@@ -32,14 +32,14 @@ bool GUI::Init()
 {
   LOG(DEBUG_BASIC, "GUI::Init()" << endl)
 
-  useCursors = false;
+  hideCursor = false;
 
   if (!gfx.Init())
   {
     LOG(DEBUG_BASIC, "ERROR: GUI::Init()   gfx.Init() failed" << endl)
     return false;
   }
-
+  
   return true;
 }
 
@@ -62,15 +62,18 @@ void GUI::Update()
   Render(screen); // render screen first
   
   // draw cursor
-  for (unsigned int i = 0; i < sys.input.inputChannels.size(); i++)
+  if (!hideCursor)
   {
-    InputChannel& chan = sys.input.inputChannels[i];
-    if (chan.active)
+    for (unsigned int i = 0; i < sys.input.inputChannels.size(); i++)
     {
-      char buf[100];
-      sprintf(buf, "%lX", (unsigned long)gfx.cursorImage);
-      LOG(DEBUG_GUTS, "cursor("<< buf <<") to x: " << chan.cursorX-48 << " y: " << chan.cursorY-48 << " using src rect x:" << gfx.cursorFrames[6+i*3].x <<"  y: " <<gfx.cursorFrames[6+i*3].y<<" w: " << gfx.cursorFrames[6+i*3].w << " h: " <<gfx.cursorFrames[6+i*3].h << " whew!E" << endl)
-      sys.vid.ApplySurface(chan.cursorX-48, chan.cursorY-48, gfx.cursorImage, sys.vid.screen, &gfx.cursorFrames[6+i*3]);
+      InputChannel& chan = sys.input.inputChannels[i];
+      if (chan.active)
+      {
+        char buf[100];
+        sprintf(buf, "%lX", (unsigned long)gfx.cursorImage);
+        LOG(DEBUG_GUTS, "cursor("<< buf <<") to x: " << chan.cursorX-48 << " y: " << chan.cursorY-48 << " using src rect x:" << gfx.cursorFrames[6+i*3].x <<"  y: " <<gfx.cursorFrames[6+i*3].y<<" w: " << gfx.cursorFrames[6+i*3].w << " h: " <<gfx.cursorFrames[6+i*3].h << " whew!E" << endl)
+        sys.vid.ApplySurface(chan.cursorX-48, chan.cursorY-48, gfx.cursorImage, sys.vid.screen, &gfx.cursorFrames[6+i*3]);
+      }
     }
   }
 }
@@ -106,7 +109,8 @@ void GUI::Render(Container &c)
   {
     Label& l = c.Labels()[i];
     LOG(DEBUG_GUTS, "GUI::Render() element is label " << endl)
-    DrawSpriteText(l.x, l.y,(char*) l.text.c_str(), 1);
+    //DrawSpriteText(l.x, l.y,(char*) l.text.c_str(), 1);
+    SpriteTextColored(l.x, l.y,(char*) l.text.c_str(), 1);
   }
   for (unsigned int i = 0; i < c.Buttons().size(); i++)
   {
@@ -212,7 +216,8 @@ void GUI::DrawButton(Button& b)
   int tempy = b.y+b.h/2;
   //x=x+w/2;y=y+h/2;
   //DrawSpriteText(x,y-21/2,text,2);
-  DrawSpriteText(tempx,tempy-21/2,(char*)b.text.c_str(),2);
+  SpriteText(tempx,tempy-21/2,(char*)b.text.c_str(),2);
+  //SpriteTextColored(tempx,tempy-21/2,(char*)b.text.c_str(),2);
 }
 
 /*

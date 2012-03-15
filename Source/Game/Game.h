@@ -22,6 +22,8 @@
 using std::string;
 #include <vector>
 using std::vector;
+#include <map>
+using std::map;
 
 #include <fstream>
 using std::ofstream;
@@ -45,6 +47,10 @@ using Gooey::SimpleSongScroller;
 #include "Constants.h"
 #include "Sound.h"
 #include "Graphics.h"
+#include "Player.h"
+#include "Song.h"
+#include "SongMenuItem.h"
+
 
 namespace DanceClone
 {
@@ -59,27 +65,49 @@ public:
     TITLE,        // 0
     CREDITS,      // 1
     SCORE,        // 2, 9
-    SONG_SELECT1, // 3
-    SONG_SELECT2, // 4
+    SELECT_SONG, // 3
+    SELECT_DIFFICULTY, // 4
     STEP_CREATE,  // 5
     PLAY_PREP1,   // 7
     PLAY_PREP2,   // 11
     PLAY,         // 8
-    DEBUG         // 10
+    DEBUG,         // 10
+    LOADING_SONG
   };
-
 
 private:
   
+  Game(); //disallow empty public ctor 
+  
   OS& sys;
   GUI& gui;
+  Graphics gfx;
+  Sound sound;
+  
   GameState state;
   bool gameStateChanged;
-  Constants constants;
-  Sound sound;
-  Graphics gfx;
-  Game(); //disallow emtpy public ctor 
-
+  
+  vector<Player> players;
+  int numPlayers;
+  
+  map<string, Song> songs;
+  string currentSong; // map key
+  vector<SongMenuItem> songMenuItems;
+  int selectedSongIndex;
+  
+  long preStartTime;
+  int currentBeatTick;
+  int numBeatTicks;
+  int currentBpmChange;
+  int numBpmChanges;
+  long songStartTime;
+  long songTime;
+  long songAbortStartTime;
+  long frameTime;
+  long viewportOffset;
+  float pixelsPerMsAtCurrentBpm;
+  float pixelsLeftToScroll;
+//  vector<player_data> current_player_data;
   
 public:
 
@@ -91,7 +119,19 @@ public:
   void RunTitleScreen();
   void RunCreditsScreen();
   void RunDebugScreen();
-  void RunSongSelect1();
+  void RunSelectSong();
+  void RunSelectDifficulty();
+  void PreloadSongs();
+  void RunLoadingSong();
+  void RunPlayPrep();
+  bool PreStartDelayFinished();
+  void RunScoreScreen();
+  void RunPlay();
+  void CheckAbort();
+  void InitialFrame();
+  void Frame();
+  void PartialFrame(long begin, long end);
+  void RateArrows(Player& p);
 };
 
 }
