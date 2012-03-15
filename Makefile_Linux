@@ -159,7 +159,7 @@ $(OUTPUT): $(OFILES)
 	@echo LIBPATHS: $(LIBPATHS)
 	@echo LIBS: $(LIBS)
 	@echo LD_LIBRARY_PATH: $(LD_LIBRARY_PATH)
-	@echo that: $^
+	@echo ld targets: $^
 	@$(LD)  $^ $(LDFLAGS) $(LIBPATHS) $(LIBS) -o $@
 
 -include $(DEPENDS)

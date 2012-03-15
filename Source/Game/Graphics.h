@@ -31,6 +31,8 @@ using std::exception;
 #include "../Platform/OS.h"
 using Platform::OS;
 
+#include "Constants.h"
+
 namespace DanceClone
 {
 
@@ -41,56 +43,52 @@ private:
   OS& sys;
   void ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* dest_frames, int src_cols);
   void SetArrowFrame(SDL_Rect* dest, int index, int x, int y, int w, int h);
-  int screenWidth;
-  int screenHeight;
-  int goalOffset;
   Graphics();
   
 public:
 
+  int screenWidth;
+  int screenHeight;
   SDL_Surface* screen;
   Uint8* pWDrgb1;
   Uint8* pWDrgb2;
 
-  SDL_Surface* background_image;
-  SDL_Surface* title_image;
-  SDL_Surface* ratings_image;
-  SDL_Rect ratings_frames[3];
-  SDL_Surface* get_ready_image;
+  SDL_Surface* backgroundImage;
+  SDL_Surface* titleImage;
+  SDL_Surface* ratingsImage;
+  SDL_Rect ratingsFrames[3];
+  SDL_Surface* getReadyImage;
 
   // all non-hold arrows have same layout so use only one frames array
-  SDL_Rect arrows_frames[16];
-  SDL_Surface* temp_arrows_image_src; 
-  SDL_Surface* home_arrows_image; 
-  SDL_Surface* quarter_arrows_image; 
-  SDL_Surface* eighth_arrows_image; 
-  SDL_Surface* quarter_triplet_arrows_image; 
-  SDL_Surface* sixteenth_arrows_image; 
-  SDL_Surface* eighth_triplet_arrows_image; 
-  SDL_Surface* thirtysecond_arrows_image; 
-  SDL_Surface* sixteenth_triplet_arrows_image; 
-  SDL_Surface* sixtyfourth_arrows_image; 
-  SDL_Surface* sixtyfourth_triplet_arrows_image; 
+  SDL_Rect arrowsFrames[16];
+  SDL_Surface* tempArrowsImageSrc; 
+  SDL_Surface* homeArrowsImage; 
+  SDL_Surface* quarterArrowsImage; 
+  SDL_Surface* eighthArrowsImage; 
+  SDL_Surface* quarterTripletArrowsImage; 
+  SDL_Surface* sixteenthArrowsImage; 
+  SDL_Surface* eighthTripletArrowsImage; 
+  SDL_Surface* thirtysecondArrowsImage; 
+  SDL_Surface* sixteenthTripletArrowsImage; 
+  SDL_Surface* sixtyfourthArrowsImage; 
+  SDL_Surface* sixtyfourthTripletArrowsImage; 
 
-  SDL_Surface* freeze_arrows_body_image;
-  SDL_Rect freeze_body_frames[12];
-  SDL_Surface* freeze_arrows_tail_image;
-  SDL_Rect freeze_tail_frames[12];
-  SDL_Surface* freeze_arrows_head_image;
-  SDL_Rect freeze_head_frames[16];
+  SDL_Surface* freezeArrowsBodyImage;
+  SDL_Rect freezeBodyFrames[12];
+  SDL_Surface* freezeArrowsTailImage;
+  SDL_Rect freezeTailFrames[12];
+  SDL_Surface* freezeArrowsHeadImage;
+  SDL_Rect freezeHeadFrames[16];
 
-  SDL_Rect arrows_hit_frames[32];
-  SDL_Surface* marvellous_hit_image; 
-  SDL_Surface* perfect_hit_image; 
-  SDL_Surface* great_hit_image; 
-  SDL_Surface* good_hit_image; 
-  SDL_Surface* freeze_hit_image; 
+  SDL_Rect arrowsHitFrames[32];
+  SDL_Surface* marvellousHitImage; 
+  SDL_Surface* perfectHitImage; 
+  SDL_Surface* greatHitImage; 
+  SDL_Surface* goodHitImage; 
+  SDL_Surface* freezeHitImage; 
 
   int arrowWidth;
   int arrowHeight;
-
-  float pixelsPerMsAt1BPM;
-
 
   Graphics(OS& os);
   bool Init(string configFilePath = "");

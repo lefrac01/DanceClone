@@ -79,7 +79,15 @@ void WiiInput::Update()
     chan.buttonDown[InputChannel::Button7] = WiiButtonsDown[i] & WPAD_BUTTON_PLUS;
     chan.buttonHeld[InputChannel::Button7] = WiiButtonsHeld[i] & WPAD_BUTTON_PLUS;
 
-
+    chan.directionDown[InputChannel::UP] =    WiiButtonsDown[i] & WPAD_BUTTON_UP;
+    chan.directionDown[InputChannel::DOWN] =  WiiButtonsDown[i] & WPAD_BUTTON_DOWN;
+    chan.directionDown[InputChannel::LEFT] =  WiiButtonsDown[i] & WPAD_BUTTON_LEFT;
+    chan.directionDown[InputChannel::RIGHT] = WiiButtonsDown[i] & WPAD_BUTTON_RIGHT;
+    chan.directionHeld[InputChannel::UP] =    WiiButtonsHeld[i] & WPAD_BUTTON_UP;
+    chan.directionHeld[InputChannel::DOWN] =  WiiButtonsHeld[i] & WPAD_BUTTON_DOWN;
+    chan.directionHeld[InputChannel::LEFT] =  WiiButtonsHeld[i] & WPAD_BUTTON_LEFT;
+    chan.directionHeld[InputChannel::RIGHT] = WiiButtonsHeld[i] & WPAD_BUTTON_RIGHT;
+    
 
     WPAD_IR(i, &ir[i]);
     if (ir[i].valid)
@@ -109,6 +117,21 @@ void WiiInput::Update()
     chan.buttonHeld[InputChannel::Button4] |= GCButtonsHeld[i] & PAD_BUTTON_A;
     chan.buttonDown[InputChannel::Button3] |= GCButtonsDown[i] & PAD_BUTTON_B;
     chan.buttonHeld[InputChannel::Button3] |= GCButtonsHeld[i] & PAD_BUTTON_B;
+    chan.buttonDown[InputChannel::Button5] |= GCButtonsDown[i] & PAD_TRIGGER_Z;
+    chan.buttonHeld[InputChannel::Button5] |= GCButtonsHeld[i] & PAD_TRIGGER_Z;
+    chan.buttonDown[InputChannel::Button7] |= GCButtonsDown[i] & PAD_BUTTON_START;
+    chan.buttonHeld[InputChannel::Button7] |= GCButtonsHeld[i] & PAD_BUTTON_START;
+    
+    chan.directionDown[InputChannel::UP]   |= GCButtonsDown[i] & PAD_BUTTON_UP;
+    chan.directionDown[InputChannel::DOWN] |= GCButtonsDown[i] & PAD_BUTTON_DOWN;
+    chan.directionDown[InputChannel::LEFT] |= GCButtonsDown[i] & PAD_BUTTON_LEFT;
+    chan.directionDown[InputChannel::RIGHT] |= GCButtonsDown[i] & PAD_BUTTON_RIGHT;
+    chan.directionHeld[InputChannel::UP]   |= GCButtonsHeld[i] & PAD_BUTTON_UP;
+    chan.directionHeld[InputChannel::DOWN] |= GCButtonsHeld[i] & PAD_BUTTON_DOWN;
+    chan.directionHeld[InputChannel::LEFT] |= GCButtonsHeld[i] & PAD_BUTTON_LEFT;
+    chan.directionHeld[InputChannel::RIGHT] |= GCButtonsHeld[i] & PAD_BUTTON_RIGHT;
+
+
   }
     
 /*

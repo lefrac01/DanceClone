@@ -60,6 +60,15 @@ void LinuxInput::Update()
   inputChannels[0].buttonDown[InputChannel::Button4] = mousestate & SDL_BUTTON(1);    // Wiimote button A
   
   inputChannels[0].buttonDown[InputChannel::Button6] = keystate[SDLK_ESCAPE] == 2;
+  inputChannels[0].directionDown[InputChannel::UP] = keystate[SDLK_UP] == 2;
+  inputChannels[0].directionDown[InputChannel::DOWN] = keystate[SDLK_DOWN] == 2;
+  inputChannels[0].directionDown[InputChannel::LEFT] = keystate[SDLK_LEFT] == 2;
+  inputChannels[0].directionDown[InputChannel::RIGHT] = keystate[SDLK_RIGHT] == 2;
+  
+  inputChannels[0].directionHeld[InputChannel::UP] = keystate[SDLK_UP] == 1 || keystate[SDLK_UP] == 2 ;
+  inputChannels[0].directionHeld[InputChannel::DOWN] = keystate[SDLK_DOWN] == 1 || keystate[SDLK_DOWN] == 2 ;
+  inputChannels[0].directionHeld[InputChannel::LEFT] = keystate[SDLK_LEFT] == 1 || keystate[SDLK_LEFT] == 2 ;
+  inputChannels[0].directionHeld[InputChannel::RIGHT] = keystate[SDLK_RIGHT] == 1 || keystate[SDLK_RIGHT] == 2 ;
 }
 
 void LinuxInput::Cleanup()

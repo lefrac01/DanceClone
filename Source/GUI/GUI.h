@@ -40,8 +40,7 @@ private:
   GUI();
   OS& sys;
   Graphics gfx;
-  bool useCursors;
-  bool useCursor[4];
+
   
 public:
 
@@ -50,18 +49,17 @@ public:
   void Update();
   void Cleanup();
   void DrawSpriteText(int posx,int posy,char* texttosprite,int leftmiddleright);
-  //void DrawButton(int x, int y,int w,int h,bool glow);
   void DrawButton(Button& b);
   bool DoButton(int x, int y,int w,int h,bool center,bool clickable,char* text);
   int SpriteTextWrapped(int posx,int posy,char* texttosprite,int length);
   void SpriteText(int posx,int posy,char* texttosprite,int leftmiddleright);
   void SpriteTextColored(int posx,int posy,char* texttosprite,int leftmiddleright);
   void SetSpriteTextColored(Uint32 color);
-  void SavePngScreenshot();
+  void SavePngScreenshot(); //TODO: fix
   void SetScreen(Container& c);
-//  void Render(Container& c, int basex = 0, int basey = 0);
   void Render(Container& c);
   Container screen;  // clash with sys.vid concept
+  bool hideCursor;
   //void WiiDash_savebmpscreenshot();
 };
 

@@ -19,7 +19,7 @@ TARGET		:=	boot
 BUILD		:=	build
 SOURCES		:=	Source Source/Game Source/Platform Source/GUI Source/Dash Source/Platform/Wii
 DATA		:=	data  
-INCLUDES	:=	../SDL_svn/SDL/include/
+INCLUDES	:=	
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -89,7 +89,8 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES), $(CURDIR)/$(dir)) \
 					-I$(CURDIR)/$(BUILD) \
 					-I$(LIBOGC_INC) \
 					-I$(LIBOGC_INC)/SDL \
-					-I /usr/local/boost_1_49_0 
+					-I /usr/local/boost_1_49_0 \
+					-I ../SDL_svn/SDL/include/ 
 					
 #---------------------------------------------------------------------------------
 # build a list of library paths

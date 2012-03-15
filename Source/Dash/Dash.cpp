@@ -500,7 +500,7 @@ bool Dash::Visible()
 void Dash::RunMenu()
 {
   int y = OnOffSlide(screenHeight/2-125,screenHeight/2-125+screenHeight);
-
+  ++y;
 //TODO: reimplement properly.  original redesign failed.
 /*
   if(gui.DoButton(screenWidth/2,y,300,15,1,1,(char*)"Resume game"))onOff=0;

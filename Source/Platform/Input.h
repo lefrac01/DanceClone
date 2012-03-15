@@ -34,9 +34,9 @@ class InputChannel
 public:
   enum InputDirection
   {
-    UP,
-    DOWN,
     LEFT,
+    DOWN,
+    UP,
     RIGHT,
     NUM_DIRECTIONS
   };
@@ -60,6 +60,7 @@ public:
 
   bool directionDown[NUM_DIRECTIONS];
   bool directionHeld[NUM_DIRECTIONS];
+  long directionDownTime[NUM_DIRECTIONS];
 //  bool directionUp[NUM_DIRECTIONS];
   bool buttonDown[NUM_BUTTONS];
   bool buttonHeld[NUM_BUTTONS];

@@ -22,6 +22,9 @@
 
 namespace DanceClone
 {
+
+Constants constants;
+
 //TODO: game drawing constants like ms per pixel at 1 bpm and goal offset!
 void Constants::Init(string ConfigFilePath)
 {
@@ -31,7 +34,7 @@ void Constants::Init(string ConfigFilePath)
   songStartOffset = 100;
 
   goalOffset = 0;
-  maxPlayers = 1;
+  maxPlayers = 2;
   preStartDelay = 3000;
   songAbortDelay = 3000;
   jumpAllowDelay = 100;
@@ -44,14 +47,23 @@ void Constants::Init(string ConfigFilePath)
   freezeLengthAllow = 25;
   // how many pixels before the end of a freeze arrow the player is
   //  allowed to lift off without failing the freeze
-  
-//    #ifdef WIN
-//  musicFileRoot = "Music/";
-//    #endif
-//    #ifdef WII
-  musicFileRoot = "/apps/DanceClone/Music/";
-  baseFileButtonTag = 1024;
 
+  musicFileRoot = "Music/";
+
+  /*
+  #ifdef WII
+    musicFileRoot = "/apps/DanceClone/Music/";
+  #endif
+  #ifdef LINUX
+    musicFileRoot = "Music/";
+  #endif
+  #ifdef WIN
+    musicFileRoot = "Music/";
+  #endif
+  */
+  baseFileButtonTag = 1024;
+  
+  pixelsPerMsAt1Bpm = 0.0;
 //    #endif  
 }
 
