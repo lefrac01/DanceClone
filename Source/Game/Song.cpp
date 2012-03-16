@@ -44,7 +44,7 @@ Song::Song() :
   filename(""),
   beat0Offset(0),
   arrows(constants.numDifficulties),
-  difficultyAvailable(Constants::NUM_DIFFICULTIES, false)
+  difficultyAvailable(constants.numDifficulties, false)
 {
 }
 

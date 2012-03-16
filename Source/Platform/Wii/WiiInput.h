@@ -35,7 +35,7 @@ namespace Platform
 class WiiInput : public Input
 {
 private:
-
+  bool GCControllerPresent(u32 scan, int chan);
   
 public:
 

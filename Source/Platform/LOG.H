@@ -32,7 +32,7 @@ using std::ofstream;
 using std::ifstream;
 #include <cstdlib>
 
-static ofstream logFile; // tired == global
+static ofstream logFile;
 
 #define DEBUG_OFF 0
 #define DEBUG_BASIC 1

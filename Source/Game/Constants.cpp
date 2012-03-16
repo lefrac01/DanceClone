@@ -25,6 +25,8 @@ namespace DanceClone
 
 Constants constants;
 
+const char* Constants::difficultyText[] = {"Beginner", "Easy", "Medium", "Hard", "Challenge"};
+
 //TODO: game drawing constants like ms per pixel at 1 bpm and goal offset!
 void Constants::Init(string ConfigFilePath)
 {
@@ -36,7 +38,7 @@ void Constants::Init(string ConfigFilePath)
   goalOffset = 0;
   maxPlayers = 2;
   preStartDelay = 3000;
-  songAbortDelay = 3000;
+  songAbortDelay = 2500;
   jumpAllowDelay = 100;
   booDelay = 200;
   goodDelay = 200;

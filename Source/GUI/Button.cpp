@@ -50,7 +50,7 @@ bool Button::Clicked(int testx, int testy)
 {
   // is point in extent?
   LOG(DEBUG_GUTS, "Button::Clicked() testing my rect: x: " << TestExtent().x << " y: " << TestExtent().y << " w: " << TestExtent().w << " h: " << TestExtent().h << " tag:" << tag << endl)
-  if (PointInSDLRect(testx, testy, TestExtent()))
+  if (active && PointInSDLRect(testx, testy, TestExtent()))
   {
     LOG(DEBUG_GUTS, "Button::Clicked() point in my rect  testx: " << testx << " testy: " << testy << " x: " << x << " y: " << y << " tag:" << tag << endl)
     clicked = true;
@@ -65,7 +65,7 @@ void Button::CursorAt(int testx, int testy)
 {
   // is point in extent?
   LOG(DEBUG_GUTS, "Button::CursorAt() testing my rect: x: " << TestExtent().x << " y: " << TestExtent().y << " w: " << TestExtent().w << " h: " << TestExtent().h << " tag:" << tag << endl)
-  if (PointInSDLRect(testx, testy, TestExtent()))
+  if (active && PointInSDLRect(testx, testy, TestExtent()))
   {
     LOG(DEBUG_GUTS, "Button::CursorAt() point in my rect  testx: " << testx << " testy: " << testy << " x: " << x << " y: " << y << " tag:" << tag << endl)
     if (!clicked) state = HOVER;

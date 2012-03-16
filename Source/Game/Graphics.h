@@ -55,10 +55,12 @@ public:
 
   SDL_Surface* backgroundImage;
   SDL_Surface* titleImage;
+  SDL_Surface* difficultyCursorImage;
+  SDL_Rect difficultyCursorFrames[4];
   SDL_Surface* ratingsImage;
   SDL_Rect ratingsFrames[3];
   SDL_Surface* getReadyImage;
-
+  
   // all non-hold arrows have same layout so use only one frames array
   SDL_Rect arrowsFrames[16];
   SDL_Surface* tempArrowsImageSrc; 
@@ -89,6 +91,16 @@ public:
 
   int arrowWidth;
   int arrowHeight;
+
+  Uint32 sdlWhite;
+  Uint32 sdlBlack;
+  Uint32 sdlGrey;
+  Uint32 sdlTeal;
+  Uint32 sdlRed;
+  Uint32 sdlGreen;
+  Uint32 sdlBlue;
+  Uint32 sdlYellow;
+  Uint32 sdlCyan;
 
   Graphics(OS& os);
   bool Init(string configFilePath = "");

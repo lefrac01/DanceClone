@@ -41,11 +41,13 @@ public:
   Player(InputChannel& ic);
   int playerNumber;
   bool active;
+  bool ready;
   InputChannel& inputs;
   vector<long> directionDownTime;
   vector<bool> directionJumpActive;
 
-  Constants::Difficulty difficulty;
+  //Constants::Difficulty difficulty;
+  int difficulty;
   //recordFileId      //note operator=
   vector<Arrow> arrows;
   int baseArrow;

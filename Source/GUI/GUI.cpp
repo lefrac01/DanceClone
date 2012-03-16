@@ -39,6 +39,8 @@ bool GUI::Init()
     LOG(DEBUG_BASIC, "ERROR: GUI::Init()   gfx.Init() failed" << endl)
     return false;
   }
+
+  spriteTextColour = SDL_MapRGBA(gfx.fontImageColored->format, 255, 255, 255, 255);
   
   return true;
 }
@@ -93,7 +95,6 @@ void GUI::SetScreen(Container& c)
   LOG(DEBUG_MINOR, "GUI::SetScreen() screen button count now: " << screen.AllButtons().size() << endl)
 }
 
-//void GUI::Render(Container &c, int basex, int basey)
 void GUI::Render(Container &c)
 {
   LOG(DEBUG_GUTS, "GUI::Render() " << endl)
@@ -109,8 +110,17 @@ void GUI::Render(Container &c)
   {
     Label& l = c.Labels()[i];
     LOG(DEBUG_GUTS, "GUI::Render() element is label " << endl)
-    //DrawSpriteText(l.x, l.y,(char*) l.text.c_str(), 1);
-    SpriteTextColored(l.x, l.y,(char*) l.text.c_str(), 1);
+    if (l.colour != Element::noColour)
+    {
+      Uint32 oldColour = GetSpriteTextColour();
+      SetSpriteTextColour(l.colour);
+      SpriteTextColored(l.x, l.y, (char*)l.text.c_str(), 1);
+      SetSpriteTextColour(oldColour);
+    }
+    else
+    {
+      SpriteTextColored(l.x, l.y, (char*)l.text.c_str(), 1);
+    }
   }
   for (unsigned int i = 0; i < c.Buttons().size(); i++)
   {
@@ -158,7 +168,6 @@ void GUI::DrawSpriteText(int posx,int posy,char* texttosprite,int leftmiddlerigh
   }
 }
 
-//void GUI::DrawButton(int x, int y,int w,int h,bool glow)
 void GUI::DrawButton(Button& b)
 {
   LOG(DEBUG_GUTS, "GUI::DrawButton(" << b.x << ", " << b.y << ", " << b.w << ", " << b.h << endl)
@@ -176,6 +185,7 @@ void GUI::DrawButton(Button& b)
       //#break;
     //#}      
   //#}
+
   
   //corners
   sys.vid.ApplySurface(b.x-21, b.y-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[0+glow*9]);
@@ -216,8 +226,25 @@ void GUI::DrawButton(Button& b)
   int tempy = b.y+b.h/2;
   //x=x+w/2;y=y+h/2;
   //DrawSpriteText(x,y-21/2,text,2);
-  SpriteText(tempx,tempy-21/2,(char*)b.text.c_str(),2);
+  //SpriteText(tempx,tempy-21/2,(char*)b.text.c_str(),2);
   //SpriteTextColored(tempx,tempy-21/2,(char*)b.text.c_str(),2);
+  
+  Uint32 oldColour = GetSpriteTextColour();
+  if (!b.active)
+  {
+    Uint32 inactive;
+    inactive = SDL_MapRGB(sys.vid.screen->format, 80, 80, 80);
+    SetSpriteTextColour(inactive);
+  }
+  else if (b.colour != Element::noColour)
+  {
+    SetSpriteTextColour(b.colour);
+  }
+  SpriteTextColored(tempx,tempy-21/2,(char*)b.text.c_str(),2);
+  if (!b.active || b.colour != Element::noColour)
+  {
+    SetSpriteTextColour(oldColour);
+  }
 }
 
 /*
@@ -261,16 +288,22 @@ bool GUI::DoButton(int x, int y,int w,int h,bool center,bool clickable,char* tex
 }
 */
 
-void GUI::SetSpriteTextColored(Uint32 color)
+Uint32 GUI::GetSpriteTextColour()
 {
+  return spriteTextColour;
+}
+  
+void GUI::SetSpriteTextColour(Uint32 colour)
+{
+  spriteTextColour = colour;
   Uint8 r1,g1,b1;
-  SDL_GetRGB(color,gfx.fontImage->format,&r1,&g1,&b1);
+  SDL_GetRGB(colour,gfx.fontImage->format,&r1,&g1,&b1);
   Uint8 r2,g2,b2,a2;
   for(int x=0;x<gfx.fontImage->w;x++)for(int y=0;y<gfx.fontImage->h;y++){
-    color=sys.vid.GetPixel(gfx.fontImage,x,y);
-    SDL_GetRGBA(color,gfx.fontImage->format,&r2,&g2,&b2,&a2);
-    color=SDL_MapRGBA(gfx.fontImageColored->format,r1,g1,b1,a2);
-    sys.vid.PutPixel(gfx.fontImageColored,x,y,color);
+    colour=sys.vid.GetPixel(gfx.fontImage,x,y);
+    SDL_GetRGBA(colour,gfx.fontImage->format,&r2,&g2,&b2,&a2);
+    colour=SDL_MapRGBA(gfx.fontImageColored->format,r1,g1,b1,a2);
+    sys.vid.PutPixel(gfx.fontImageColored,x,y,colour);
   }
 }
 

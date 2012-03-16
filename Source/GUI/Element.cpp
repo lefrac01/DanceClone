@@ -31,6 +31,7 @@ Element::Element() :
   visible(true),
   active(true),
   clicked(false),
+  colour(noColour),
   text("")
 {
 }
@@ -44,9 +45,14 @@ Element::Element(int _x, int _y, int _w, int _h, bool v, bool a, bool c, string 
   visible(v),
   active(a),
   clicked(c),
+  colour(noColour),
   text(tx)
 {
 }
 
+void Element::SetColour(Uint32 c)
+{
+  colour = c;
+}
 
 }

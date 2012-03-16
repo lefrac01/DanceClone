@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
     {
       game.Run();
       
-      if (game.State() != Game::PLAY_PREP1 && game.State() != Game::PLAY_PREP2)
+      if (game.State() != Game::PLAY_PREP1 && game.State() != Game::PLAY_PREP2 && game.State() != Game::PLAY)
       {
         gui.Update();
       }

@@ -52,8 +52,9 @@ public:
     Button7,
     NUM_BUTTONS
   };
-                    
+
   bool active;
+  bool danceMatActive;  //TEMP not generic enough
   
   int cursorX;
   int cursorY;

@@ -54,12 +54,14 @@ public:
   int SpriteTextWrapped(int posx,int posy,char* texttosprite,int length);
   void SpriteText(int posx,int posy,char* texttosprite,int leftmiddleright);
   void SpriteTextColored(int posx,int posy,char* texttosprite,int leftmiddleright);
-  void SetSpriteTextColored(Uint32 color);
+  Uint32 GetSpriteTextColour();
+  void SetSpriteTextColour(Uint32 colour);
   void SavePngScreenshot(); //TODO: fix
   void SetScreen(Container& c);
   void Render(Container& c);
   Container screen;  // clash with sys.vid concept
   bool hideCursor;
+  Uint32 spriteTextColour;
   //void WiiDash_savebmpscreenshot();
 };
 

@@ -23,6 +23,8 @@
 #include <string>
 using std::string;
 
+#include <SDL.h>
+
 namespace Gooey
 {
 
@@ -34,6 +36,7 @@ private:
 
 public:
   
+  const static Uint32 noColour = -1;
 
   Element();
   virtual ~Element(){};
@@ -47,9 +50,11 @@ public:
   bool visible;
   bool active;
   bool clicked;
+  Uint32 colour;
   string text;
   virtual bool Clicked(int testx, int testy) = 0;
   virtual void CursorAt(int testx, int testy) = 0;
+  void SetColour(Uint32 c);
 };
 
 

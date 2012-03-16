@@ -1,7 +1,9 @@
 changelog
 --
 v0.60
--test after funky commands to purge debug log from git history
+-menu for number of players
+-menu for per-player difficulty selection
+-added mouse button debounce for Linux
 
 v0.59 "almost sexy"
 -OO rewrite

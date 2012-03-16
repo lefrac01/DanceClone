@@ -63,6 +63,7 @@ public:
   {
     NONE,         //
     TITLE,        // 0
+    CHOOSE_NUM_PLAYERS,
     CREDITS,      // 1
     SCORE,        // 2, 9
     SELECT_SONG, // 3
@@ -119,6 +120,7 @@ public:
   void RunTitleScreen();
   void RunCreditsScreen();
   void RunDebugScreen();
+  void RunChooseNumPlayers();
   void RunSelectSong();
   void RunSelectDifficulty();
   void PreloadSongs();

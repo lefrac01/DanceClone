@@ -32,17 +32,6 @@ extern Constants constants;
   
 class Constants
 {
-public: 
-  enum Difficulty
-  {
-    BEGINNER,
-    EASY,
-    MEDIUM,
-    HARD,
-    CHALLENGE,
-    NUM_DIFFICULTIES
-  };
-
 private:
 
   
@@ -50,6 +39,7 @@ public:
 
   float arrowsHitAnimMs;
   int numDifficulties;
+  static const char* difficultyText[];
   long songStartOffset;
   
   long goalOffset;

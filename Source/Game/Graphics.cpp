@@ -61,6 +61,17 @@ bool Graphics::Init(string configFilePath)
   
   constants.goalOffset = screenHeight / 4;
   
+  sdlWhite = SDL_MapRGB(sys.vid.screen->format, 255, 255, 255);
+  sdlBlack = SDL_MapRGB(sys.vid.screen->format, 0, 0, 0);
+  sdlGrey =  SDL_MapRGB(sys.vid.screen->format, 150, 150, 150);
+  sdlTeal =  SDL_MapRGB(sys.vid.screen->format, 200, 255, 250);
+  sdlRed =   SDL_MapRGB(sys.vid.screen->format, 255, 0, 0);
+  sdlGreen = SDL_MapRGB(sys.vid.screen->format, 0, 255, 0);
+  sdlBlue  = SDL_MapRGB(sys.vid.screen->format, 0, 0, 255);
+  sdlYellow= SDL_MapRGB(sys.vid.screen->format, 255, 255, 0);
+  sdlCyan  = SDL_MapRGB(sys.vid.screen->format, 0, 255, 255);  
+
+  
   constants.pixelsPerMsAt1Bpm = screenHeight / 4000.0 / 120.0; // calculate once screen height is known
 // based on the observed rate of 4000ms per screen height per quarter note
 // at 120 BPM
@@ -70,19 +81,31 @@ bool Graphics::Init(string configFilePath)
     string backgroundImagePath = "Media/Game/background.png";
     string titleImagePath = "Media/Game/title.png";
     string getReadyImagePath = "Media/Game/getready.png";
+    string difficultyCursorImagePath = "Media/Game/diff_cursors.png";
   
     //TODO: fix hard-coded constants
-    //backgroundImage = sys.vid.LoadOptimize("Media/Game/background.png");
     backgroundImage = sys.vid.LoadOptimizeAlpha(backgroundImagePath.c_str());
     if (!backgroundImage) LOG(DEBUG_BASIC, "failed to load \"" << backgroundImagePath << "\"" << endl)
 
-    //titleImage = IMG_Load("Media/Game/title.png");
     titleImage = sys.vid.LoadOptimizeAlpha(titleImagePath.c_str());
     if (!titleImage) LOG(DEBUG_BASIC, "failed to load \"" << titleImagePath << "\"" << endl)
     
-    //getReadyImage = IMG_Load("Media/Game/getready.png");
     getReadyImage = sys.vid.LoadOptimizeAlpha(getReadyImagePath.c_str());
     if (!getReadyImage) LOG(DEBUG_BASIC, "failed to load \"" << getReadyImagePath << "\"" << endl)
+    
+    difficultyCursorImage = sys.vid.LoadOptimizeAlpha(difficultyCursorImagePath.c_str());
+    if (!getReadyImage) LOG(DEBUG_BASIC, "failed to load \"" << difficultyCursorImagePath << "\"" << endl)
+    for(int r = 0; r < 2; r++)
+    {
+      for (int c = 0; c < 2; c++)
+      {
+        difficultyCursorFrames[r*2+c].x = c*32;
+        difficultyCursorFrames[r*2+c].y = r*32;
+        difficultyCursorFrames[r*2+c].w = 32;
+        difficultyCursorFrames[r*2+c].h = 32;
+      }
+    }
+
     
     // expand source PNGs creating other arrow directions
     //optimistically using SDL_HWSURFACE but not all these can fit into the hardware memory ;)
@@ -188,7 +211,7 @@ bool Graphics::Init(string configFilePath)
     throw e;
   }
   
-  return (backgroundImage && titleImage && getReadyImage && freezeHitImage && freezeArrowsHeadImage && freezeArrowsBodyImage && freezeArrowsTailImage);
+  return (backgroundImage && titleImage && getReadyImage && freezeHitImage && freezeArrowsHeadImage && freezeArrowsBodyImage && freezeArrowsTailImage && difficultyCursorImage);
 }
 
 void Graphics::SetArrowFrame(SDL_Rect* dest, int index, int x, int y, int w, int h)

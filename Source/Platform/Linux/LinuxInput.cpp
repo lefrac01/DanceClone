@@ -30,15 +30,15 @@ void LinuxInput::Init()
   SDL_ShowCursor(SDL_DISABLE);
   
   //allocate basic channel.
-  inputChannels.resize(1);
+  inputChannels.resize(2);  // TEMP fake 2 players
   
   inputChannels[0].active = true;
+  inputChannels[0].danceMatActive = true;   // using keyboard
 }
 
 void LinuxInput::Update()
 {
   LOG(DEBUG_GUTS, "LinuxInput::Update()" << endl)
-
   //TODO: platform specific subclassing of input agent
 
   SDL_Event event;
@@ -56,9 +56,26 @@ void LinuxInput::Update()
     for(int a=0;a<mousecount;a++)if(event.button.button==a)mousestate[a]=0;
 */
 
+  // just like C64 :)
+  static bool debounceMouse = false;
   Uint8 mousestate = SDL_GetMouseState(&inputChannels[0].cursorX, &inputChannels[0].cursorY);
-  inputChannels[0].buttonDown[InputChannel::Button4] = mousestate & SDL_BUTTON(1);    // Wiimote button A
   
+  if (debounceMouse)
+  {
+    inputChannels[0].buttonDown[InputChannel::Button4] = false;
+    if ((mousestate & SDL_BUTTON(1)) == 0)    // Wiimote button A
+    {
+      debounceMouse = false;
+    }
+  }
+  else
+  {
+    if (mousestate & SDL_BUTTON(1))
+    {
+      inputChannels[0].buttonDown[InputChannel::Button4] = true;    // Wiimote button A
+      debounceMouse = true;
+    }
+  }
   inputChannels[0].buttonDown[InputChannel::Button6] = keystate[SDLK_ESCAPE] == 2;
   inputChannels[0].directionDown[InputChannel::UP] = keystate[SDLK_UP] == 2;
   inputChannels[0].directionDown[InputChannel::DOWN] = keystate[SDLK_DOWN] == 2;
@@ -69,6 +86,10 @@ void LinuxInput::Update()
   inputChannels[0].directionHeld[InputChannel::DOWN] = keystate[SDLK_DOWN] == 1 || keystate[SDLK_DOWN] == 2 ;
   inputChannels[0].directionHeld[InputChannel::LEFT] = keystate[SDLK_LEFT] == 1 || keystate[SDLK_LEFT] == 2 ;
   inputChannels[0].directionHeld[InputChannel::RIGHT] = keystate[SDLK_RIGHT] == 1 || keystate[SDLK_RIGHT] == 2 ;
+  
+  inputChannels[0].buttonHeld[InputChannel::Button4] = keystate[SDLK_RETURN] == 1;   // A button
+  inputChannels[0].buttonHeld[InputChannel::Button5] = keystate[SDLK_MINUS] == 1;   // Abort keys
+  inputChannels[0].buttonHeld[InputChannel::Button7] = keystate[SDLK_EQUALS] == 1;    // Abort keys
 }
 
 void LinuxInput::Cleanup()

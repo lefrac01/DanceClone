@@ -41,6 +41,13 @@ void WiiInput::WiiInputInit(int w, int h)
   WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);  
 }
 
+bool WiiInput::GCControllerPresent(u32 scan, int chan)
+{
+  u8 chanbit = 1 << chan;
+  scan &= chanbit;
+  return scan != 0;
+}
+
 void WiiInput::Update()
 {
   //bool wiimoteactive[maxChannels];
@@ -102,36 +109,68 @@ void WiiInput::Update()
   LOG(DEBUG_GUTS, "wiimoteactive[0]:" << inputChannels[0].active << " [1]:" << inputChannels[1].active << endl)
 
 
+
+  //NOTE: Wii GC Dance Mat to GC controller mappings:
+  //minus PAD_TRIGGER_Z     }- both?
+  //minus PAD_BUTTON_MENU   }
+  //plus  PAD_BUTTON_START
+  //B     PAD_BUTTON_B
+  //A     PAD_BUTTON_A
+  //LEFT  PAD_BUTTON_LEFT
+  //RIGHT PAD_BUTTON_RIGHT
+  //UP    PAD_BUTTON_UP
+  //DOWN  PAD_BUTTON_DOWN
+  
   //NOTE not considering dance mat buttons and wiimote buttons as separate
   // this would be unexpected for many other applications!!! but no time to
   // spare.. must get done quickly for DanceNight
-  PAD_ScanPads();
+  u32 scanResult;
+  scanResult = PAD_ScanPads();
   for (int i = 0; i < maxChannels; i++)
   {
     InputChannel& chan = inputChannels[i];
-    GCButtonsHeld[i] = PAD_ButtonsHeld(i);
-    GCButtonsDown[i] = PAD_ButtonsDown(i);
-    //GCButtonsUp[i] = PAD_ButtonsUp(i);
-    
-    chan.buttonDown[InputChannel::Button4] |= GCButtonsDown[i] & PAD_BUTTON_A;
-    chan.buttonHeld[InputChannel::Button4] |= GCButtonsHeld[i] & PAD_BUTTON_A;
-    chan.buttonDown[InputChannel::Button3] |= GCButtonsDown[i] & PAD_BUTTON_B;
-    chan.buttonHeld[InputChannel::Button3] |= GCButtonsHeld[i] & PAD_BUTTON_B;
-    chan.buttonDown[InputChannel::Button5] |= GCButtonsDown[i] & PAD_TRIGGER_Z;
-    chan.buttonHeld[InputChannel::Button5] |= GCButtonsHeld[i] & PAD_TRIGGER_Z;
-    chan.buttonDown[InputChannel::Button7] |= GCButtonsDown[i] & PAD_BUTTON_START;
-    chan.buttonHeld[InputChannel::Button7] |= GCButtonsHeld[i] & PAD_BUTTON_START;
-    
-    chan.directionDown[InputChannel::UP]   |= GCButtonsDown[i] & PAD_BUTTON_UP;
-    chan.directionDown[InputChannel::DOWN] |= GCButtonsDown[i] & PAD_BUTTON_DOWN;
-    chan.directionDown[InputChannel::LEFT] |= GCButtonsDown[i] & PAD_BUTTON_LEFT;
-    chan.directionDown[InputChannel::RIGHT] |= GCButtonsDown[i] & PAD_BUTTON_RIGHT;
-    chan.directionHeld[InputChannel::UP]   |= GCButtonsHeld[i] & PAD_BUTTON_UP;
-    chan.directionHeld[InputChannel::DOWN] |= GCButtonsHeld[i] & PAD_BUTTON_DOWN;
-    chan.directionHeld[InputChannel::LEFT] |= GCButtonsHeld[i] & PAD_BUTTON_LEFT;
-    chan.directionHeld[InputChannel::RIGHT] |= GCButtonsHeld[i] & PAD_BUTTON_RIGHT;
-
-
+    chan.danceMatActive = GCControllerPresent(scanResult, i);
+    if (chan.danceMatActive)
+    {
+      GCButtonsHeld[i] = PAD_ButtonsHeld(i);
+      GCButtonsDown[i] = PAD_ButtonsDown(i);
+      //GCButtonsUp[i] = PAD_ButtonsUp(i);
+/*
+if (GCButtonsDown[i] & PAD_BUTTON_LEFT) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_BUTTON_LEFT" << endl)
+if (GCButtonsDown[i] & PAD_BUTTON_RIGHT) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_BUTTON_RIGHT" << endl)
+if (GCButtonsDown[i] & PAD_BUTTON_DOWN) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_BUTTON_DOWN" << endl)
+if (GCButtonsDown[i] & PAD_BUTTON_UP) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_BUTTON_UP" << endl)
+if (GCButtonsDown[i] & PAD_TRIGGER_Z) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_TRIGGER_Z" << endl)
+if (GCButtonsDown[i] & PAD_TRIGGER_R) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_TRIGGER_R" << endl)
+if (GCButtonsDown[i] & PAD_TRIGGER_L) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_TRIGGER_L" << endl)
+if (GCButtonsDown[i] & PAD_BUTTON_A) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_BUTTON_A" << endl)
+if (GCButtonsDown[i] & PAD_BUTTON_B) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_BUTTON_B" << endl)
+if (GCButtonsDown[i] & PAD_BUTTON_X) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_BUTTON_X" << endl)
+if (GCButtonsDown[i] & PAD_BUTTON_Y) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_BUTTON_Y" << endl)
+if (GCButtonsDown[i] & PAD_BUTTON_MENU) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_BUTTON_MENU" << endl)
+if (GCButtonsDown[i] & PAD_BUTTON_START) LOG(DEBUG_BASIC, "PL" << i << "--GCDown: PAD_BUTTON_START" << endl)
+*/
+      
+      chan.buttonDown[InputChannel::Button4] |= GCButtonsDown[i] & PAD_BUTTON_A;
+      chan.buttonHeld[InputChannel::Button4] |= GCButtonsHeld[i] & PAD_BUTTON_A;
+      chan.buttonDown[InputChannel::Button3] |= GCButtonsDown[i] & PAD_BUTTON_B;
+      chan.buttonHeld[InputChannel::Button3] |= GCButtonsHeld[i] & PAD_BUTTON_B;
+      chan.buttonDown[InputChannel::Button5] |= GCButtonsDown[i] & PAD_TRIGGER_Z;
+      chan.buttonHeld[InputChannel::Button5] |= GCButtonsHeld[i] & PAD_TRIGGER_Z;
+      chan.buttonDown[InputChannel::Button5] |= GCButtonsDown[i] & PAD_BUTTON_MENU;
+      chan.buttonHeld[InputChannel::Button5] |= GCButtonsHeld[i] & PAD_BUTTON_MENU;
+      chan.buttonDown[InputChannel::Button7] |= GCButtonsDown[i] & PAD_BUTTON_START;
+      chan.buttonHeld[InputChannel::Button7] |= GCButtonsHeld[i] & PAD_BUTTON_START;
+      
+      chan.directionDown[InputChannel::UP]   |= GCButtonsDown[i] & PAD_BUTTON_UP;
+      chan.directionDown[InputChannel::DOWN] |= GCButtonsDown[i] & PAD_BUTTON_DOWN;
+      chan.directionDown[InputChannel::LEFT] |= GCButtonsDown[i] & PAD_BUTTON_LEFT;
+      chan.directionDown[InputChannel::RIGHT] |= GCButtonsDown[i] & PAD_BUTTON_RIGHT;
+      chan.directionHeld[InputChannel::UP]   |= GCButtonsHeld[i] & PAD_BUTTON_UP;
+      chan.directionHeld[InputChannel::DOWN] |= GCButtonsHeld[i] & PAD_BUTTON_DOWN;
+      chan.directionHeld[InputChannel::LEFT] |= GCButtonsHeld[i] & PAD_BUTTON_LEFT;
+      chan.directionHeld[InputChannel::RIGHT] |= GCButtonsHeld[i] & PAD_BUTTON_RIGHT;
+    }
   }
     
 /*

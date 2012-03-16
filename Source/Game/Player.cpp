@@ -33,6 +33,7 @@ Player& Player::operator= (const Player& b)
 {
   playerNumber = b.playerNumber;
   active = b.active;
+  ready = b.ready;
   inputs = b.inputs;  //???
   difficulty = b.difficulty;
   arrows = b.arrows;
@@ -49,7 +50,8 @@ void Player::Init(int n)
   LOG(DEBUG_MINOR, "DanceClone::Player::Init()" << endl)
   playerNumber = n;
   active = true;
-  difficulty = Constants::EASY;
+  ready = false;
+  difficulty = -1;
 }
 
 void Player::Prepare()

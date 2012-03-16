@@ -36,10 +36,14 @@ gfx(os)
 
 bool Game::Init(string ConfigFilePath)
 {
-  Player temp(sys.input.inputChannels[0]);
-  temp.Init(1); //initialise as player 1
-  players.push_back(temp);
-  numPlayers = 1;
+  numPlayers = 0;
+  for (unsigned int i = 0; i < sys.input.inputChannels.size(); ++i)
+  {
+    Player temp(sys.input.inputChannels[i]);
+    temp.Init(i + 1); //initialise as player # starting at 1
+    players.push_back(temp);
+    ++numPlayers;
+  }
   
   selectedSongIndex = -1;
   
@@ -95,6 +99,9 @@ void Game::Run()
     break;
   case SCORE:
     //#Game_menu_score();
+    break;
+  case CHOOSE_NUM_PLAYERS:
+    RunChooseNumPlayers();
     break;
   case SELECT_SONG:
     RunSelectSong();
@@ -179,6 +186,8 @@ void Game::RunTitleScreen()
   {
     LOG(DEBUG_BASIC, "Game::RunTitleScreen setting up title)" << endl)
     
+    gui.SetSpriteTextColour(gfx.sdlBlack);
+    
     // FOR NOW, IDEA 1.
     Container title;
     int border = 40;
@@ -209,7 +218,7 @@ void Game::RunTitleScreen()
       switch (b.tag)
       {
       case playTag:
-        state = SELECT_SONG;
+        state = CHOOSE_NUM_PLAYERS;
         break;
       case creditsTag:
         state = CREDITS;
@@ -235,14 +244,14 @@ void Game::RunCreditsScreen()
     LOG(DEBUG_BASIC, "Game::RunCreditsScreen setting up" << endl)
     Container credits;
 
-    Label cred1("v0.50 Programming and graphics by ThatOtherPerson", 40, 200+20*0, 0, 0);
-    Label cred2("thatotherdev.wordpress.com", 40, 200+20*1, 0, 0);
+    Label cred1("v0.50 Programming and graphics by ThatOtherPerson", 40, 60+20*0, 0, 0);
+    Label cred2("thatotherdev.wordpress.com", 40, 60+20*1, 0, 0);
 
-    Label cred3("v0.57 enhancements by Carl Lefrancois", 40, 200+20*3, 0, 0);
+    Label cred3("v0.57 enhancements by Carl Lefrancois", 40, 60+20*3, 0, 0);
 
-    Label cred4("Dance, NOW! music by RekcahDam", 40, 200+20*5, 0, 0);
-    Label cred5("rekcahdam.blogspot.com", 40, 200+20*6, 0, 0);
-
+    Label cred4("Dance, NOW! music by RekcahDam", 40, 60+20*5, 0, 0);
+    Label cred5("rekcahdam.blogspot.com", 40, 60+20*6, 0, 0);
+    
     credits.Add(cred1);
     credits.Add(cred2);
     credits.Add(cred3);
@@ -250,13 +259,12 @@ void Game::RunCreditsScreen()
     credits.Add(cred5);
     
     Button back("Back", sys.vid.ScreenWidth()-100-40, sys.vid.ScreenHeight()-10-40, 100, 10, backButtonTag);
+    back.colour = gfx.sdlBlack;
     credits.Add(back);
     
     gui.SetScreen(credits);
     
-    Uint32 soWhite;
-    soWhite = SDL_MapRGB(sys.vid.screen->format, 255, 255, 255);
-    gui.SetSpriteTextColored(soWhite);
+    gui.SetSpriteTextColour(gfx.sdlWhite);
   }
 
 
@@ -285,16 +293,8 @@ void Game::RunLoadingSong()
   static int c = -2;
   const int backButtonTag = 7;
   const int continueButtonTag = 8;
+  static bool ready = false;
 
-  Uint32 soWhite;
-  soWhite = SDL_MapRGB(sys.vid.screen->format, 255, 255, 255);
-  Uint32 soYellow;
-  soYellow = SDL_MapRGB(sys.vid.screen->format, 255, 255, 0);
-  Uint32 soGrey;
-  soGrey = SDL_MapRGB(sys.vid.screen->format, 150, 150, 150);
-  Uint32 soDark;
-  soDark = SDL_MapRGB(sys.vid.screen->format, 30, 40, 50);
-    
   if (gameStateChanged)
   {
     LOG(DEBUG_BASIC, "Game::RunLoadingSong setting up" << endl)
@@ -305,8 +305,9 @@ void Game::RunLoadingSong()
     loadingSong.Add(message);
     
     gui.SetScreen(loadingSong);
-    gui.SetSpriteTextColored(soWhite);
+    gui.SetSpriteTextColour(gfx.sdlWhite);
     c=-2;
+    ready = false;
   }
   
   if (c==-2) c=-3;
@@ -323,6 +324,7 @@ void Game::RunLoadingSong()
     {
       Button back("Continue", sys.vid.ScreenWidth()-200-40, sys.vid.ScreenHeight()-10-40, 100, 10, continueButtonTag);
       loadingSong.Add(back);
+      ready = true;
     }
     else
     {
@@ -337,16 +339,18 @@ void Game::RunLoadingSong()
   {
     switch(++c)
     {
-      case 0: gui.SetSpriteTextColored(soWhite); break;
-      case 1: gui.SetSpriteTextColored(soYellow); break;
-      case 2: gui.SetSpriteTextColored(soGrey); break;
-      case 3: gui.SetSpriteTextColored(soDark); break;
+      case 0: gui.SetSpriteTextColour(gfx.sdlWhite); break;
+      case 1: gui.SetSpriteTextColour(gfx.sdlYellow); break;
+      case 2: gui.SetSpriteTextColour(gfx.sdlGrey); break;
+      case 3: gui.SetSpriteTextColour(gfx.sdlGreen); break;
     }
     if (c==4)c=-1;
   }  
-  
-  //THIS WOULD WORK IF THE SONG WAS LOADING IN ANOTHER THREAD!!! W00T!!!
-  //update animate just after song is done loading ;) hihi
+
+  if (ready && sys.input.ButtonDown(-1, InputChannel::Button4))
+  {
+    state = PLAY_PREP1;
+  }
   
   vector<Button> buttons;
   buttons = gui.screen.AllButtons();
@@ -393,9 +397,7 @@ void Game::RunDebugScreen()
     
     gui.SetScreen(debug);
 
-    Uint32 soTeal;
-    soTeal = SDL_MapRGB(sys.vid.screen->format, 200, 255, 250);
-    gui.SetSpriteTextColored(soTeal);
+    gui.SetSpriteTextColour(gfx.sdlCyan);
   }
 
 
@@ -422,6 +424,89 @@ void Game::RunDebugScreen()
   }
 }
 
+void Game::RunChooseNumPlayers()
+{
+  const int backButtonTag = 9;
+  const int basePlayerChoiceTag = 100;
+  static int numPlayersDetected = 0;
+  
+  if (gameStateChanged)
+  {
+    LOG(DEBUG_MINOR, "Game::RunChooseNumPlayers setting up" << endl)
+    
+    numPlayersDetected = 0;
+  }
+
+  // detect number of dance mat connections
+  int num = 0;
+  for (unsigned int i = 0; i < sys.input.inputChannels.size() && i < 4; ++i)
+  {
+    if (sys.input.inputChannels[i].danceMatActive)
+    {
+      ++num;
+    }
+  }
+
+  if (gameStateChanged || numPlayersDetected != num)
+  {
+    numPlayersDetected = num;
+    
+    Container chooseNumPlayers;
+
+    gui.SetSpriteTextColour(gfx.sdlBlack);
+    
+    // Detect max input channels and those with an active dance mat
+    // add i < 4 to not use the wii balance board
+    int tempx = 55;
+    for (unsigned int i = 0; i < sys.input.inputChannels.size() && i < 4; ++i)
+    {
+      char temp[100];
+      sprintf(temp, "%d", i + 1);
+      Button b(temp, tempx, 300, 80, 60, basePlayerChoiceTag + i);
+      b.active = sys.input.inputChannels[i].danceMatActive;
+      if (b.active)
+      {
+        b.colour = gfx.sdlGreen;
+      }
+      else
+      {
+        b.colour = gfx.sdlGrey;
+      }
+      chooseNumPlayers.Add(b);
+      tempx += 100+20;
+    }
+      
+    Button back("Back", sys.vid.ScreenWidth()-100-40, sys.vid.ScreenHeight()-10-40, 100, 10, backButtonTag);
+    chooseNumPlayers.Add(back);
+    
+    gui.SetScreen(chooseNumPlayers);
+  }
+
+  vector<Button> buttons;
+  buttons = gui.screen.AllButtons();
+  for (unsigned int i = 0; i < buttons.size(); i++)
+  {
+    Button& b = buttons[i];
+    if (b.clicked)
+    {
+      switch (b.tag)
+      {
+      case backButtonTag:
+        state = TITLE;
+        break;
+      default:
+        if (b.tag >= basePlayerChoiceTag)
+        {
+          numPlayers = b.tag - basePlayerChoiceTag + 1;
+          state = SELECT_SONG;
+          LOG(DEBUG_BASIC, "Game::RunChooseNumPlayers got " << numPlayers << endl)
+        }
+        break;
+      }
+    }
+  }
+}
+
 void Game::RunSelectSong()
 {
   const int backButtonTag = 6;
@@ -430,6 +515,8 @@ void Game::RunSelectSong()
   {
     LOG(DEBUG_MINOR, "Game::RunSelectSong setting up" << endl)
 
+    gui.SetSpriteTextColour(gfx.sdlBlack);
+    
     // if there are no choices, preload songs.  worst case there are no songs
     // and the preload is done every time the menu is entered...
     if (songMenuItems.size() == 0)
@@ -460,15 +547,14 @@ void Game::RunSelectSong()
     }
     else
     {
-      Uint32 soTeal;
-      soTeal = SDL_MapRGB(sys.vid.screen->format, 200, 255, 250);
-      gui.SetSpriteTextColored(soTeal);
-      
-      Label noFiles1("No files with valid dance-single steps could be read", 40, 200+20*2, 0, 0);
+      Label noFiles1("No files with valid dance-single steps could be read", 40, 40+20*2, 0, 0);
+      noFiles1.colour = gfx.sdlWhite;
       char temp[100];
       sprintf(temp, "%d mp3 files were found in the following directory:", (int)songs.size());
-      Label noFiles2(temp, 40, 200+20*4, 0, 0);
-      Label noFiles3(constants.musicFileRoot.c_str(), 40, 200+20*5, 0, 0);
+      Label noFiles2(temp, 40, 40+20*4, 0, 0);
+      noFiles2.colour = gfx.sdlWhite;
+      Label noFiles3(constants.musicFileRoot.c_str(), 40, 40+20*5, 0, 0);
+      noFiles3.colour = gfx.sdlWhite;
 
       songSelect1.Add(noFiles1);
       songSelect1.Add(noFiles2);
@@ -500,6 +586,7 @@ void Game::RunSelectSong()
           selectedSongIndex = b.tag - constants.baseFileButtonTag;
           currentSong = songMenuItems[selectedSongIndex].song.filename;
           state = SELECT_DIFFICULTY;
+LOG(DEBUG_BASIC, "chose song " << selectedSongIndex << endl)
         }
         break;
       }
@@ -510,47 +597,42 @@ void Game::RunSelectSong()
 void Game::RunSelectDifficulty()
 {
   const int backButtonTag = 8;
-  const int playBeginnerTag = 9;
-  const int playEasyTag = 10;
-  const int playMediumTag = 11;
-  const int playHardTag = 12;
-  const int playChallengeTag = 13;
-  
+  const int baseDifficultyTag = 200;
+
+  const int baseY = 80;
+  const int rowHeight = 40;
+  const int x = 80;
+  const int w = 150;
+  static int maxDifficulty = 0;
+  static int minDifficulty = 0;
+
   if (gameStateChanged)
   {
     LOG(DEBUG_MINOR, "Game::RunSelectDifficulty setting up" << endl)
 
     Container selectDifficulty;
-    int y = 40;
-    if (songs[currentSong].DifficultyIsAvailable(Constants::BEGINNER))
+
+    bool firstDifficulty = true;
+   
+    for (int i = 0; i < constants.numDifficulties; ++i)
     {
-      y += 40;
-      Button b("play beginner", 80, y, sys.vid.ScreenWidth()-160, 10, playBeginnerTag);
-      selectDifficulty.Add(b);
+      if (songs[currentSong].DifficultyIsAvailable(i))
+      {
+        if (firstDifficulty)
+        {
+          firstDifficulty = false;
+          minDifficulty = i;
+        }
+        maxDifficulty = i;
+        Button b(Constants::difficultyText[i], x, baseY + i * rowHeight, w, 10, baseDifficultyTag + i);
+        selectDifficulty.Add(b);
+      }
     }
-    if (songs[currentSong].DifficultyIsAvailable(Constants::EASY))
+    
+    for (int i = 0; i < numPlayers; ++i)
     {
-      y += 40;
-      Button b("play easy", 80, y, sys.vid.ScreenWidth()-160, 10, playEasyTag);
-      selectDifficulty.Add(b);
-    }
-    if (songs[currentSong].DifficultyIsAvailable(Constants::MEDIUM))
-    {
-      y += 40;
-      Button b("play medium", 80, y, sys.vid.ScreenWidth()-160, 10, playMediumTag);
-      selectDifficulty.Add(b);
-    }
-    if (songs[currentSong].DifficultyIsAvailable(Constants::HARD))
-    {
-      y += 40;
-      Button b("play hard", 80, y, sys.vid.ScreenWidth()-160, 10, playHardTag);
-      selectDifficulty.Add(b);
-    }
-    if (songs[currentSong].DifficultyIsAvailable(Constants::CHALLENGE))
-    {
-      y += 40;
-      Button b("play challenge", 80, y, sys.vid.ScreenWidth()-160, 10, playChallengeTag);
-      selectDifficulty.Add(b);
+      players[i].difficulty = minDifficulty;
+      players[i].ready = false;
     }
     
     Button back("Back", sys.vid.ScreenWidth()-100-40, sys.vid.ScreenHeight()-10-40, 100, 10, backButtonTag);
@@ -559,41 +641,72 @@ void Game::RunSelectDifficulty()
     gui.SetScreen(selectDifficulty);
   }
 
-
-  vector<Button> buttons;
-  buttons = gui.screen.AllButtons();
-  for (unsigned int i = 0; i < buttons.size(); i++)
+  // Apply player difficulty selection cursor according to currently selected difficulty
+  for (int i = 0; i < numPlayers; ++i)
   {
-    Button& b = buttons[i];
-    if (b.clicked)
+      sys.vid.ApplySurface(x + w + 20 + i * 50, baseY - 16 + players[i].difficulty * rowHeight, gfx.difficultyCursorImage, NULL, &gfx.difficultyCursorFrames[players[i].ready ? 2+i : i]);
+  }
+
+  // directly check inputs for changing each player's difficulty
+  for (int i = 0; i < numPlayers; ++i)
+  {
+    Player& p = players[i];
+    if (!p.ready)
     {
-      switch (b.tag)
+      if (p.inputs.directionDown[InputChannel::UP] && p.difficulty > minDifficulty)
       {
-      case backButtonTag:
-        state = SELECT_SONG;
-        break;
-      case playBeginnerTag:
-        players[0].difficulty = Constants::BEGINNER;
-        state = LOADING_SONG;
-        break;
-      case playEasyTag:
-        players[0].difficulty = Constants::EASY;
-        state = LOADING_SONG;
-        break;
-      case playMediumTag:
-        players[0].difficulty = Constants::MEDIUM;
-        state = LOADING_SONG;
-        break;
-      case playHardTag:
-        players[0].difficulty = Constants::HARD;
-        state = LOADING_SONG;
-        break;
-      case playChallengeTag:
-        players[0].difficulty = Constants::CHALLENGE;
-        state = LOADING_SONG;
-        break;
-      default:
-        break;
+        while (!songs[currentSong].DifficultyIsAvailable(--p.difficulty));
+        // play feedback wav
+      }
+      else if (p.inputs.directionDown[InputChannel::DOWN] && p.difficulty < maxDifficulty)
+      {
+        while (!songs[currentSong].DifficultyIsAvailable(++p.difficulty));
+        // play feedback wav
+      }
+      if (p.inputs.buttonDown[InputChannel::Button4])  // A button
+      {
+        p.ready = true;
+        // play feedback wav
+      }
+    }
+    else if (p.inputs.buttonDown[InputChannel::Button3])  // B button
+    {
+      p.ready = false;
+      // play feedback wav
+    }
+  }
+  
+
+  bool allPlayersReady = true;
+  for (int i = 0; i < numPlayers; ++i)
+  {
+    if (!players[i].ready)
+    {
+      allPlayersReady = false;
+      break;
+    }
+  }
+  if (allPlayersReady)
+  {
+    state = LOADING_SONG;
+  }
+  else
+  {
+    vector<Button> buttons;
+    buttons = gui.screen.AllButtons();
+    for (unsigned int i = 0; i < buttons.size(); i++)
+    {
+      Button& b = buttons[i];
+      if (b.clicked)
+      {
+        switch (b.tag)
+        {
+        case backButtonTag:
+          state = SELECT_SONG;
+          break;
+        default:
+          break;
+        }
       }
     }
   }  
@@ -807,8 +920,6 @@ void Game::RunPlay()
     beatFraction -= 0.25;
   }
   
-//log << "cbt:" << currentBeatTick << "tw:" << tick_whole << "  beatFraction:" <<  beatFraction << endl; //TEMPLOG: outputting vars anims depend on 
-    
   if (tick_whole == 0)
   {
     // first 16th of a quarter note, draw flashing home arrows
@@ -830,7 +941,6 @@ void Game::RunPlay()
   // animate arrows
   long offscreenHigh = viewportOffset + sys.vid.ScreenHeight() - constants.goalOffset;
   long offscreenLow = viewportOffset - gfx.arrowHeight - constants.goalOffset;
-LOG(DEBUG_DETAIL, "XXX: offscreenLow = viewportOffset " << viewportOffset << " - gfx.arrowHeight " << gfx.arrowHeight << " - constants.goalOffset " << constants.goalOffset << endl)
   for (int i = 0; i < numPlayers; ++i)
   {
     Player&p = players[i];
@@ -1162,7 +1272,7 @@ void Game::CheckAbort()
   bool abortHeld = false;
   for (int i = 0; i < numPlayers; i++)
   {
-    if (players[i].inputs.buttonDown[InputChannel::Button4] && players[i].inputs.buttonDown[InputChannel::Button5])
+    if (players[i].inputs.buttonHeld[InputChannel::Button5] && players[i].inputs.buttonHeld[InputChannel::Button7])
     {
       abortHeld = true;
       break;
@@ -1339,7 +1449,6 @@ void Game::RateArrows(Player& p)
     Arrow& ar = p.arrows[a];
     if (ar.rating == Arrow::RATING_NONE && songTime - ar.time > constants.booDelay)
     {
-LOG(DEBUG_BASIC, "MISS ar:" << a << " because songTime - ar.time = " << songTime << " - " << ar.time << " == " << songTime-ar.time << endl)
       ar.rating = Arrow::MISS;
       if (ar.type == Arrow::HOLD)
       {
@@ -1363,7 +1472,6 @@ LOG(DEBUG_BASIC, "MISS ar:" << a << " because songTime - ar.time = " << songTime
         
         if (ar.direction == b && ar.rating == Arrow::RATING_NONE)
         {
-LOG(DEBUG_BASIC, "check ar:" << a << "  songTime - ar.time = " << songTime << " - " << ar.time << " == " << songTime-ar.time << endl)
           Arrow::Rating newRating = Arrow::RATING_NONE;
           if(labs(ar.time - songTime) <= constants.marvellousDelay)
           {
@@ -1417,7 +1525,6 @@ LOG(DEBUG_BASIC, "check ar:" << a << "  songTime - ar.time = " << songTime << " 
               if (p.directionJumpActive[p.arrows[i].direction] == false)
               //if (p.control_data[p.arrows[i].direction].jump_active == false)
               {
-LOG(DEBUG_BASIC, "NULLING RATE ar:" << a << " because control direction " << p.arrows[i].direction << " not jump active " << " i: " << i << "  min idx: " << minJumpArrowIndex << " max: " << maxJumpArrowIndex << endl)
                 newRating = Arrow::RATING_NONE;
               }
             }
@@ -1428,7 +1535,6 @@ LOG(DEBUG_BASIC, "NULLING RATE ar:" << a << " because control direction " << p.a
               {
                 Arrow& jmpAr = p.arrows[i];
                 
-LOG(DEBUG_BASIC, "JUMP RATE ar:" << i << " rating: " << newRating << endl)
                 jmpAr.animStartTime = songTime;
                 jmpAr.rating = newRating;
                 ++p.combo;
@@ -1445,7 +1551,6 @@ LOG(DEBUG_BASIC, "JUMP RATE ar:" << i << " rating: " << newRating << endl)
             // non-jump arrow case
             if (newRating != Arrow::RATING_NONE)
             {
-LOG(DEBUG_BASIC, "RATE ar:" << a << " rating: " << newRating << " because ar.t-st=" << labs(ar.time-songTime) << endl)
               ar.animStartTime = songTime;
               ar.rating = newRating;
               ++p.combo;
@@ -1478,7 +1583,6 @@ LOG(DEBUG_BASIC, "RATE ar:" << a << " rating: " << newRating << " because ar.t-s
             // all notes on the same row as a freeze arrow have freeze graphics
             if (ar.length != 0)
             {
-LOG(DEBUG_BASIC, "RATE ar:" << a << " freeze rating ok." << endl)
               ar.freezeRating = Arrow::FREEZE_OK;
             }
             ar.hidden = true;
@@ -1498,7 +1602,6 @@ LOG(DEBUG_BASIC, "RATE ar:" << a << " freeze rating ok." << endl)
           // this is supposed to be a fun game anyway ;)
           if (ar.length - labs(viewportOffset - ar.yPos) > constants.freezeLengthAllow)
           {
-LOG(DEBUG_BASIC, "RATE ar:" << a << " freeze rating FAILED." << endl)
             ar.freezeRating = Arrow::FREEZE_FAILED;
             // when a freeze arrow is failed, it grows a new head at the 
             // point where it was failed for the rest of the darkened
@@ -1518,7 +1621,6 @@ LOG(DEBUG_BASIC, "RATE ar:" << a << " freeze rating FAILED." << endl)
               // all notes on the same row as a freeze arrow have freeze graphics
               if (ar.length != 0)
               {
-LOG(DEBUG_BASIC, "RATE ar:" << a << " freeze rating ok." << endl)
                 ar.freezeRating = Arrow::FREEZE_OK;
               }
               ar.hidden = true;
