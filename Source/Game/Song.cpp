@@ -425,7 +425,7 @@ bool Song::Prepare()
                   
                   // set BPM according to current beat and list of BPMs that apply to each beat
                   while (currentBpmIndex + 1 < (int)bpmChanges.size()
-                    &&  (bpmChanges[currentBpmIndex + 1].beat <= currentBeat)
+                    &&  ((bpmChanges[currentBpmIndex + 1].beat < currentBeat) || (float_same(bpmChanges[currentBpmIndex + 1].beat,currentBeat)))
                   )
                   {
                     // there is a BPM change on this beat.
@@ -434,6 +434,7 @@ bool Song::Prepare()
                     // now that timestamp is known, update it
                     //NOTE: this works but it weakens the code
                     bpmChanges[currentBpmIndex].timestamp = currentTime;
+LOG(DEBUG_BASIC, "TIMESHTAMPING:  currentBpmIndex:" << currentBpmIndex << " currentTime: " << currentTime << " currentBeat " << currentBeat << endl)
                     
                     LOG(DEBUG_DETAIL, "beat change detected on beat " << currentBeat << " new bpm is " << bpmChanges[currentBpmIndex].bpm << " at index " << currentBpmIndex << endl << "timestamped bpmChange with " << currentTime << endl)
                   }
@@ -644,9 +645,23 @@ bool Song::Prepare()
   for (int i = 0; i < num_beatTicks; i++)
   {
     LOG(DEBUG_DETAIL, "b_ts["<<i<<"]="<<beatTicks[i].yPos<<","<<beatTicks[i].timestamp<<","<<beatTicks[i].beat<<endl)
-  }  
+  }
   
-
+  //KLUDGE:
+  // beat ticks are only inserted into the vector when reading note data. 
+  // if the note data does not extend to the end of the song, it is 
+  // possible that a BPM change will happen on a beat that is not
+  // covered by the beat tick vector.  bugs frame time calcs.
+  if (beatTicks.size() > 0 && bpmChanges.size() > 0)
+  {
+    float lastBeatTickBeat = beatTicks.back().beat;
+    while(bpmChanges.back().beat > lastBeatTickBeat)
+    {
+      LOG(DEBUG_BASIC, "WARN: popping extra bpm change!" << endl)
+      bpmChanges.pop_back();
+    }
+  }
+  
   LOG(DEBUG_MINOR, "leaving read step data" << endl)
   
   //TODO: these conditions are all true before this function is called.  

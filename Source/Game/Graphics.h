@@ -98,6 +98,8 @@ public:
   Uint32 sdlTeal;
   Uint32 sdlRed;
   Uint32 sdlGreen;
+  Uint32 sdlMediumGreen;
+  Uint32 sdlDarkGreen;
   Uint32 sdlBlue;
   Uint32 sdlYellow;
   Uint32 sdlCyan;

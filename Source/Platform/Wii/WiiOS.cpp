@@ -48,12 +48,7 @@ void WiiOS::Init()
   //TODO: call this function until a successful file read can be done
   fatInitDefault();
   //TEMP
-  sleep(2);
-/*
-  WPAD_Init();
-  WPAD_SetVRes(WPAD_CHAN_ALL,vid.ScreenWidth(),vid.ScreenHeight());  
-  WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);  
-*/  
+  sleep(1);
 
 
   wiiInput.WiiInputInit(vid.ScreenWidth(), vid.ScreenHeight());
@@ -65,9 +60,7 @@ void WiiOS::Init()
 void WiiOS::Pump()
 {
   OS::Pump();
-//    SYS_SetResetCallback(WiiResetPressed);  //TODO:???
-//    SYS_SetPowerCallback(WiiPowerPressed);  //TODO:???
-//    WPAD_SetPowerButtonCallback(WiimotePowerPressed); //TODO:???
+
   if (HWButton != -1)
   {
     SYS_ResetSystem(HWButton, 0, 0);

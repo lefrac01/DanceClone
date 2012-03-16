@@ -34,12 +34,15 @@ void LinuxInput::Init()
   
   inputChannels[0].active = true;
   inputChannels[0].danceMatActive = true;   // using keyboard
+
+  //TEMP: this would have to be configured in a menu
+  inputChannels[1].active = true;                             
+  inputChannels[1].danceMatActive = true;   // using keyboard
 }
 
 void LinuxInput::Update()
 {
   LOG(DEBUG_GUTS, "LinuxInput::Update()" << endl)
-  //TODO: platform specific subclassing of input agent
 
   SDL_Event event;
 
@@ -87,9 +90,23 @@ void LinuxInput::Update()
   inputChannels[0].directionHeld[InputChannel::LEFT] = keystate[SDLK_LEFT] == 1 || keystate[SDLK_LEFT] == 2 ;
   inputChannels[0].directionHeld[InputChannel::RIGHT] = keystate[SDLK_RIGHT] == 1 || keystate[SDLK_RIGHT] == 2 ;
   
-  inputChannels[0].buttonHeld[InputChannel::Button4] = keystate[SDLK_RETURN] == 1;   // A button
+  inputChannels[0].buttonDown[InputChannel::Button4] |= keystate[SDLK_RETURN] == 2;   // A button
   inputChannels[0].buttonHeld[InputChannel::Button5] = keystate[SDLK_MINUS] == 1;   // Abort keys
   inputChannels[0].buttonHeld[InputChannel::Button7] = keystate[SDLK_EQUALS] == 1;    // Abort keys
+  
+  //TEMP: player 2 testing:
+  inputChannels[1].directionDown[InputChannel::UP] = keystate[SDLK_w] == 2;
+  inputChannels[1].directionDown[InputChannel::DOWN] = keystate[SDLK_s] == 2;
+  inputChannels[1].directionDown[InputChannel::LEFT] = keystate[SDLK_a] == 2;
+  inputChannels[1].directionDown[InputChannel::RIGHT] = keystate[SDLK_d] == 2;
+  inputChannels[1].directionHeld[InputChannel::UP] = keystate[SDLK_w] == 1 || keystate[SDLK_w] == 2 ;
+  inputChannels[1].directionHeld[InputChannel::DOWN] = keystate[SDLK_s] == 1 || keystate[SDLK_s] == 2 ;
+  inputChannels[1].directionHeld[InputChannel::LEFT] = keystate[SDLK_a] == 1 || keystate[SDLK_a] == 2 ;
+  inputChannels[1].directionHeld[InputChannel::RIGHT] = keystate[SDLK_d] == 1 || keystate[SDLK_d] == 2 ;
+  
+  inputChannels[1].buttonDown[InputChannel::Button4] = keystate[SDLK_q] == 2;   // A button
+
+
 }
 
 void LinuxInput::Cleanup()

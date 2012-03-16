@@ -38,37 +38,7 @@ bool LinuxVideo::Init()
 
   screen = SDL_SetVideoMode(screenWidth, screenHeight, 32, SDL_DOUBLEBUF);
   //SDL_WM_SetCaption( GAMEVERSIONSTRING, NULL );
-/*  rmode = VIDEO_GetPreferredMode(NULL);
-  //#LOG(DEBUG_BASIC, "VIDEO_GetPreferredMode(NULL) returns:"
-      //#<< "\nrmode->viTVMode:" << rmode->viTVMode \
-      //#<< "\nrmode->fbWidth:" << rmode->fbWidth \
-      //#<< "\nrmode->efbHeight:" << rmode->efbHeight \
-      //#<< "\nrmode->xfbHeight:" << rmode->xfbHeight \
-      //#<< "\nrmode->viXOrigin:" << rmode->viXOrigin \
-      //#<< "\nrmode->viYOrigin:" << rmode->viYOrigin \
-      //#<< "\nrmode->viWidth:" << rmode->viWidth \
-      //#<< "\nrmode->viHeight:" << rmode->viHeight \
-      //#<< endl)
-//#
-  //#switch (rmode->viTVMode >> 2)
-  //#{
-          //#case VI_NTSC: // 480 lines (NTSC 60hz)
-                  //#break;
-          //#case VI_PAL: // 576 lines (PAL 50hz)
-                  //#rmode = &TVPal574IntDfScale;
-                  //#rmode->xfbHeight = 480;
-                  //#rmode->viYOrigin = (VI_MAX_HEIGHT_PAL - 480)/2;
-                  //#rmode->viHeight = 480;
-                  //#break;
-          //#default: // 480 lines (PAL 60Hz)
-                  //#break;
-  //#}
-//#
-  //#screen = SDL_SetVideoMode(rmode->viWidth, rmode->viHeight, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
-  //#
-//#//TODO: per-platform agent subclassing
-endif
-*/
+
 
   return true;
 }

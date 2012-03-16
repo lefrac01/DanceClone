@@ -61,7 +61,7 @@ public:
   SDL_Surface *fontImage;
   SDL_Rect fontFrames[95];
   SDL_Surface *buttonImage;
-  SDL_Rect buttonFrames[18];
+  SDL_Rect buttonFrames[27];
   SDL_Surface *arrowsImage;
   SDL_Rect arrowsFrames[4];
   SDL_Surface *fontImageColored;

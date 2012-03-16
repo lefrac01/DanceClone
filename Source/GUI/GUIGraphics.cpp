@@ -80,7 +80,7 @@ bool Graphics::Init()
     fontFrames[a].w = 15;
     fontFrames[a].h = 21;
   }
-  for(int b = 0; b < 2; b++)
+  for(int b = 0; b < 3; b++)
   {
     for(int a = 0; a < 9; a++)
     {

@@ -1,6 +1,6 @@
 #include "Platform/OS.h"
 
-#define GAMEVERSIONSTRING "DanceClone v0.59"
+#define GAMEVERSIONSTRING "DanceClone v0.60"
 
 
 #include "Game/Game.h"

@@ -58,6 +58,7 @@ public:
   //dance mode e.g. dance-single vs dance-double      //note operator=
   int firstVisibleArrow;
   int lastVisibleArrow;
+  int arrowFieldXOffset;
   
   void Init(int n);
   void Prepare();

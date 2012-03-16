@@ -1,21 +1,26 @@
 changelog
 --
 v0.60
+-initial multiplayer support
 -menu for number of players
 -menu for per-player difficulty selection
+-added gui element colour support
+-added button disabled state handling
 -added mouse button debounce for Linux
+-fix sometimes freeze arrows disappear too fast
+-fix freeze tails sometimes become normal instead of glow just at end
+-fix nasty float-equal comparison bug lurking in song loading code (where are you -mepsilon?!?)
+known bugs:
+-need more debouncing on Linux
+-a step between two very close arrows counts for the earlier arrow
+ instead of the closest one
+-the blur done on the bg bitmap when going into the dash is broken
 
 v0.59 "almost sexy"
 -OO rewrite
 -new menu choice preload code and loading screen
 -now supports Wii and Linux
-known bugs:
--sometimes freeze arrows disappear too fast
 -song abort not working
--esp in Linux a click can carry over to the next menu
--when a step between two very close arrows counts for the earlier arrow
- instead of the closest one
--the blur done on the bg bitmap when going into the dash is broken
 
 v0.57
 -added intro delay before song start

@@ -27,7 +27,6 @@ Constants constants;
 
 const char* Constants::difficultyText[] = {"Beginner", "Easy", "Medium", "Hard", "Challenge"};
 
-//TODO: game drawing constants like ms per pixel at 1 bpm and goal offset!
 void Constants::Init(string ConfigFilePath)
 {
   LOG(DEBUG_MINOR, "DanceClone::Constants::Init()" << endl)
@@ -37,6 +36,9 @@ void Constants::Init(string ConfigFilePath)
 
   goalOffset = 0;
   maxPlayers = 2;
+  playerArrowColumnWidth = 65;
+  playerArrowFieldMargin = 20;
+  
   preStartDelay = 3000;
   songAbortDelay = 2500;
   jumpAllowDelay = 100;
@@ -50,8 +52,13 @@ void Constants::Init(string ConfigFilePath)
   // how many pixels before the end of a freeze arrow the player is
   //  allowed to lift off without failing the freeze
 
+  #ifdef LINUX
+  musicFileRoot = "../Music/";  // to avoid potential of music data ending up in git repository.  you probably want to change this if actually planning to use on Linux :)
+  #endif
+  #ifdef WII
   musicFileRoot = "Music/";
-
+  #endif
+  
   /*
   #ifdef WII
     musicFileRoot = "/apps/DanceClone/Music/";

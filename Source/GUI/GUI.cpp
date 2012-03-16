@@ -172,53 +172,68 @@ void GUI::DrawButton(Button& b)
 {
   LOG(DEBUG_GUTS, "GUI::DrawButton(" << b.x << ", " << b.y << ", " << b.w << ", " << b.h << endl)
   
-  // is it glowing?
+  // is it buttonRowing?
 //  if(useCursor[a] && sys.input.cursorx[a]>x-14 && sys.input.cursory[a]>y-14 && sys.input.cursorx[a]<x+w+13 && sys.input.cursory[a]<y+h+13){
-  bool glow = b.state == Button::HOVER;
-  //#bool glow = false;
+  //bool buttonRow = b.state == Button::HOVER;
+  //#bool buttonRow = false;
   //#for (unsigned int i = 0; i < sys.input.inputChannels.size(); i++)
   //#{
     //#InputChannel& chan = sys.input.inputChannels[i];
     //#if (chan.active && chan.cursorX>b.x-14 && chan.cursorY>b.y-14 && chan.cursorX<b.x+b.w+13 && chan.cursorY<b.y+b.h+13)
     //#{
-      //#glow = true;
+      //#buttonRow = true;
       //#break;
     //#}      
   //#}
 
+
+  // Button states are in a 3*9 array mapped like this:
+  // row 0: normal
+  // row 1: hover
+  // row 2: not active
+  int buttonRow = 0;
+  if (!b.active)
+  {
+    buttonRow = 2;
+  }
+  else if (b.state == Button::HOVER)
+  {
+    buttonRow = 1;
+  }
+  
   
   //corners
-  sys.vid.ApplySurface(b.x-21, b.y-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[0+glow*9]);
-  sys.vid.ApplySurface(b.x-21, b.y+b.h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[1+glow*9]);
-  sys.vid.ApplySurface(b.x+b.w,  b.y-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[2+glow*9]);
-  sys.vid.ApplySurface(b.x+b.w,  b.y+b.h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[3+glow*9]);
+  sys.vid.ApplySurface(b.x-21, b.y-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[0+buttonRow*9]);
+  sys.vid.ApplySurface(b.x-21, b.y+b.h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[1+buttonRow*9]);
+  sys.vid.ApplySurface(b.x+b.w,  b.y-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[2+buttonRow*9]);
+  sys.vid.ApplySurface(b.x+b.w,  b.y+b.h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[3+buttonRow*9]);
   //edges
   for(int a=0; a<b.w/21; a++)
-    sys.vid.ApplySurface(b.x+a*21,b.y+b.h,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[4+glow*9]);
-  SDL_Rect temprect1={4*21,glow*21,b.w-b.w/21*21,21};
+    sys.vid.ApplySurface(b.x+a*21,b.y+b.h,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[4+buttonRow*9]);
+  SDL_Rect temprect1={4*21,buttonRow*21,b.w-b.w/21*21,21};
   sys.vid.ApplySurface(b.x+b.w/21*21,b.y+b.h,gfx.buttonImage,sys.vid.screen,&temprect1);
   for(int a=0; a<b.h/21; a++)
-    sys.vid.ApplySurface(b.x+b.w,b.y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[5+glow*9]);
-  SDL_Rect temprect2={5*21,glow*21,21,b.h-b.h/21*21};
+    sys.vid.ApplySurface(b.x+b.w,b.y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[5+buttonRow*9]);
+  SDL_Rect temprect2={5*21,buttonRow*21,21,b.h-b.h/21*21};
   sys.vid.ApplySurface(b.x+b.w,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect2);
   for(int a=0; a<b.w/21; a++)
-    sys.vid.ApplySurface(b.x+a*21,b.y-21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[6+glow*9]);
-  SDL_Rect temprect3={6*21,glow*21,b.w-b.w/21*21,21};
+    sys.vid.ApplySurface(b.x+a*21,b.y-21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[6+buttonRow*9]);
+  SDL_Rect temprect3={6*21,buttonRow*21,b.w-b.w/21*21,21};
   sys.vid.ApplySurface(b.x+b.w/21*21,b.y-21,gfx.buttonImage,sys.vid.screen,&temprect3);
   for(int a=0; a<b.h/21; a++)
-    sys.vid.ApplySurface(b.x-21,b.y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[7+glow*9]);
-  SDL_Rect temprect4={7*21,glow*21,21,b.h-b.h/21*21};
+    sys.vid.ApplySurface(b.x-21,b.y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[7+buttonRow*9]);
+  SDL_Rect temprect4={7*21,buttonRow*21,21,b.h-b.h/21*21};
   sys.vid.ApplySurface(b.x-21,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect4);
   //insides
   for(int a=0; a<b.h/21; a++)for(int i=0; i<b.w/21; i++)
-    sys.vid.ApplySurface(b.x+i*21,b.y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[8+glow*9]);
-  SDL_Rect temprect5={8*21,glow*21,b.w-b.w/21*21,21};
+    sys.vid.ApplySurface(b.x+i*21,b.y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[8+buttonRow*9]);
+  SDL_Rect temprect5={8*21,buttonRow*21,b.w-b.w/21*21,21};
   for(int a=0; a<b.h/21; a++)
     sys.vid.ApplySurface(b.x+b.w/21*21,b.y+a*21,gfx.buttonImage,sys.vid.screen,&temprect5);
-  SDL_Rect temprect6={8*21,glow*21,21,b.h-b.h/21*21};
+  SDL_Rect temprect6={8*21,buttonRow*21,21,b.h-b.h/21*21};
   for(int a=0; a<b.w/21; a++)
     sys.vid.ApplySurface(b.x+a*21,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect6);
-  SDL_Rect temprect7={8*21,glow*21,b.w-b.w/21*21,b.h-b.h/21*21};
+  SDL_Rect temprect7={8*21,buttonRow*21,b.w-b.w/21*21,b.h-b.h/21*21};
   sys.vid.ApplySurface(b.x+b.w/21*21,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect7);
   
   // draw text!
@@ -252,14 +267,14 @@ bool GUI::DoButton(int x, int y,int w,int h,bool center,bool clickable,char* tex
 {
   LOG(DEBUG_GUTS, "GUI::DoButton(" << x << ", " << y << ", " << w << ", " << h << ", " << center << ", " << clickable << ", " << text << ")" << endl)
   bool clicked=0;
-  bool glow=0;
+  bool buttonRow=0;
   if(center){x=x-w/2;y=y-h/2;}
 
 //TODO: subclassing ?? probably not
 //  #ifdef WIN
 //  if(clickable && sys.input.cursorx[0]>x-14 && cursory[0]>y-14 && sys.input.cursorx[0]<x+w+13 && cursory[0]<y+h+13){
 //    if(mousestate[SDL_BUTTON_LEFT]==2)clicked=1;
-//    glow=1;}
+//    buttonRow=1;}
 //  #endif
 
 //  #ifdef WII
@@ -275,12 +290,12 @@ bool GUI::DoButton(int x, int y,int w,int h,bool center,bool clickable,char* tex
         clicked=1;  //TODO multi-user
         LOG(DEBUG_DETAIL, "GUI::DoButton()... WPAD_CLASSIC_BUTTON_A " << endl)
       }
-      glow=1;
+      buttonRow=1;
     }
   }
 //  #endif
 
-  DrawButton(x,y,w,h,glow);
+  DrawButton(x,y,w,h,buttonRow);
 
   x=x+w/2;y=y+h/2;
   DrawSpriteText(x,y-21/2,text,2);

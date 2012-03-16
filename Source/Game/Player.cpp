@@ -42,6 +42,8 @@ Player& Player::operator= (const Player& b)
   combo = b.combo;
   firstVisibleArrow = b.firstVisibleArrow;
   lastVisibleArrow = b.lastVisibleArrow;
+  arrowFieldXOffset = b.arrowFieldXOffset;
+
   return *this;
 }
   
@@ -52,6 +54,7 @@ void Player::Init(int n)
   active = true;
   ready = false;
   difficulty = -1;
+  arrowFieldXOffset = -1;
 }
 
 void Player::Prepare()

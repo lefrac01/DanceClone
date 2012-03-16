@@ -21,6 +21,8 @@
 
 #include <string>
 using std::string;
+#include <vector>
+using std::vector;
 
 #include "../Platform/OS.h" // which platform is defined...
 #include "../Platform/LOG.H"
@@ -44,7 +46,9 @@ public:
   
   long goalOffset;
   int maxPlayers;
-
+  int playerArrowColumnWidth;
+  int playerArrowFieldMargin;
+  
   int preStartDelay;
   int songAbortDelay;
   int jumpAllowDelay;

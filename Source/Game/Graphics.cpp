@@ -67,6 +67,8 @@ bool Graphics::Init(string configFilePath)
   sdlTeal =  SDL_MapRGB(sys.vid.screen->format, 200, 255, 250);
   sdlRed =   SDL_MapRGB(sys.vid.screen->format, 255, 0, 0);
   sdlGreen = SDL_MapRGB(sys.vid.screen->format, 0, 255, 0);
+  sdlMediumGreen = SDL_MapRGB(sys.vid.screen->format, 0, 192, 0);
+  sdlDarkGreen = SDL_MapRGB(sys.vid.screen->format, 0, 128, 0);
   sdlBlue  = SDL_MapRGB(sys.vid.screen->format, 0, 0, 255);
   sdlYellow= SDL_MapRGB(sys.vid.screen->format, 255, 255, 0);
   sdlCyan  = SDL_MapRGB(sys.vid.screen->format, 0, 255, 255);  
@@ -162,8 +164,6 @@ bool Graphics::Init(string configFilePath)
     string freezeBodyImagePath = "Media/Game/freezebody.png";
     string freezeTailImagePath = "Media/Game/freezetail.png";
  
-    //freezeHitImage = IMG_Load("Media/Game/freezehit.png");
-    //freezeArrowsHeadImage = IMG_Load("Media/Game/freezehead.png");
     freezeHitImage = sys.vid.LoadOptimizeAlpha(freezeHitImagePath.c_str());
     if (!freezeHitImage) LOG(DEBUG_BASIC, "failed to load \"" << freezeHitImagePath << "\"" << endl)
     freezeArrowsHeadImage = sys.vid.LoadOptimizeAlpha(freezeHeadImagePath.c_str());
@@ -177,8 +177,6 @@ bool Graphics::Init(string configFilePath)
         freezeHeadFrames[b*4 + a].w = 64;   freezeHeadFrames[b*4 + a].h = 64;
       }
     }
-    //freezeArrowsBodyImage = IMG_Load("Media/Game/freezebody.png");
-    //freezeArrowsTailImage = IMG_Load("Media/Game/freezetail.png");
     freezeArrowsBodyImage = sys.vid.LoadOptimizeAlpha(freezeBodyImagePath.c_str());
     if (!freezeArrowsBodyImage) LOG(DEBUG_BASIC, "failed to load \"" << freezeBodyImagePath << "\"" << endl)
     freezeArrowsTailImage = sys.vid.LoadOptimizeAlpha(freezeTailImagePath.c_str());
