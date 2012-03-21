@@ -1,5 +1,12 @@
 changelog
 --
+v0.61 "sexify" pt1
+-added per-song background image support
+-added sound effects support
+-start new music selection screen
+-ran through valgrind
+-fix music handling issues
+
 v0.60
 -initial multiplayer support
 -menu for number of players

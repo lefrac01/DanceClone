@@ -29,6 +29,7 @@ using std::map;
 using std::ofstream;
 using std::ifstream;
 using std::endl;
+#include "unistd.h" //usleep()
 
 #include <boost/algorithm/string.hpp>
 
@@ -47,6 +48,7 @@ using Gooey::SimpleSongScroller;
 #include "Constants.h"
 #include "Sound.h"
 #include "Graphics.h"
+using DanceClone::Graphics;
 #include "Player.h"
 #include "Song.h"
 #include "SongMenuItem.h"
@@ -94,7 +96,6 @@ private:
   map<string, Song> songs;
   string currentSong; // map key
   vector<SongMenuItem> songMenuItems;
-  int selectedSongIndex;
   
   long preStartTime;
   int currentBeatTick;
@@ -108,8 +109,8 @@ private:
   long viewportOffset;
   float pixelsPerMsAtCurrentBpm;
   float pixelsLeftToScroll;
-//  vector<player_data> current_player_data;
   
+  SDL_Surface* songBg;
 public:
 
   Game(OS& os, GUI& g);
@@ -122,14 +123,16 @@ public:
   void RunDebugScreen();
   void RunChooseNumPlayers();
   void RunSelectSong();
+  void RunSelectSongv2();
   void RunSelectDifficulty();
   void PreloadSongs();
   void RunLoadingSong();
   void RunPlayPrep();
+  void RunPlay();
+  void RunPlayCleanup();
   bool PreStartDelayFinished();
   void RunScoreScreen();
-  void RunPlay();
-  void CheckAbort();
+  bool CheckAbort();
   void InitialFrame();
   void Frame();
   void PartialFrame(long begin, long end);

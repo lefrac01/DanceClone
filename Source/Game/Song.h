@@ -39,6 +39,8 @@ using std::ofstream;
 using std::ifstream;
 //#include <cmath>
 
+#include "SDL.h"
+
 #include "../Platform/LOG.H"
 #include "../Platform/Tools.h"
 
@@ -81,13 +83,15 @@ public:
   bool prepared;
   string filename;
   string bannerImageFilename;
+  string backgroundImageFilename;
   float beat0Offset;
   vector<string> stepFileLines;
   vector< vector<Arrow> > arrows;
   vector<BpmChange> bpmChanges;
   vector<bool> difficultyAvailable;
   vector<BeatTick> beatTicks;
-
+  SDL_Surface* backgroundImage;
+  
   void Init();
   bool Load(string& f);
   bool Prepare();
@@ -96,6 +100,7 @@ public:
   string StepFilePath();
   string ScorePath();
   string BannerImagePath();
+  string BackgroundImagePath();
   bool DifficultyIsAvailable(int difficulty);  
 };
 

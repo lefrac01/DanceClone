@@ -1,4 +1,4 @@
-//      Sound.h
+//      WAVSample.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -17,69 +17,74 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
-#include <string>
-using std::string;
-
 #include "../Platform/LOG.H"
 #include "../Platform/OS.h"
+#include "../Platform/Tools.h"
 
+// ENTIRE FILE IS USED ONLY ON WII
+
+#include "malloc.h"
 #ifdef WII
-#include "SDL_mixer.h"
-#include <mp3player.h>
 #include <asndlib.h>
 #else
-typedef unsigned char u8;
-typedef unsigned int u16;
-typedef unsigned long u32;
+// note WIN32 may need special definition here
+#define u8 unsigned char
+#define u16 unsigned short
+#define u32 unsigned int
+#define VOICE_MONO_8BIT       0
+#define VOICE_MONO_16BIT      1
+#define VOICE_STEREO_8BIT     2
+#define VOICE_STEREO_16BIT    3
 #endif
-#include "WAVSample.h"
 
 namespace DanceClone
 {
 
-class Sound
+class WAVSample
 {
 public:
 
-  enum Sample
-  {
-    WoodBlock,
-    HandClap,
-    RecordScratch,
-    MenuNav,
-    Select,
-    NUM_SOUNDS
-  };
+struct WAVHeader
+{
+  char tag[4];      // e.g. "RIFF"  - big-endian form
+  u32 nextChunkSize;
+  char type[4];       // Contains the letters "WAVE"  - big-endian form
+};
 
+
+struct WAVFormatHeader
+{
+  char tag[4];
+  u32 fmtLength;
+  u16 waveType;
+  u16 channels;
+  u32 sampleRate;
+  u32 bytesPerSecond;
+  u16 blockAlignment;
+  u16 bitResolution;
+};
+
+struct WAVDataHeader
+{
+  char tag[4];    // "data"  -  big-endian form
+  u32 length;
+};
 
 private:
 
-  #ifdef LINUX
-  Mix_Music* music;
-  #endif
-  #ifdef WIN32
-  Mix_Music* music;
-  #endif
-  char* mp3Buffer;
-  long mp3LSize;
-
-
-public:
-  Sound();
-  vector<string> soundPaths;
-  vector<WAVSample> sounds;
-
-  bool initialised;
-  bool ready;
   
-  bool Init();
-  void Cleanup();
-  void PrepMusic(string path);
-  void StartMusic();
-  void StopMusic();
-  bool MusicFinished();
-  int PlaySample(Sample s);
-  void StopSoundChannel(int c);
+public:
+  WAVSample();
+  ~WAVSample();
+
+  u8* data;
+  u32 length;
+  u8  channelCount;
+  u32 sampleRate;
+  u32 bitsPerSample;
+  bool initialised;
+  
+  bool Load(string path);
 };
 
 }

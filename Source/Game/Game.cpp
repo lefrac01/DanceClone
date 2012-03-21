@@ -45,8 +45,6 @@ bool Game::Init(string ConfigFilePath)
     ++numPlayers;
   }
   
-  selectedSongIndex = -1;
-  
   try
   {
     constants.Init();
@@ -67,7 +65,10 @@ bool Game::Init(string ConfigFilePath)
     return false;
   }
 
-  sound.Init();
+  if (!sound.Init())
+  {
+    return false;
+  }
   
   state = TITLE;
   gameStateChanged = true;
@@ -83,33 +84,35 @@ void Game::Cleanup()
 
 void Game::Run()
 {
-  //TODO: gfx are a resource.  have a class responsible for all the 
-  // game drawing logic
-  gfx.DrawBackground();
-
   GameState oldState = state;
 
   switch (state)
   {
   case TITLE:
+    gfx.DrawBackground();
     RunTitleScreen();
     break;
   case CREDITS:
+    gfx.DrawBackground();
     RunCreditsScreen();
     break;
   case SCORE:
     //#Game_menu_score();
     break;
   case CHOOSE_NUM_PLAYERS:
+    gfx.DrawBackground();
     RunChooseNumPlayers();
     break;
   case SELECT_SONG:
-    RunSelectSong();
+    gfx.DrawBackground();
+    RunSelectSongv2();
     break;
   case LOADING_SONG:
+    gfx.DrawBackground();
     RunLoadingSong();
     break;
   case SELECT_DIFFICULTY:
+    gfx.DrawBackground();
     RunSelectDifficulty();
     break;
   case STEP_CREATE:
@@ -192,7 +195,7 @@ void Game::RunTitleScreen()
     Container title;
     int border = 40;
     
-    Image titleImage(gfx.titleImage, sys.vid.ScreenWidth()/2-300/2, 30, 0, 0);
+    Image titleImage(gfx.images[Graphics::Title], sys.vid.ScreenWidth()/2-300/2, 30, 0, 0);
     title.Add(titleImage);
 
     Button play("Play", border,55+4*40,sys.vid.ScreenWidth()-border*2,10, playTag);
@@ -389,7 +392,7 @@ void Game::RunDebugScreen()
     debug.Add(title);
 
    
-    Image freezeHit(gfx.freezeHitImage, 30, 70, 0, 0);
+    Image freezeHit(gfx.images[Graphics::ComboHit], 30, 70, 0, 0);
     debug.Add(freezeHit);
     
     Button back("Back", sys.vid.ScreenWidth()-200-40, sys.vid.ScreenHeight()-10-40, 100, 10, backButtonTag);
@@ -401,9 +404,9 @@ void Game::RunDebugScreen()
   }
 
 
-  sys.vid.ApplySurface(80, 260, gfx.freezeArrowsTailImage, NULL, &gfx.freezeTailFrames[3]); //12
-  sys.vid.ApplySurface(80, 132, gfx.freezeArrowsBodyImage, NULL, &gfx.freezeBodyFrames[3]); //12
-  sys.vid.ApplySurface(80, 100, gfx.freezeArrowsHeadImage, NULL, &gfx.freezeHeadFrames[3]); //16
+  sys.vid.ApplySurface(80, 260, gfx.images[Graphics::FreezeArrowsTail], NULL, &gfx.freezeTailFrames[3]); //12
+  sys.vid.ApplySurface(80, 132, gfx.images[Graphics::FreezeArrowsBody], NULL, &gfx.freezeBodyFrames[3]); //12
+  sys.vid.ApplySurface(80, 100, gfx.images[Graphics::FreezeArrowsHead], NULL, &gfx.freezeHeadFrames[3]); //16
 
   vector<Button> buttons;
   buttons = gui.screen.AllButtons();
@@ -510,6 +513,7 @@ void Game::RunChooseNumPlayers()
 void Game::RunSelectSong()
 {
   const int backButtonTag = 6;
+  static int selectedMenuIndex = -1;
   
   if (gameStateChanged)
   {
@@ -583,15 +587,117 @@ void Game::RunSelectSong()
       default:
         if (b.tag >= constants.baseFileButtonTag)
         {
-          selectedSongIndex = b.tag - constants.baseFileButtonTag;
-          currentSong = songMenuItems[selectedSongIndex].song.filename;
+          selectedMenuIndex = b.tag - constants.baseFileButtonTag;
+          currentSong = songMenuItems[selectedMenuIndex].song.filename;
           state = SELECT_DIFFICULTY;
-LOG(DEBUG_BASIC, "chose song " << selectedSongIndex << endl)
+          LOG(DEBUG_BASIC, "chose song " << selectedMenuIndex << endl)
         }
         break;
       }
     }
   }
+}
+
+void Game::RunSelectSongv2()
+{
+  static int menuIndex = -1;
+  static bool redraw = true;
+ 
+  if (gameStateChanged)
+  {
+    LOG(DEBUG_MINOR, "Game::RunSelectSong setting up" << endl)
+
+    if (menuIndex == -1)
+    {
+      // initial cursor position.  if already previously set, 
+      // keep last cursor position
+      menuIndex = 0;
+    }
+
+    gui.SetSpriteTextColour(gfx.sdlBlack);
+    
+    // if there are no choices, preload songs.  worst case there are no songs
+    // and the preload is done every time the menu is entered...
+    if (songMenuItems.size() == 0)
+    {
+      PreloadSongs();
+    }
+
+    
+    if (songMenuItems.size() == 0)
+    {
+      Container noFileScreen;
+      Label noFiles1("No files with valid dance-single steps could be read", 40, 40+20*2, 0, 0);
+      noFiles1.colour = gfx.sdlWhite;
+      char temp[100];
+      sprintf(temp, "%d mp3 files were found in the following directory:", (int)songs.size());
+      Label noFiles2(temp, 40, 40+20*4, 0, 0);
+      noFiles2.colour = gfx.sdlWhite;
+      Label noFiles3(constants.musicFileRoot.c_str(), 40, 40+20*5, 0, 0);
+      noFiles3.colour = gfx.sdlWhite;
+
+      noFileScreen.Add(noFiles1);
+      noFileScreen.Add(noFiles2);
+      noFileScreen.Add(noFiles3);
+      
+      gui.SetScreen(noFileScreen);
+    }
+    else
+    {
+      redraw = true;
+    }
+  }
+
+  if (redraw)
+  {
+    Container songSelect;
+  
+    Label title(songMenuItems[menuIndex].song.Name(), 40, 30, 0, 0);
+    title.colour = gfx.sdlWhite;
+    songSelect.Add(title);
+    
+    SDL_Surface* banner = songMenuItems[menuIndex].banner ? songMenuItems[menuIndex].banner : gfx.images[Graphics::DefaultBanner];
+    SDL_Surface* bannerMini = songMenuItems[menuIndex].bannerMini ? songMenuItems[menuIndex].bannerMini : gfx.images[Graphics::DefaultBannerMini];
+    Image justBan(banner, 100, 100, 0, 0);
+    songSelect.Add(justBan);
+
+    Image doTheMini(bannerMini, 300, 100, 0, 0);
+    songSelect.Add(doTheMini);
+    
+    gui.SetScreen(songSelect);
+  }
+
+  if (sys.input.ButtonDown(-1, InputChannel::Button3))
+  {
+    state = CHOOSE_NUM_PLAYERS;
+    LOG(DEBUG_BASIC, "v2 quit back to select player number " <<  endl)
+  }
+  else if (sys.input.ButtonDown(-1, InputChannel::Button4))
+  {
+    currentSong = songMenuItems[menuIndex].song.filename;
+    state = SELECT_DIFFICULTY;
+    sound.PlaySample(Sound::Select);
+    LOG(DEBUG_BASIC, "v2 chose song " << songMenuItems[menuIndex].song.filename << endl)
+  }
+  else if (sys.input.DirectionDown(-1, InputChannel::RIGHT))
+  {
+    if (++menuIndex == (int)songMenuItems.size())
+    {
+      menuIndex = 0;
+    }
+    redraw = true;
+    sound.PlaySample(Sound::MenuNav);
+  }
+  else if (sys.input.DirectionDown(-1, InputChannel::LEFT))
+  {
+    if (--menuIndex < 0)
+    {
+      menuIndex = songMenuItems.size() - 1;
+    }
+    redraw = true;
+    sound.PlaySample(Sound::MenuNav);
+  }
+
 }
 
 void Game::RunSelectDifficulty()
@@ -644,7 +750,7 @@ void Game::RunSelectDifficulty()
   // Apply player difficulty selection cursor according to currently selected difficulty
   for (int i = 0; i < numPlayers; ++i)
   {
-      sys.vid.ApplySurface(x + w + 20 + i * 50, baseY - 16 + players[i].difficulty * rowHeight, gfx.difficultyCursorImage, NULL, &gfx.difficultyCursorFrames[players[i].ready ? 2+i : i]);
+      sys.vid.ApplySurface(x + w + 20 + i * 50, baseY - 16 + players[i].difficulty * rowHeight, gfx.images[Graphics::DifficultyCursor], NULL, &gfx.difficultyCursorFrames[players[i].ready ? 2+i : i]);
   }
 
   // directly check inputs for changing each player's difficulty
@@ -657,11 +763,15 @@ void Game::RunSelectDifficulty()
       {
         while (!songs[currentSong].DifficultyIsAvailable(--p.difficulty));
         // play feedback wav
+        //HSSSSSSSSSS     getting double inputs on Wii only...
+        usleep(10000);
       }
       else if (p.inputs.directionDown[InputChannel::DOWN] && p.difficulty < maxDifficulty)
       {
         while (!songs[currentSong].DifficultyIsAvailable(++p.difficulty));
         // play feedback wav
+        //HSSSSSSSSSS     getting double inputs on Wii only...
+        usleep(10000);
       }
       if (p.inputs.buttonDown[InputChannel::Button4])  // A button
       {
@@ -731,12 +841,25 @@ void Game::PreloadSongs()
         if (songs[en.filename].Load(en.filename))
         {
           // song has valid steps so also create menu choice
-          SongMenuItem temp(songs[en.filename]);
+          SongMenuItem temp(sys, songs[en.filename]);
           songMenuItems.push_back(temp);
         }
       }
     }
   }
+}
+
+void Game::RunPlayCleanup()
+{
+  sound.StopMusic();
+  
+  if (songs[currentSong].backgroundImageFilename != "")
+  {
+    SDL_FreeSurface(songBg);
+  }
+  songBg = NULL;
+  
+  gui.hideCursor = false;
 }
 
 void Game::RunPlayPrep()
@@ -748,6 +871,16 @@ void Game::RunPlayPrep()
     
     // Initialise music
     sound.PrepMusic(songs[currentSong].Path());
+    
+    songBg = NULL;
+    if (songs[currentSong].backgroundImageFilename.size() > 0)
+    {
+      songBg = sys.vid.LoadOptimize(songs[currentSong].BackgroundImagePath());
+    }
+    else
+    {
+      songBg = gfx.images[Graphics::DefaultBg];
+    }
     
     preStartTime = -1;
   
@@ -771,17 +904,22 @@ void Game::RunPlayPrep()
   
   //TEMP: ripped code from drawing routine to at least show home arrows during pre-play pause
   // other 15 16ths of quarter, draw lit home arrow only if player presses it
+
+  // bg
+  sys.vid.ApplySurface(0, 0, songBg, sys.vid.screen, NULL);
+  
+  
   for (int i = 0; i < numPlayers; ++i)
   {
     Player& p = players[i];
-    sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.homeArrowsImage, NULL, &gfx.arrowsFrames[6]);
-    sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.homeArrowsImage, NULL, &gfx.arrowsFrames[2]);
-    sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.homeArrowsImage, NULL, &gfx.arrowsFrames[10]);
-    sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.homeArrowsImage, NULL, &gfx.arrowsFrames[14]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[6]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[2]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[10]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[14]);
   }
   
   // getready.png 300 x 120
-  sys.vid.ApplySurface(gfx.screenWidth/2 - 300/2, gfx.screenHeight/2 - 120/2, gfx.getReadyImage, NULL, NULL);
+  sys.vid.ApplySurface(gfx.screenWidth/2 - 300/2, gfx.screenHeight/2 - 120/2, gfx.images[Graphics::GetReady], NULL, NULL);
   
   if (PreStartDelayFinished())
   {
@@ -833,9 +971,8 @@ void Game::RunPlayPrep()
     else
     {
       // game state should not be moving forward.  time to go back to the menu!
-      sound.FreeMusic();
       state = SELECT_SONG;
-      gui.hideCursor = false;
+      RunPlayCleanup();
     }
   }
 }
@@ -916,6 +1053,9 @@ void Game::RunPlay()
   }
   */
   
+  // bg
+  sys.vid.ApplySurface(0, 0, songBg, sys.vid.screen, NULL);
+
   
   // animate home arrows per user input
   float beatFraction = fabs(songs[currentSong].beatTicks[currentBeatTick].beat) - (long)fabs(songs[currentSong].beatTicks[currentBeatTick].beat);
@@ -938,18 +1078,18 @@ void Game::RunPlay()
     if (tick_whole == 0)
     {
       // first 16th of a quarter note, draw flashing home arrows
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.homeArrowsImage, NULL, &gfx.arrowsFrames[4]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.homeArrowsImage, NULL, &gfx.arrowsFrames[0]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.homeArrowsImage, NULL, &gfx.arrowsFrames[8]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.homeArrowsImage, NULL, &gfx.arrowsFrames[12]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[4]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[0]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[8]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[12]);
     }
     else
     {
       // other 15 16ths of quarter, draw lit home arrow only if player presses it
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.homeArrowsImage, NULL, &gfx.arrowsFrames[p.inputs.directionDown[InputChannel::LEFT]  ? 4  : 6]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.homeArrowsImage, NULL, &gfx.arrowsFrames[p.inputs.directionDown[InputChannel::DOWN]  ? 0  : 2]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.homeArrowsImage, NULL, &gfx.arrowsFrames[p.inputs.directionDown[InputChannel::UP]    ? 8  : 10]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.homeArrowsImage, NULL, &gfx.arrowsFrames[p.inputs.directionDown[InputChannel::RIGHT] ? 12 : 14]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[p.inputs.directionDown[InputChannel::LEFT]  ? 4  : 6]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[p.inputs.directionDown[InputChannel::DOWN]  ? 0  : 2]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[p.inputs.directionDown[InputChannel::UP]    ? 8  : 10]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[p.inputs.directionDown[InputChannel::RIGHT] ? 12 : 14]);
     }
   }    
   
@@ -1108,7 +1248,7 @@ void Game::RunPlay()
                 freeze_dest_rect.y = current_freeze_bottom - current_freeze_length;
               }
 
-              SDL_BlitSurface(gfx.freezeArrowsTailImage, &freeze_src_rect, sys.vid.screen, &freeze_dest_rect);
+              SDL_BlitSurface(gfx.images[Graphics::FreezeArrowsTail], &freeze_src_rect, sys.vid.screen, &freeze_dest_rect);
               current_freeze_bottom -= blit_height;
               current_freeze_length -= blit_height;
               
@@ -1136,7 +1276,7 @@ void Game::RunPlay()
                   freeze_dest_rect.h = current_freeze_length;
                   freeze_dest_rect.y = current_freeze_bottom - current_freeze_length;
                 }
-                SDL_BlitSurface(gfx.freezeArrowsBodyImage, &freeze_src_rect, sys.vid.screen, &freeze_dest_rect);
+                SDL_BlitSurface(gfx.images[Graphics::FreezeArrowsBody], &freeze_src_rect, sys.vid.screen, &freeze_dest_rect);
                 current_freeze_bottom -= blit_height;
                 current_freeze_length -= blit_height;
               }
@@ -1148,7 +1288,7 @@ void Game::RunPlay()
               screenYPos = constants.goalOffset;
             }
             
-            sys.vid.ApplySurface(xpos, screenYPos, gfx.freezeArrowsHeadImage, NULL, &gfx.freezeHeadFrames[freeze_head_frame_index]);
+            sys.vid.ApplySurface(xpos, screenYPos, gfx.images[Graphics::FreezeArrowsHead], NULL, &gfx.freezeHeadFrames[freeze_head_frame_index]);
           }
           else
           {
@@ -1156,38 +1296,38 @@ void Game::RunPlay()
             switch(ar.type)
             {
             case Arrow::QUARTER:
-              arrowBitmapSrc = gfx.quarterArrowsImage;
+              arrowBitmapSrc = gfx.images[Graphics::QuarterArrows];
               break;
             case Arrow::EIGHTH:
-              arrowBitmapSrc = gfx.eighthArrowsImage;
+              arrowBitmapSrc = gfx.images[Graphics::EighthArrows];
               break;
             case Arrow::QUARTER_TRIPLET:
-              arrowBitmapSrc = gfx.quarterTripletArrowsImage;
+              arrowBitmapSrc = gfx.images[Graphics::QuarterTripletArrows];
               break;
             case Arrow::SIXTEENTH:
-              arrowBitmapSrc = gfx.sixteenthArrowsImage;
+              arrowBitmapSrc = gfx.images[Graphics::SixteenthArrows];
               break;
             case Arrow::EIGHTH_TRIPLET:
-              arrowBitmapSrc = gfx.eighthTripletArrowsImage;
+              arrowBitmapSrc = gfx.images[Graphics::EighthTripletArrows];
               break;
             case Arrow::THIRTYSECOND:
-              arrowBitmapSrc = gfx.thirtysecondArrowsImage;
+              arrowBitmapSrc = gfx.images[Graphics::ThirtysecondArrows];
               break;
             case Arrow::SIXTEENTH_TRIPLET:
-              arrowBitmapSrc = gfx.sixteenthTripletArrowsImage;
+              arrowBitmapSrc = gfx.images[Graphics::SixteenthTripletArrows];
               break;
             case Arrow::SIXTYFOURTH:
-              arrowBitmapSrc = gfx.sixtyfourthArrowsImage;
+              arrowBitmapSrc = gfx.images[Graphics::SixtyfourthArrows];
               break;
             //NOTE: same graphics used for 96th and 192nd
             case Arrow::THIRTYSECOND_TRIPLET:
             case Arrow::SIXTYFOURTH_TRIPLET:
-              arrowBitmapSrc = gfx.sixtyfourthTripletArrowsImage;
+              arrowBitmapSrc = gfx.images[Graphics::SixtyfourthTripletArrows];
               break;
 
             default:
               LOG(DEBUG_BASIC, "fell to default arrow type.  type=" << ar.type << endl)
-              arrowBitmapSrc = gfx.quarterArrowsImage;
+              arrowBitmapSrc = gfx.images[Graphics::QuarterArrows];
               break;
             }
             sys.vid.ApplySurface(xpos, screenYPos, arrowBitmapSrc, NULL, &gfx.arrowsFrames[arrowsFramesIndex]);
@@ -1220,17 +1360,17 @@ void Game::RunPlay()
               SDL_Surface* animBitmapSrc = NULL;
               if (ar.type == Arrow::HOLD && ar.length != 0)
               {
-                animBitmapSrc = gfx.freezeHitImage;
+                animBitmapSrc = gfx.images[Graphics::ComboHit];
                 arrowsHitIndex = 0; // only one row of freeze hit anims
               }
               else
               {
                 switch (ar.rating)
                 {
-                  case Arrow::MARVELLOUS: animBitmapSrc = gfx.marvellousHitImage; break;
-                  case Arrow::PERFECT: animBitmapSrc = gfx.perfectHitImage; break;
-                  case Arrow::GREAT: animBitmapSrc = gfx.greatHitImage; break;
-                  case Arrow::GOOD: animBitmapSrc = gfx.goodHitImage; break;
+                  case Arrow::MARVELLOUS: animBitmapSrc = gfx.images[Graphics::MarvellousHit]; break;
+                  case Arrow::PERFECT: animBitmapSrc = gfx.images[Graphics::PerfectHit]; break;
+                  case Arrow::GREAT: animBitmapSrc = gfx.images[Graphics::GreatHit]; break;
+                  case Arrow::GOOD: animBitmapSrc = gfx.images[Graphics::GoodHit]; break;
                   default: break;
                 }
               }
@@ -1273,16 +1413,24 @@ void Game::RunPlay()
   {
     //TODO: score
     //state = SCORE;
+    RunPlayCleanup();
     state = SELECT_SONG;
-    gui.hideCursor = false;
   }
 
-  CheckAbort();
+  if (CheckAbort())
+  {
+    //TODO: score
+    //state = SCORE;
+    RunPlayCleanup();
+    state = SELECT_SONG;
+    sound.PlaySample(Sound::RecordScratch);
+  }
+
 
   LOG(DEBUG_DETAIL, "Game::Play() done " << endl)
 }
 
-void Game::CheckAbort()
+bool Game::CheckAbort()
 {
   bool abortHeld = false;
   for (int i = 0; i < numPlayers; i++)
@@ -1304,9 +1452,7 @@ void Game::CheckAbort()
       if ((long)SDL_GetTicks() - songAbortStartTime > constants.songAbortDelay)
       {
         songAbortStartTime = -1;
-        sound.StopMusic();
-        state = SELECT_SONG;
-        gui.hideCursor = false;
+        return true;
       }
     }
   }
@@ -1314,6 +1460,7 @@ void Game::CheckAbort()
   {
     songAbortStartTime = -1;
   }
+  return false;
 }
 
 void Game::InitialFrame()
@@ -1348,7 +1495,6 @@ void Game::Frame()
   // process partial frames
   long partialFrameTimeBegin = oldSongTime;
   long frameTimeEnd = songTime;
-LOG(DEBUG_BASIC, "this old song:: " << partialFrameTimeBegin << " but it ENDSSSSSSS:: " << songTime << endl)
 
   // process beat ticks
   int frameEndBeatTick = currentBeatTick;
@@ -1394,7 +1540,6 @@ LOG(DEBUG_BASIC, "this old song:: " << partialFrameTimeBegin << " but it ENDSSSS
         // position and the position of the bpm change
         long partialFrameTimeEnd = songs[currentSong].bpmChanges[frameEndBpmChange].timestamp;
         PartialFrame(partialFrameTimeBegin, partialFrameTimeEnd);
-LOG(DEBUG_BASIC, "bpmChanges[frameEndBpmChange].timestamp: " << songs[currentSong].bpmChanges[frameEndBpmChange].timestamp << "  frameEndBpmChange: " <<frameEndBpmChange << endl)
         
         // update variables needed to calculate next partial
         partialFrameTimeBegin = partialFrameTimeEnd;
@@ -1453,7 +1598,6 @@ void Game::PartialFrame(long begin, long end)
   pixelsLeftToScroll = pixelsToScroll - wholePixelsToScroll;
 
   viewportOffset += wholePixelsToScroll;
-LOG(DEBUG_BASIC, "viewportOffset:: " << viewportOffset << "  begin: " << begin << endl)
 }
 
 
@@ -1462,6 +1606,11 @@ void Game::RateArrows(Player& p)
 {
   LOG(DEBUG_GUTS, "RateArrows" << endl)
   LOG(DEBUG_GUTS, "f: " << p.firstVisibleArrow << " l: " << p.lastVisibleArrow << endl)
+  if (p.firstVisibleArrow == -1)
+  {
+    return;
+  }
+  
   for(int a = p.firstVisibleArrow; a <= p.lastVisibleArrow; a++)
   {
     LOG(DEBUG_GUTS, "f: " << p.firstVisibleArrow << " l: " << p.lastVisibleArrow << endl)

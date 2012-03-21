@@ -55,6 +55,28 @@ bool Input::ButtonDown(int c, InputChannel::InputButton b)
   return false;
 }
 
+bool Input::DirectionDown(int c, InputChannel::InputDirection d)
+{
+  if (c == -1)
+  {
+    for (unsigned int i = 0; i < inputChannels.size(); i++)
+    {
+      if (inputChannels[i].directionDown[d])
+      {
+        LOG(DEBUG_GUTS, "Input::directionDown(" << c << ", d) returning true because of channel " << i << endl)
+        return true;
+      }
+    }
+  }
+  else if (c >= 0 && c < (int)inputChannels.size())
+  {
+    LOG(DEBUG_GUTS, "Input::directionDown(" << c << ", d) returning channel[" << c << "].directionDown[d] which is " << inputChannels[c].directionDown[d] << endl)
+    return inputChannels[c].directionDown[d];
+  }
+  
+  return false;
+}
+
 void Input::Cleanup()
 {
   

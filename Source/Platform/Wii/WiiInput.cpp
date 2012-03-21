@@ -135,7 +135,7 @@ void WiiInput::Update()
   // this would be unexpected for many other applications!!! but no time to
   // spare.. must get done quickly for DanceNight
   WPAD_ScanPads();
- u32 scanResult;
+  u32 scanResult;
   scanResult = PAD_ScanPads();
   for (int i = 0; i < maxChannels; i++)
   {
@@ -193,9 +193,6 @@ void WiiInput::Update()
     chan.directionHeld[InputChannel::LEFT] = GCButtonsHeld[i] & PAD_BUTTON_LEFT;
     chan.directionHeld[InputChannel::RIGHT] = GCButtonsHeld[i] & PAD_BUTTON_RIGHT;
   }
-  
-//LOG(DEBUG_BASIC, "inputChannels[0].mat active: " << inputChannels[0].danceMatActive << " inputChannels[0].directionHeld[InputChannel::LEFT]:" << inputChannels[0].directionHeld[InputChannel::LEFT] << endl)
-
 }
 
 void WiiInput::Cleanup()

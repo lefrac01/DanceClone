@@ -1,3 +1,10 @@
+//NOTE: WAV files should use the following format:
+// sample rate 48000 
+// format WAV(Microsoft) Signed 16 bit PCM
+//
+// MP3 files are less picky.  A good bitrate is 192 kpbs.  More is 
+// an unnecessary drain on the CPU.
+
 //      Sound.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
@@ -21,31 +28,87 @@
 
 namespace DanceClone
 {
-  
-void Sound::Init()
+
+Sound::Sound() :
+soundPaths(NUM_SOUNDS),
+sounds(NUM_SOUNDS)
+{
+}
+
+bool Sound::Init()
 {
   LOG(DEBUG_MINOR, "Sound::Init()" << endl)
+
+  
   #ifdef LINUX
   music = NULL;
   Mix_OpenAudio(0,0,0,0);
   #endif
+  #ifdef WII
+  mp3Buffer = NULL;
+  SND_Init(INIT_RATE_48000);  // note: SND_xxx is the same as ASND_xxx
+  SND_Pause(0);   
+  MP3Player_Init();
+  #endif
   #ifdef WIN
   music = NULL;
   Mix_OpenAudio(0,0,0,0);
-  //Mix_VolumeMusic(100);
-  //Mix_PlayMusic(music, -1);
   #endif
+
+ 
+  
+  initialised = true;
+
+  soundPaths[WoodBlock] = "Media/Game/woodblock.wav";
+  soundPaths[HandClap] = "Media/Game/handclap.wav";
+  soundPaths[RecordScratch] = "Media/Game/recordscratch.wav";
+  soundPaths[MenuNav] = "Media/Game/menunav.wav";
+  soundPaths[Select] = "Media/Game/select.wav";
+
+  for (unsigned int i = 0; i < sounds.size(); ++i)
+  {
+    if (!sounds[i].Load(soundPaths[i]))
+    {
+      initialised = false;
+      LOG(DEBUG_BASIC, "Sound::Init() returning false due to uninitialised sound at index " << i << " (file: " << soundPaths[i] << ")" << endl)
+      break;
+    }
+  }
+  
+  return initialised;
 }
 
 void Sound::Cleanup()
 {
   LOG(DEBUG_MINOR, "Sound::Cleanup()" << endl)
+  
+  #ifdef WII
+  ASND_Pause(1);  //pause
+  ASND_End();
+  #endif
+  
   StopMusic();
-  FreeMusic();
   #ifdef LINUX
+  if (music)
+  {
+    Mix_FreeMusic(music);
+    music = NULL;
+  }
   Mix_CloseAudio();
   #endif
+  #ifdef WII
+  if(mp3Buffer)
+  {
+    free(mp3Buffer);
+    mp3Buffer = NULL;
+  }
+  #endif
   #ifdef WIN
+  if (music)
+  {
+    Mix_FreeMusic(music);
+    music = NULL;
+  }
   Mix_CloseAudio();
   #endif
 }
@@ -55,41 +118,55 @@ void Sound::PrepMusic(string path)
   LOG(DEBUG_MINOR, "Sound::PrepMusic()" << endl)
   #ifdef LINUX
     music = Mix_LoadMUS(path.c_str());
+    ready = music != NULL;
   #endif
   #ifdef WII
-    ASND_Init();
-    MP3Player_Init();
-    FILE *BGM = 0;
-    //long lSize;
-    //size_t result;
-    //BGM = fopen(temptext, "rb");
+
+    FILE* BGM = 0;
+    size_t result = 0;
     BGM = fopen(path.c_str(), "rb");
-    fseek(BGM, 0, SEEK_END);
-    mp3LSize = ftell (BGM);
-    rewind(BGM);
-    mp3Buffer = (char*)malloc(sizeof(char)*mp3LSize);
-    //result = fread (buffer,1,lSize,BGM);
-    fread(mp3Buffer, 1, mp3LSize, BGM);
-    fclose(BGM);
+    if (BGM)
+    {
+      fseek(BGM, 0, SEEK_END);
+      mp3LSize = ftell(BGM);
+      rewind(BGM);
+      mp3Buffer = (char*)malloc(sizeof(char)*mp3LSize);
+      if (mp3Buffer)
+      {
+        result = fread(mp3Buffer, 1, mp3LSize, BGM);
+        if (!result)
+        {
+          free(mp3Buffer);
+          mp3Buffer = NULL;
+        }
+      }
+      fclose(BGM);
+    }
+    ready = result != 0;
   #endif
   #ifdef WIN
     music = Mix_LoadMUS(path.c_str());
+    ready = music != NULL;
   #endif
 }
 
 void Sound::StartMusic()
 {
   LOG(DEBUG_MINOR, "Sound::StartMusic()" << endl)
-  #ifdef LINUX
-    Mix_PlayMusic(music,0);
-  #endif
-  #ifdef WII
-    MP3Player_PlayBuffer(mp3Buffer, mp3LSize, NULL);
-    free(mp3Buffer);
-  #endif
-  #ifdef WIN
-    Mix_PlayMusic(music,0);
-  #endif
+  if (initialised && ready)
+  {
+    #ifdef LINUX
+      Mix_PlayMusic(music,0);
+    #endif
+    #ifdef WII
+      MP3Player_PlayBuffer(mp3Buffer, mp3LSize, NULL);
+      free(mp3Buffer);
+      mp3Buffer = NULL;
+    #endif
+    #ifdef WIN
+      Mix_PlayMusic(music,0);
+    #endif
+  }
 }
 
 void Sound::StopMusic()
@@ -106,33 +183,24 @@ void Sound::StopMusic()
   #endif
 }
 
-void Sound::FreeMusic()
-{
-  LOG(DEBUG_MINOR, "Sound::FreeMusic()" << endl)
-  #ifdef LINUX
-  Mix_FreeMusic(music);
-  #endif
-  #ifdef WII
-    free(mp3Buffer);
-  #endif
-  #ifdef WIN32
-  Mix_FreeMusic(music);
-  #endif
-}
-
 bool Sound::MusicFinished()
 {
   LOG(DEBUG_GUTS, "Sound::MusicFinished()" << endl)
   #ifdef LINUX
   if(!Mix_PlayingMusic())
   {
-    Mix_FreeMusic(music);
+    if (music)
+    {
+      Mix_FreeMusic(music);
+      music = NULL;
+    }
     return true;
   }
   #endif
   #ifdef WII
   if(!MP3Player_IsPlaying())
   {
+    LOG(DEBUG_MINOR, "Sound::MusicFinished() (WII) detected !MP3Player_IsPlaying" << endl)
     MP3Player_Stop();
     return true;
   }
@@ -140,7 +208,11 @@ bool Sound::MusicFinished()
   #ifdef WIN
   if(!Mix_PlayingMusic())
   {
-    Mix_FreeMusic(music);
+    if (music)
+    {
+      Mix_FreeMusic(music);
+      music = NULL;
+    }
     return true;
   }
   #endif
@@ -148,5 +220,32 @@ bool Sound::MusicFinished()
   return false;
 }
 
-  
+
+int Sound::PlaySample(Sample s)
+{
+  int channel = -1;
+  if (sounds[s].initialised)
+  {
+    #ifdef LINUX
+    //NOTE: this is not the recommended way of playing sounds under Linux
+    // I am only doing this because this program is targeted at the WII
+    // and Linux is a testing platform.  Use Mix_LoadWAV...
+    channel = Mix_PlayChannel(-1, Mix_QuickLoad_RAW(sounds[s].data, sounds[s].length), 0) ;   // -1 : use first available channel, 0 no looping
+    
+    #endif
+    #ifdef WII
+    channel = ASND_GetFirstUnusedVoice();
+    ASND_SetVoice(channel, sounds[s].channelCount, sounds[s].sampleRate, 0, sounds[s].data, sounds[s].length , 0xff, 0xff, NULL);
+    #endif
+  }
+  return channel;
+} 
+
+void Sound::StopSoundChannel(int c)
+{
+  #ifdef WII
+  ASND_StopVoice(c);
+  #endif
+}
+
 }

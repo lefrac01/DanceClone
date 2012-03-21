@@ -22,8 +22,12 @@ using std::string;
 #include <vector>
 using std::vector;
 
-#include "SDL.h"
+#include <SDL_rotozoom.h>
+//#include <SDL_image.h>
+#include <SDL.h>
 
+#include "../Platform/OS.h"
+using Platform::OS;
 #include "../Platform/LOG.H"
 
 #include "Song.h"
@@ -34,15 +38,21 @@ namespace DanceClone
 class SongMenuItem
 {
 private:
+  OS& sys;
   SongMenuItem();
   
 public:
-  SongMenuItem(Song& s);
+  SongMenuItem(OS& os, Song& s);
+  SongMenuItem(const SongMenuItem& b);
   SongMenuItem& operator=(const SongMenuItem& b);
+  ~SongMenuItem();
   
   Song& song;
-  SDL_Surface* bannerImage;
-  
+  SDL_Surface* banner;
+  SDL_Surface* bannerMini;
+
+  void Prepare();
+  void Cleanup();
 };
 
 }

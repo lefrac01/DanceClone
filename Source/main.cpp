@@ -1,6 +1,6 @@
 #include "Platform/OS.h"
 
-#define GAMEVERSIONSTRING "DanceClone v0.60"
+#define GAMEVERSIONSTRING "DanceClone v0.61"
 
 
 #include "Game/Game.h"
@@ -68,6 +68,7 @@ int main(int argc, char* argv[])
   {
     LOG(DEBUG_BASIC, "ERROR: game.Init() failed" << endl)
     gui.Cleanup();
+    dash.Cleanup();
     sys.Cleanup();
     exit(-3);
   }
@@ -110,6 +111,7 @@ int main(int argc, char* argv[])
   
   game.Cleanup();
   gui.Cleanup();
+  dash.Cleanup();
   sys.Cleanup();
   CLOSE_LOG
   

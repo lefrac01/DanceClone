@@ -96,6 +96,7 @@ vector<DirectoryEntry> LinuxOS::ReadDirectory(string path)
         }
         contents.push_back(DirectoryEntry(dirEntry->d_name, isFolder, statFailed, extra));
       }
+      closedir(dirStruct);
     }
   }
   

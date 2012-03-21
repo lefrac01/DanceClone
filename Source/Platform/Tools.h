@@ -26,6 +26,7 @@
 #include <string.h>
 #include <SDL.h>
 
+#include "OS.h"
 
 int getnumberfromchar(char text);
 char getcharfromnumber(int textnumber);
@@ -53,4 +54,8 @@ bool SegmentIntersectRectangle(double a_rectangleMinX,
                  double a_p2x,
                  double a_p2y);
 bool PointInSDLRect(int x, int y, SDL_Rect& r);
+void SwapByteOrder(unsigned short& us);
+void SwapByteOrder(unsigned int& ui);
+void SwapByteOrder(unsigned long long& ull);
+
 #endif

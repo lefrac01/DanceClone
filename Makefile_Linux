@@ -43,7 +43,11 @@ INCLUDES	:=
 #---------------------------------------------------------------------------------
 
 # -mepsilon should go here, but is giving an error ???  (floating point comparison)
-CFLAGS	= -g -O2 -Wall $(INCLUDE)		
+#RELEASE
+#CFLAGS	= -O2 -Wall $(INCLUDE)
+
+#debug
+CFLAGS	= -g -O1 -Wall $(INCLUDE)
 CXXFLAGS	=	$(CFLAGS)
 
 LDFLAGS	=	-g -Wl,-Map,$(notdir $@).map

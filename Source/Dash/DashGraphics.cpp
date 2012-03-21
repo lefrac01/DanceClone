@@ -63,4 +63,30 @@ bool DashGraphics::Init()
 
 void DashGraphics::Cleanup()
 {
+  LOG(DEBUG_BASIC, "DashGraphics::Cleanup()" << endl)
+  if (borderImage)
+  {
+    SDL_FreeSurface(borderImage);
+    borderImage = NULL;
+  }
+  if (topBottomBorderImage)
+  {
+    SDL_FreeSurface(topBottomBorderImage);
+    topBottomBorderImage = NULL;
+  }
+  if (cursorImage)
+  {
+    SDL_FreeSurface(cursorImage);
+    cursorImage = NULL;
+  }
+  if (background)
+  {
+    SDL_FreeSurface(background);
+    background = NULL;
+  }
+  if (backgroundBlurred)
+  {
+    SDL_FreeSurface(backgroundBlurred);
+    backgroundBlurred = NULL;
+  }
 }

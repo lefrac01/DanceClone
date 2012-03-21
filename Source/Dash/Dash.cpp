@@ -45,8 +45,6 @@ bool Dash::Init()
   
   prgb1 = (Uint8*)malloc(screenWidth * screenHeight * 3 * sizeof(Uint8));
   prgb2 = (Uint8*)malloc(screenWidth * screenHeight * 3 * sizeof(Uint8));
-  prgb1 = (Uint8*)malloc(screenWidth * screenHeight * 3 * sizeof(Uint8));
-  prgb2 = (Uint8*)malloc(screenWidth * screenHeight * 3 * sizeof(Uint8));
   
   LOG(DEBUG_DETAIL, "Dash::Init() setting onOff to default value 0" << endl)
   onOff = 0;
@@ -116,7 +114,7 @@ void Dash::RunOnOff()
     LOG(DEBUG_GUTS, "Dash::RunOnOff() setting onOff to 1 because it is 0" << endl)
     onOff=1;
     if(double_same(onOffPercent,0)){
-      sys.vid.ApplySurface(0,0,sys.vid.screen,gfx.background,NULL);
+      //sys.vid.ApplySurface(0,0,sys.vid.screen,gfx.background,NULL);
 //      #ifdef WIN
 //      for(int x=0;x<screenWidth;x++)for(int y=0;y<screenHeight;y++)
 //        SDL_GetRGB(sys.vid.GetPixel(screen,x,y),
@@ -490,6 +488,8 @@ void Dash::Cleanup()
     free(prgb2);
     prgb2 = NULL;
   }
+  
+  gfx.Cleanup();
 }
 
 bool Dash::Visible()

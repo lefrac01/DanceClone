@@ -39,7 +39,7 @@ static ofstream logFile;
 #define DEBUG_MINOR 2
 #define DEBUG_DETAIL 3
 #define DEBUG_GUTS 4
-#define LOG_LEVEL DEBUG_OFF
+#define LOG_LEVEL DEBUG_BASIC
 #define SAFE_LOGGING
 
 #ifdef SAFE_LOGGING

@@ -53,6 +53,8 @@ void Song::Init()
   LOG(DEBUG_MINOR, "DanceClone::Song::Init()" << endl)
   filename = "";
   bannerImageFilename = "";
+  backgroundImageFilename = "";
+  
   std::fill(difficultyAvailable.begin(), difficultyAvailable.end(), false);
   
   for (int i = 0; i < constants.numDifficulties; ++i)
@@ -125,6 +127,13 @@ string Song::BannerImagePath()
   return temp;
 }
 
+string Song::BackgroundImagePath()
+{
+  string temp = constants.musicFileRoot;
+  temp += backgroundImageFilename; 
+  return temp;
+}
+
 bool Song::ReadStepData()
 {
   LOG(DEBUG_BASIC, "Song::ReadStepData()" << endl)
@@ -142,6 +151,7 @@ bool Song::ReadStepData()
   
   // analyse contents
   string bannerTag = "#BANNER:";
+  string backgoundTag = "#BACKGROUND:";
   string bpmTag = "#BPMS:";
   string offsetTag = "#OFFSET:";
   string notesTag = "#NOTES:";
@@ -150,18 +160,23 @@ bool Song::ReadStepData()
   {
     if (stepFileLines[currentLine].find(bannerTag) != string::npos)
     {
-      LOG(DEBUG_DETAIL, "ReadStepData() found #BANNER:" << endl)
+      LOG(DEBUG_DETAIL, "ReadStepData() found " << bannerTag << endl)
       bannerImageFilename = SMValGetString(stepFileLines[currentLine]);
     }
-    if (stepFileLines[currentLine].find(bpmTag) != string::npos)
+    else if (stepFileLines[currentLine].find(backgoundTag) != string::npos)
     {
-      LOG(DEBUG_DETAIL, "ReadStepData() found #BPMS:" << endl)
+      LOG(DEBUG_DETAIL, "ReadStepData() found " << backgoundTag << endl)
+      backgroundImageFilename = SMValGetString(stepFileLines[currentLine]);
+    }
+    else if (stepFileLines[currentLine].find(bpmTag) != string::npos)
+    {
+      LOG(DEBUG_DETAIL, "ReadStepData() found " << bpmTag << endl)
       ParseBpms(stepFileLines[currentLine], bpmChanges);
     }
     else if (stepFileLines[currentLine].find(offsetTag) != string::npos)
     {
       beat0Offset = -1000.0 * atof(SMValGetString(stepFileLines[currentLine]).c_str());
-      LOG(DEBUG_DETAIL, "ReadStepData() found #OFFSET:" << beat0Offset << endl)
+      LOG(DEBUG_DETAIL, "ReadStepData() found " << offsetTag << beat0Offset << endl)
     }
     else if (stepFileLines[currentLine].find(notesTag) != string::npos)
     {
@@ -434,7 +449,7 @@ bool Song::Prepare()
                     // now that timestamp is known, update it
                     //NOTE: this works but it weakens the code
                     bpmChanges[currentBpmIndex].timestamp = currentTime;
-LOG(DEBUG_BASIC, "TIMESHTAMPING:  currentBpmIndex:" << currentBpmIndex << " currentTime: " << currentTime << " currentBeat " << currentBeat << endl)
+                    //#LOG(DEBUG_BASIC, "TIMESHTAMPING:  currentBpmIndex:" << currentBpmIndex << " currentTime: " << currentTime << " currentBeat " << currentBeat << endl)
                     
                     LOG(DEBUG_DETAIL, "beat change detected on beat " << currentBeat << " new bpm is " << bpmChanges[currentBpmIndex].bpm << " at index " << currentBpmIndex << endl << "timestamped bpmChange with " << currentTime << endl)
                   }

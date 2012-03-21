@@ -38,6 +38,37 @@ namespace DanceClone
 
 class Graphics
 {
+public:
+  enum Images
+  {
+    DefaultBg,
+    Title,
+    //Ratings,
+    DefaultBanner,
+    DefaultBannerMini,
+    GetReady,
+    DifficultyCursor,
+    HomeArrows,
+    QuarterArrows,
+    EighthArrows,
+    QuarterTripletArrows,
+    SixteenthArrows,
+    EighthTripletArrows,
+    ThirtysecondArrows,
+    SixteenthTripletArrows,
+    SixtyfourthArrows,
+    SixtyfourthTripletArrows,
+    FreezeArrowsBody,
+    FreezeArrowsTail,
+    FreezeArrowsHead,
+    MarvellousHit,
+    PerfectHit,
+    GreatHit,
+    GoodHit,
+    ComboHit,
+    NUM_IMAGES
+  };
+  
 private:
 
   OS& sys;
@@ -53,41 +84,17 @@ public:
   Uint8* pWDrgb1;
   Uint8* pWDrgb2;
 
-  SDL_Surface* backgroundImage;
-  SDL_Surface* titleImage;
-  SDL_Surface* difficultyCursorImage;
+  vector<SDL_Surface*> images;
   SDL_Rect difficultyCursorFrames[4];
-  SDL_Surface* ratingsImage;
   SDL_Rect ratingsFrames[3];
-  SDL_Surface* getReadyImage;
   
   // all non-hold arrows have same layout so use only one frames array
   SDL_Rect arrowsFrames[16];
-  SDL_Surface* tempArrowsImageSrc; 
-  SDL_Surface* homeArrowsImage; 
-  SDL_Surface* quarterArrowsImage; 
-  SDL_Surface* eighthArrowsImage; 
-  SDL_Surface* quarterTripletArrowsImage; 
-  SDL_Surface* sixteenthArrowsImage; 
-  SDL_Surface* eighthTripletArrowsImage; 
-  SDL_Surface* thirtysecondArrowsImage; 
-  SDL_Surface* sixteenthTripletArrowsImage; 
-  SDL_Surface* sixtyfourthArrowsImage; 
-  SDL_Surface* sixtyfourthTripletArrowsImage; 
-
-  SDL_Surface* freezeArrowsBodyImage;
   SDL_Rect freezeBodyFrames[12];
-  SDL_Surface* freezeArrowsTailImage;
   SDL_Rect freezeTailFrames[12];
-  SDL_Surface* freezeArrowsHeadImage;
   SDL_Rect freezeHeadFrames[16];
 
   SDL_Rect arrowsHitFrames[32];
-  SDL_Surface* marvellousHitImage; 
-  SDL_Surface* perfectHitImage; 
-  SDL_Surface* greatHitImage; 
-  SDL_Surface* goodHitImage; 
-  SDL_Surface* freezeHitImage; 
 
   int arrowWidth;
   int arrowHeight;
