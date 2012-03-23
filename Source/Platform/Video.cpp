@@ -26,59 +26,6 @@ Video::Video() :
   screen(NULL)
 {
 }
-/*
-bool Video::Init()
-{
-  LOG(DEBUG_BASIC, "Platform::Video::Init()" << endl)
-  //TODO: there is a way to reinit adding support for just video...
-  //SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
-  //SDL_ShowCursor(SDL_DISABLE);
-
-
-//#//TODO: per-platform agent subclassing
-//##ifdef WIN
-  //#screen = SDL_SetVideoMode(screenx, screeny, screenb, SDL_DOUBLEBUF);
-  //#SDL_WM_SetCaption( GAMEVERSIONSTRING, NULL );
-//##endif
-
-
-//TODO: per-platform agent subclassing
-ifdef WII
-//#
-  //#rmode = VIDEO_GetPreferredMode(NULL);
-  //#LOG(DEBUG_BASIC, "VIDEO_GetPreferredMode(NULL) returns:"
-      //#<< "\nrmode->viTVMode:" << rmode->viTVMode \
-      //#<< "\nrmode->fbWidth:" << rmode->fbWidth \
-      //#<< "\nrmode->efbHeight:" << rmode->efbHeight \
-      //#<< "\nrmode->xfbHeight:" << rmode->xfbHeight \
-      //#<< "\nrmode->viXOrigin:" << rmode->viXOrigin \
-      //#<< "\nrmode->viYOrigin:" << rmode->viYOrigin \
-      //#<< "\nrmode->viWidth:" << rmode->viWidth \
-      //#<< "\nrmode->viHeight:" << rmode->viHeight \
-      //#<< endl)
-//#
-  //#switch (rmode->viTVMode >> 2)
-  //#{
-          //#case VI_NTSC: // 480 lines (NTSC 60hz)
-                  //#break;
-          //#case VI_PAL: // 576 lines (PAL 50hz)
-                  //#rmode = &TVPal574IntDfScale;
-                  //#rmode->xfbHeight = 480;
-                  //#rmode->viYOrigin = (VI_MAX_HEIGHT_PAL - 480)/2;
-                  //#rmode->viHeight = 480;
-                  //#break;
-          //#default: // 480 lines (PAL 60Hz)
-                  //#break;
-  //#}
-//#
-  //#screen = SDL_SetVideoMode(rmode->viWidth, rmode->viHeight, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
-  //#
-//#//TODO: per-platform agent subclassing
-endif
-
-  return true;
-}
-*/
 
 int Video::ScreenWidth()
 {
@@ -141,8 +88,6 @@ void Video::ApplySurface( int x, int y, SDL_Surface* source, SDL_Surface* destin
 void Video::Cleanup()
 {
   LOG(DEBUG_MINOR, "Video::Cleanup" << endl)
-  //screen(NULL),  SDL_Quit does this?
-  //rmode(NULL),  ??
 }
 
 Uint32 Video::GetPixel(SDL_Surface *surface,int x,int y){

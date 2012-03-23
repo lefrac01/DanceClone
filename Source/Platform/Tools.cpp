@@ -430,3 +430,146 @@ void SwapByteOrder(unsigned long long& ull)
         ((ull>>40) & 0x000000000000FF00) |
         (ull << 56);
 }
+
+float PFunc::Parametric(Function f, float p, float start, float end)
+{
+  //#if (min > max)
+  //#{
+    //#min = max;
+  //#}
+  if (p < 0)
+  {
+    p = 0;
+  }
+  else if (p > 1)
+  {
+    p = 1;
+  }
+  
+  switch(f)
+  {
+    case Linear:
+      return start + (end-start) * p;
+    case Inverse:
+      return start + (end-start) * (1-p);
+    case Square:
+      return start + (end-start) * (p*p);
+    case Cube:
+      return start + (end-start) * (p*p*p);
+    case Sine:
+      return sin(Parametric(Linear, Parametric(Linear, p, start, end), 0, 2*PI));
+//      return sin(Parametric(Linear, Parametric(Linear, p, start, end), asin(-1), asin(1)));
+    case Cosine:
+      return cos(Parametric(Linear, Parametric(Linear, p, start, end), 0, 2*PI));
+//      return cos(Parametric(Linear, Parametric(Linear, p, start, end), acos(1), acos(-1)));
+    case Log:
+      return 0; // need header on Wii... too tired :(
+      //return start + (end-start) * log(p);
+    case NiceLog:
+      return 0; // need header on Wii... too tired :(
+      //return 1 to 2.7182 of Log which gives approx output (0..1)
+      //return start + (end-start) * log(Parametric(Linear, p, 1.0, 2.718281828));
+    default:
+      return start;
+  }
+}
+
+float PFunc::ParamByVal(Function f, float x, float start, float end)
+{
+  if (start > end)
+  {
+    start = end;
+  }
+  if (x <= start)
+  {
+    return 0;
+  }
+  else if (x >= end)
+  {
+    return 1;
+  }
+  
+  switch(f)
+  {
+    case Linear:
+      return (x - start) / (end - start);   // end != start or already returned 0 or 1
+    case Square:
+      return pow(ParamByVal(Linear, x, start, end), 0.5);
+    case Cube:
+      return pow(ParamByVal(Linear, x, start, end), 1.0/3.0);
+    case Log:
+      return 0; // fail... been too long since uni
+      //return exp(ParamByVal(Linear, x, start, end));
+    case NiceLog:
+      return 0; // fail...
+      //return exp (Parametric(Linear, ParamByVal(Linear, x, start, end), 0.0, 1.0));
+    default:
+      return start;
+  }
+}
+
+    
+    // testing of parametric function class
+    //#LOG(DEBUG_BASIC, "Parametric testing ===============+" << endl)
+    //#LOG(DEBUG_BASIC, "Sine 0 to 1:" << endl)
+    //#for (int i = 0; i <= 100; i++)
+    //#{
+      //#float p = i/100.0;
+      //#LOG(DEBUG_BASIC, "p:" << p << " F:" << ParametricFunction::Parametric(ParametricFunction::Sine, p, 0.0, 1.0) << endl)
+    //#}
+    //#LOG(DEBUG_BASIC, "Cosine 0 to 1:" << endl)
+    //#for (int i = 0; i <= 100; i++)
+    //#{
+      //#float p = i/100.0;
+      //#LOG(DEBUG_BASIC, "p:" << p << " F:" << ParametricFunction::Parametric(ParametricFunction::Cosine, p, 0.0, 1.0) << endl)
+    //#}
+    //#LOG(DEBUG_BASIC, "Linear 0 to 1:" << endl)
+    //#for (int i = 0; i <= 100; i++)
+    //#{
+      //#float p = i/100.0;
+      //#LOG(DEBUG_BASIC, "p:" << p << " F:" << ParametricFunction::Parametric(ParametricFunction::Linear, p, 0.0, 1.0) << and back: " << ParametricFunction::ParamByVal(ParametricFunction::Linear, ParametricFunction::Parametric(ParametricFunction::Linear, p, 0.0, 1.0), 0.0, 1.0) << endl)
+    //#}
+    //#LOG(DEBUG_BASIC, "Linear 0 to 100:" << endl)
+    //#for (int i = 0; i <= 100; i++)
+    //#{
+      //#float p = i/100.0;
+      //#LOG(DEBUG_BASIC, "p:" << p << " F:" << ParametricFunction::Parametric(ParametricFunction::Linear, p, 0.0, 100.0) << and back: " << ParametricFunction::ParamByVal(ParametricFunction::Linear, ParametricFunction::Parametric(ParametricFunction::Linear, p, 0.0, 100.0), 0.0, 100.0) << endl)
+//#
+    //#}
+    //#LOG(DEBUG_BASIC, "Linear 200 to 500:" << endl)
+    //#for (int i = 0; i <= 100; i++)
+    //#{
+      //#float p = i/100.0;
+      //#LOG(DEBUG_BASIC, "p:" << p << " F:" << ParametricFunction::Parametric(ParametricFunction::Linear, p, 200.0, 500.0) << and back: " << ParametricFunction::ParamByVal(ParametricFunction::Linear, ParametricFunction::Parametric(ParametricFunction::Linear, p, 200.0, 500.0), 200.0, 500.0) << endl)
+//#
+    //#}
+    //#LOG(DEBUG_BASIC, "Square 0 to 1:" << endl)
+    //#for (int i = 0; i <= 100; i++)
+    //#{
+      //#float p = i/100.0;
+      //#LOG(DEBUG_BASIC, "p:" << p << " F:" << ParametricFunction::Parametric(ParametricFunction::Square, p, 0.0, 1.0) << and back: " << ParametricFunction::ParamByVal(ParametricFunction::Square, ParametricFunction::Parametric(ParametricFunction::Square, p, 0.0, 1.0), 0.0, 1.0) << endl)
+//#
+    //#}
+    //#LOG(DEBUG_BASIC, "Cube 0 to 1:" << endl)
+    //#for (int i = 0; i <= 100; i++)
+    //#{
+      //#float p = i/100.0;
+      //#LOG(DEBUG_BASIC, "p:" << p << " F:" << ParametricFunction::Parametric(ParametricFunction::Cube, p, 0.0, 1.0) << and back: " << ParametricFunction::ParamByVal(ParametricFunction::Cube, ParametricFunction::Parametric(ParametricFunction::Cube, p, 0.0, 1.0), 0.0, 1.0) << endl)
+//#
+    //#}
+    //#LOG(DEBUG_BASIC, "Log 0 to 1:" << endl)
+    //#for (int i = 0; i <= 100; i++)
+    //#{
+      //#float p = i/100.0;
+      //#LOG(DEBUG_BASIC, "p:" << p << " F:" << ParametricFunction::Parametric(ParametricFunction::Log, p, 0.0, 1.0) <<  and back: " << ParametricFunction::ParamByVal(ParametricFunction::Log, ParametricFunction::Parametric(ParametricFunction::Log, p, 0.0, 1.0), -4.6, 0.0) << endl)
+//#
+    //#}
+    //#LOG(DEBUG_BASIC, "NiceLog 0 to 1:" << endl)
+    //#for (int i = 0; i <= 100; i++)
+    //#{
+      //#float p = i/100.0;
+      //#LOG(DEBUG_BASIC, "p:" << p << " F:" << ParametricFunction::Parametric(ParametricFunction::NiceLog, p, 0.0, 1.0) << and back: " << ParametricFunction::ParamByVal(ParametricFunction::NiceLog, ParametricFunction::Parametric(ParametricFunction::NiceLog, p, 0.0, 1.0), 0.0, 1.0) << endl)
+//#
+    //#}
+    //#LOG(DEBUG_BASIC, "Parametric testing ===============-" << endl)
+    //#

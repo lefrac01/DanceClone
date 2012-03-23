@@ -33,7 +33,6 @@ Dash::Dash(OS& os, GUI& g) :
 {
 }
 
-//TODO: exceptions would be cleaner than a chain of return false here...
 bool Dash::Init()
 {
   LOG(DEBUG_BASIC, "Dash::Init()" << endl)
@@ -98,29 +97,12 @@ int Dash::OnOffSlide(int onPos, int offPos)
 
 void Dash::RunOnOff()
 {
-  //TODO: subclassing
-//  #ifdef WIN
-//  if(keystate[SDLK_ESCAPE]==2){
-//  #endif
-//  #ifdef WII
   if (sys.input.ButtonDown(-1, InputChannel::Button6))
   {
-//  if((sys.input.WiiButtonsDown[0] & WPAD_BUTTON_HOME) || (sys.input.WiiButtonsDown[0] & WPAD_CLASSIC_BUTTON_HOME)
-//  || (sys.input.WiiButtonsDown[1] & WPAD_BUTTON_HOME) || (sys.input.WiiButtonsDown[1] & WPAD_CLASSIC_BUTTON_HOME)
-//  || (sys.input.WiiButtonsDown[2] & WPAD_BUTTON_HOME) || (sys.input.WiiButtonsDown[2] & WPAD_CLASSIC_BUTTON_HOME)
-//  || (sys.input.WiiButtonsDown[3] & WPAD_BUTTON_HOME) || (sys.input.WiiButtonsDown[3] & WPAD_CLASSIC_BUTTON_HOME)){
-//  #endif
   if(onOff==0){
     LOG(DEBUG_GUTS, "Dash::RunOnOff() setting onOff to 1 because it is 0" << endl)
     onOff=1;
     if(double_same(onOffPercent,0)){
-      //sys.vid.ApplySurface(0,0,sys.vid.screen,gfx.background,NULL);
-//      #ifdef WIN
-//      for(int x=0;x<screenWidth;x++)for(int y=0;y<screenHeight;y++)
-//        SDL_GetRGB(sys.vid.GetPixel(screen,x,y),
-//        screen->format,&WDrgb1[x][y][0],&WDrgb1[x][y][1],&WDrgb1[x][y][2]);
-//      #endif
-//      #ifdef WII
       Uint32 color;
       Uint16* pPosition=(Uint16*)sys.vid.screen->pixels;
       LOG(DEBUG_GUTS, "extracting separate rgb pixels into stash 1" << endl)

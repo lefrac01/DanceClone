@@ -24,7 +24,8 @@ namespace Gooey
 {
 
 
-Container::Container()
+Container::Container() : 
+  Element()
 {
 }
 

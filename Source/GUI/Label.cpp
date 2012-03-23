@@ -23,7 +23,8 @@ namespace Gooey
 {
 
 
-Label::Label(string s)
+Label::Label(string s) :
+  Element()
 {
   text = s;
 }

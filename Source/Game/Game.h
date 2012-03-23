@@ -36,6 +36,7 @@ using std::endl;
 #include "../Platform/OS.h"
 using Platform::OS;
 using Platform::DirectoryEntry;
+#include "../Platform/Tools.h"
 #include "../GUI/GUI.h"
 using Gooey::GUI;
 using Gooey::Container;

@@ -71,9 +71,6 @@ void GUI::Update()
       InputChannel& chan = sys.input.inputChannels[i];
       if (chan.active)
       {
-        char buf[100];
-        sprintf(buf, "%lX", (unsigned long)gfx.cursorImage);
-        LOG(DEBUG_GUTS, "cursor("<< buf <<") to x: " << chan.cursorX-48 << " y: " << chan.cursorY-48 << " using src rect x:" << gfx.cursorFrames[6+i*3].x <<"  y: " <<gfx.cursorFrames[6+i*3].y<<" w: " << gfx.cursorFrames[6+i*3].w << " h: " <<gfx.cursorFrames[6+i*3].h << " whew!E" << endl)
         sys.vid.ApplySurface(chan.cursorX-48, chan.cursorY-48, gfx.cursorImage, sys.vid.screen, &gfx.cursorFrames[6+i*3]);
       }
     }
@@ -98,28 +95,43 @@ void GUI::SetScreen(Container& c)
 void GUI::Render(Container &c)
 {
   LOG(DEBUG_GUTS, "GUI::Render() " << endl)
-  
 
   for (unsigned int i = 0; i < c.Images().size(); i++)
   {
     Image& im = c.Images()[i];
     LOG(DEBUG_GUTS, "GUI::Render() element is image " << endl)
-    sys.vid.ApplySurface(im.x, im.y, im.surface, NULL, NULL);
+    int drawX = im.x;
+    int drawY = im.y;
+    if (im.offsetMode == Element::Center)
+    {
+      drawX = im.x - (im.w == 0 ? im.surface->w/2 : im.w/2);
+      drawY = im.y - (im.h == 0 ? im.surface->h/2 : im.h/2);
+    }
+    sys.vid.ApplySurface(drawX, drawY, im.surface, NULL, NULL);
   }
   for (unsigned int i = 0; i < c.Labels().size(); i++)
   {
     Label& l = c.Labels()[i];
     LOG(DEBUG_GUTS, "GUI::Render() element is label " << endl)
+    int drawX = l.x;
+    int drawY = l.y;
+    if (l.offsetMode == Element::Center)
+    {
+      //TODO: using hardcoded constants here because of the 1 fixed font.
+      // this needs to be redone if fonts are added
+      drawX = l.x - l.w == 0 ? l.text.size()*11/2 : l.w/2;
+      drawY = l.y - l.h == 0 ? 21/2 : l.h/2;
+    }
     if (l.colour != Element::noColour)
     {
       Uint32 oldColour = GetSpriteTextColour();
       SetSpriteTextColour(l.colour);
-      SpriteTextColored(l.x, l.y, (char*)l.text.c_str(), 1);
+      SpriteTextColored(drawX, drawY, (char*)l.text.c_str(), 1);
       SetSpriteTextColour(oldColour);
     }
     else
     {
-      SpriteTextColored(l.x, l.y, (char*)l.text.c_str(), 1);
+      SpriteTextColored(drawX, drawY, (char*)l.text.c_str(), 1);
     }
   }
   for (unsigned int i = 0; i < c.Buttons().size(); i++)
@@ -172,20 +184,13 @@ void GUI::DrawButton(Button& b)
 {
   LOG(DEBUG_GUTS, "GUI::DrawButton(" << b.x << ", " << b.y << ", " << b.w << ", " << b.h << endl)
   
-  // is it buttonRowing?
-//  if(useCursor[a] && sys.input.cursorx[a]>x-14 && sys.input.cursory[a]>y-14 && sys.input.cursorx[a]<x+w+13 && sys.input.cursory[a]<y+h+13){
-  //bool buttonRow = b.state == Button::HOVER;
-  //#bool buttonRow = false;
-  //#for (unsigned int i = 0; i < sys.input.inputChannels.size(); i++)
-  //#{
-    //#InputChannel& chan = sys.input.inputChannels[i];
-    //#if (chan.active && chan.cursorX>b.x-14 && chan.cursorY>b.y-14 && chan.cursorX<b.x+b.w+13 && chan.cursorY<b.y+b.h+13)
-    //#{
-      //#buttonRow = true;
-      //#break;
-    //#}      
-  //#}
-
+  int drawX = b.x;
+  int drawY = b.y;
+  if (b.offsetMode == Element::Center)
+  {
+    drawX = b.x - b.w/2;
+    drawY = b.y - b.h/2;
+  }
 
   // Button states are in a 3*9 array mapped like this:
   // row 0: normal
@@ -202,6 +207,40 @@ void GUI::DrawButton(Button& b)
   }
   
   
+  //corners
+  sys.vid.ApplySurface(drawX-21, drawY-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[0+buttonRow*9]);
+  sys.vid.ApplySurface(drawX-21, drawY+b.h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[1+buttonRow*9]);
+  sys.vid.ApplySurface(drawX+b.w,  drawY-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[2+buttonRow*9]);
+  sys.vid.ApplySurface(drawX+b.w,  drawY+b.h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[3+buttonRow*9]);
+  //edges
+  for(int a=0; a<b.w/21; a++)
+    sys.vid.ApplySurface(drawX+a*21,drawY+b.h,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[4+buttonRow*9]);
+  SDL_Rect temprect1={4*21,buttonRow*21,b.w-b.w/21*21,21};
+  sys.vid.ApplySurface(drawX+b.w/21*21,drawY+b.h,gfx.buttonImage,sys.vid.screen,&temprect1);
+  for(int a=0; a<b.h/21; a++)
+    sys.vid.ApplySurface(drawX+b.w,drawY+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[5+buttonRow*9]);
+  SDL_Rect temprect2={5*21,buttonRow*21,21,b.h-b.h/21*21};
+  sys.vid.ApplySurface(drawX+b.w,drawY+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect2);
+  for(int a=0; a<b.w/21; a++)
+    sys.vid.ApplySurface(drawX+a*21,drawY-21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[6+buttonRow*9]);
+  SDL_Rect temprect3={6*21,buttonRow*21,b.w-b.w/21*21,21};
+  sys.vid.ApplySurface(drawX+b.w/21*21,drawY-21,gfx.buttonImage,sys.vid.screen,&temprect3);
+  for(int a=0; a<b.h/21; a++)
+    sys.vid.ApplySurface(drawX-21,drawY+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[7+buttonRow*9]);
+  SDL_Rect temprect4={7*21,buttonRow*21,21,b.h-b.h/21*21};
+  sys.vid.ApplySurface(drawX-21,drawY+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect4);
+  //insides
+  for(int a=0; a<b.h/21; a++)for(int i=0; i<b.w/21; i++)
+    sys.vid.ApplySurface(drawX+i*21,drawY+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[8+buttonRow*9]);
+  SDL_Rect temprect5={8*21,buttonRow*21,b.w-b.w/21*21,21};
+  for(int a=0; a<b.h/21; a++)
+    sys.vid.ApplySurface(drawX+b.w/21*21,drawY+a*21,gfx.buttonImage,sys.vid.screen,&temprect5);
+  SDL_Rect temprect6={8*21,buttonRow*21,21,b.h-b.h/21*21};
+  for(int a=0; a<b.w/21; a++)
+    sys.vid.ApplySurface(drawX+a*21,drawY+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect6);
+  SDL_Rect temprect7={8*21,buttonRow*21,b.w-b.w/21*21,b.h-b.h/21*21};
+  sys.vid.ApplySurface(drawX+b.w/21*21,drawY+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect7);
+  /*
   //corners
   sys.vid.ApplySurface(b.x-21, b.y-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[0+buttonRow*9]);
   sys.vid.ApplySurface(b.x-21, b.y+b.h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[1+buttonRow*9]);
@@ -235,7 +274,7 @@ void GUI::DrawButton(Button& b)
     sys.vid.ApplySurface(b.x+a*21,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect6);
   SDL_Rect temprect7={8*21,buttonRow*21,b.w-b.w/21*21,b.h-b.h/21*21};
   sys.vid.ApplySurface(b.x+b.w/21*21,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect7);
-  
+  */
   // draw text!
   int tempx = b.x+b.w/2; 
   int tempy = b.y+b.h/2;
@@ -261,47 +300,6 @@ void GUI::DrawButton(Button& b)
     SetSpriteTextColour(oldColour);
   }
 }
-
-/*
-bool GUI::DoButton(int x, int y,int w,int h,bool center,bool clickable,char* text)
-{
-  LOG(DEBUG_GUTS, "GUI::DoButton(" << x << ", " << y << ", " << w << ", " << h << ", " << center << ", " << clickable << ", " << text << ")" << endl)
-  bool clicked=0;
-  bool buttonRow=0;
-  if(center){x=x-w/2;y=y-h/2;}
-
-//TODO: subclassing ?? probably not
-//  #ifdef WIN
-//  if(clickable && sys.input.cursorx[0]>x-14 && cursory[0]>y-14 && sys.input.cursorx[0]<x+w+13 && cursory[0]<y+h+13){
-//    if(mousestate[SDL_BUTTON_LEFT]==2)clicked=1;
-//    buttonRow=1;}
-//  #endif
-
-//  #ifdef WII
-  if(clickable)for(int a=0;a<4;a++){
-    if(useCursor[a] && sys.input.cursorx[a]>x-14 && sys.input.cursory[a]>y-14 && sys.input.cursorx[a]<x+w+13 && sys.input.cursory[a]<y+h+13){
-      if(sys.input.WiiButtonsDown[a] & WPAD_BUTTON_A)
-      {
-        clicked=1;    //TODO multi-user input
-        LOG(DEBUG_DETAIL, "GUI::DoButton()... WPAD_BUTTON_A " << endl)
-      }
-      if(sys.input.WiiButtonsDown[a] & WPAD_CLASSIC_BUTTON_A)
-      {
-        clicked=1;  //TODO multi-user
-        LOG(DEBUG_DETAIL, "GUI::DoButton()... WPAD_CLASSIC_BUTTON_A " << endl)
-      }
-      buttonRow=1;
-    }
-  }
-//  #endif
-
-  DrawButton(x,y,w,h,buttonRow);
-
-  x=x+w/2;y=y+h/2;
-  DrawSpriteText(x,y-21/2,text,2);
-  return clicked;
-}
-*/
 
 Uint32 GUI::GetSpriteTextColour()
 {

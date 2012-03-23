@@ -30,11 +30,12 @@ namespace Gooey
 
 class Element
 {
-private:
-
-
-
 public:
+  enum OffsetMode
+  {
+    TopLeft,
+    Center
+  };
   
   const static Uint32 noColour = -1;
 
@@ -47,6 +48,7 @@ public:
   int y;
   int w;
   int h;
+  OffsetMode offsetMode;
   bool visible;
   bool active;
   bool clicked;

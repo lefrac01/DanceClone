@@ -28,6 +28,8 @@
 
 #include "OS.h"
 
+#define PI 3.141592654
+
 int getnumberfromchar(char text);
 char getcharfromnumber(int textnumber);
 bool charmatch(char* text1,char* text2);
@@ -57,5 +59,29 @@ bool PointInSDLRect(int x, int y, SDL_Rect& r);
 void SwapByteOrder(unsigned short& us);
 void SwapByteOrder(unsigned int& ui);
 void SwapByteOrder(unsigned long long& ull);
+
+class PFunc
+{
+public:
+
+  enum Function
+  {
+    Linear,
+    Inverse,
+    Square,
+    Cube,
+    Sine,
+    Cosine,
+    Log,
+    NiceLog,
+    NUM_FUNCTIONS
+  };
+
+  // return min to max as p varies from [0..1]
+  static float Parametric(Function f, float p, float start, float end);
+  // return [0..1] as x varies from min to maxs
+  //NOTE: Log and NiceLog do not work with this yet
+  static float ParamByVal(Function f, float x, float start, float end);
+};
 
 #endif

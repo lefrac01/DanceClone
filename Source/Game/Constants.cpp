@@ -59,21 +59,13 @@ void Constants::Init(string ConfigFilePath)
   musicFileRoot = "Music/";
   #endif
   
-  /*
-  #ifdef WII
-    musicFileRoot = "/apps/DanceClone/Music/";
-  #endif
-  #ifdef LINUX
-    musicFileRoot = "Music/";
-  #endif
-  #ifdef WIN
-    musicFileRoot = "Music/";
-  #endif
-  */
   baseFileButtonTag = 1024;
   
   pixelsPerMsAt1Bpm = 0.0;
-//    #endif  
+  
+  bannerSize = 128;
+  bannerMiniZoomFactor = 0.3;
+
 }
 
 }

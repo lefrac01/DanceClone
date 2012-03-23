@@ -222,12 +222,15 @@ void Game::RunTitleScreen()
       {
       case playTag:
         state = CHOOSE_NUM_PLAYERS;
+        sound.PlaySample(Sound::Select);
         break;
       case creditsTag:
         state = CREDITS;
+        sound.PlaySample(Sound::Select);
         break;
       case debugTag:
         state = DEBUG;
+        sound.PlaySample(Sound::Select);
         break;
       default:
         break;
@@ -295,7 +298,6 @@ void Game::RunLoadingSong()
   //funny temp screen! hihi
   static int c = -2;
   const int backButtonTag = 7;
-  const int continueButtonTag = 8;
   static bool ready = false;
 
   if (gameStateChanged)
@@ -325,7 +327,7 @@ void Game::RunLoadingSong()
     
     if(songs[currentSong].Prepare())
     {
-      Button back("Continue", sys.vid.ScreenWidth()-200-40, sys.vid.ScreenHeight()-10-40, 100, 10, continueButtonTag);
+      Button back("Continue", sys.vid.ScreenWidth()-200-40, sys.vid.ScreenHeight()-10-40, 100, 10);
       loadingSong.Add(back);
       ready = true;
     }
@@ -352,6 +354,7 @@ void Game::RunLoadingSong()
 
   if (ready && sys.input.ButtonDown(-1, InputChannel::Button4))
   {
+    sound.PlaySample(Sound::Select);
     state = PLAY_PREP1;
   }
   
@@ -364,9 +367,6 @@ void Game::RunLoadingSong()
     {
       switch (b.tag)
       {
-      case continueButtonTag:
-        state = PLAY_PREP1;
-        break;
       case backButtonTag:
         state = SELECT_SONG;
         break;
@@ -401,8 +401,27 @@ void Game::RunDebugScreen()
     gui.SetScreen(debug);
 
     gui.SetSpriteTextColour(gfx.sdlCyan);
+    /*
+    LOG(DEBUG_BASIC, "Sine 0 to 1:" << endl)
+    for (int i = 0; i <= 100; i++)
+    {
+      float p = i/100.0;
+      LOG(DEBUG_BASIC, "p:" << p << " F:" << PFunc::Parametric(PFunc::Sine, p, 0.0, 1.0) << endl)
+    }
+    LOG(DEBUG_BASIC, "Cosine 0 to 1:" << endl)
+    for (int i = 0; i <= 100; i++)
+    {
+      float p = i/100.0;
+      LOG(DEBUG_BASIC, "p:" << p << " F:" << PFunc::Parametric(PFunc::Cosine, p, 0.0, 1.0) << endl)
+    }
+    LOG(DEBUG_BASIC, "Cosine 1 to 0.5:" << endl)
+    for (int i = 0; i <= 100; i++)
+    {
+      float p = i/100.0;
+      LOG(DEBUG_BASIC, "p:" << p << " F:" << PFunc::Parametric(PFunc::Cosine, p, 1.0, 0.5) << endl)
+    }
+    */
   }
-
 
   sys.vid.ApplySurface(80, 260, gfx.images[Graphics::FreezeArrowsTail], NULL, &gfx.freezeTailFrames[3]); //12
   sys.vid.ApplySurface(80, 132, gfx.images[Graphics::FreezeArrowsBody], NULL, &gfx.freezeBodyFrames[3]); //12
@@ -501,6 +520,7 @@ void Game::RunChooseNumPlayers()
         if (b.tag >= basePlayerChoiceTag)
         {
           numPlayers = b.tag - basePlayerChoiceTag + 1;
+          sound.PlaySample(Sound::Select);
           state = SELECT_SONG;
           LOG(DEBUG_BASIC, "Game::RunChooseNumPlayers got " << numPlayers << endl)
         }
@@ -598,19 +618,36 @@ void Game::RunSelectSong()
   }
 }
 
+
 void Game::RunSelectSongv2()
 {
   static int menuIndex = -1;
-  static bool redraw = true;
- 
+  static int oldMenuIndex = -1;
+  static bool setupAnim = false;
+  static long animStartTime = -1;
+  static long animEndTime = -1;
+  static long animLength = 200;
+  int elementPadding = 20;
+  static float elementIndexDistance = 0.0;
+  static vector<float> elementAnimParameters;
+  static int numElements = -1;
+  static int newFocusIndex = -1;
+  static int oldFocusIndex = -1;
+  static bool animToLeft = true;
+  static SDL_Surface* newFocusZoomSurface = NULL; // }
+  static SDL_Surface* oldFocusZoomSurface = NULL; // }- eventually a vector if all elements are to be zoomed
+  long animTime = SDL_GetTicks();
+  
   if (gameStateChanged)
   {
     LOG(DEBUG_MINOR, "Game::RunSelectSong setting up" << endl)
 
+    animStartTime = -1;
+
     if (menuIndex == -1)
     {
       // initial cursor position.  if already previously set, 
-      // keep last cursor position
+      // keep last cursor position.
       menuIndex = 0;
     }
 
@@ -644,25 +681,204 @@ void Game::RunSelectSongv2()
     }
     else
     {
-      redraw = true;
+      // don't actually animate, just do last frame and leave it there
+      setupAnim = true;
+      animStartTime = animTime;
+      animEndTime = animStartTime;
     }
   }
 
-  if (redraw)
+  if (setupAnim)
   {
+    setupAnim = false;
+    
+    // calculate vector of element positions
+    // calculate how many elements will appear on-screen, making sure it
+    // is an odd number so the focus element is in the center, then add
+    // two elements an off-screen element on each side
+    numElements = sys.vid.ScreenWidth() / (constants.bannerSize * constants.bannerMiniZoomFactor + elementPadding);
+    if (numElements % 2 == 0)
+    {
+      --numElements;
+    }
+    
+    oldFocusIndex = numElements / 2;  //TODO: check if need floor
+    if (animToLeft)
+    {
+      newFocusIndex = oldFocusIndex + 1;
+      oldMenuIndex = menuIndex - 1;
+      if (oldMenuIndex < 0)
+      {
+        oldMenuIndex = songMenuItems.size() - 1;
+      }
+    }
+    else
+    {
+      newFocusIndex = oldFocusIndex - 1;
+      oldMenuIndex = menuIndex + 1;
+      if (oldMenuIndex >= (int)songMenuItems.size())
+      {
+        oldMenuIndex = 0;
+      }
+    }
+    
+    elementIndexDistance = 1.0 / numElements;
+
+    elementAnimParameters.resize(numElements);
+    for (int i = 0; i < numElements; ++i)
+    {
+      elementAnimParameters[i] = PFunc::ParamByVal(PFunc::Linear, i, 0, numElements-1);
+    }
+    
+    
+    
+    
+  }
+  if (animStartTime != -1)
+  {
+    if (animTime >= animEndTime)
+    {
+      animStartTime = -1;
+    }
+    
+    // figure out animation technique here.
+    // use maybe a sine function combined with a linear to create
+    // a nice layout for the circular list of mini banners.
+    // the top of the screen could display the bottom arc of a circle.
+    // moving left or right would rotate the mini banners along the arc.
+    // after move, the center mini banner would be zoomed up to full banner size.
+    // just before move, the existing full banner would be faded out.
+    // not hard at all with the rotozoom function, per-surface alpha 
+    // and the new parametric functions!
+
+
+
+    // generate images based on menu index and place them 
+    // relative to their position in the element parameter vector
+    // if an element parameter is 0 it means extreme left and 1 means
+    // extreme right.
+
+    // given that menuIndex points at the songMenuItem in the
+    // newFocusIndex slot, figure out the menu index corresponding to
+    // the leftmost element
+    int elementMenuIndex = menuIndex;
+    for (int i = newFocusIndex; i > 0; --i)
+    {
+      --elementMenuIndex;
+      if (elementMenuIndex < 0)
+      {
+        elementMenuIndex = songMenuItems.size() - 1;
+      }
+    }
+
+
+    // build screen
     Container songSelect;
-  
+
     Label title(songMenuItems[menuIndex].song.Name(), 40, 30, 0, 0);
     title.colour = gfx.sdlWhite;
     songSelect.Add(title);
-    
-    SDL_Surface* banner = songMenuItems[menuIndex].banner ? songMenuItems[menuIndex].banner : gfx.images[Graphics::DefaultBanner];
-    SDL_Surface* bannerMini = songMenuItems[menuIndex].bannerMini ? songMenuItems[menuIndex].bannerMini : gfx.images[Graphics::DefaultBannerMini];
-    Image justBan(banner, 100, 100, 0, 0);
-    songSelect.Add(justBan);
 
-    Image doTheMini(bannerMini, 300, 100, 0, 0);
-    songSelect.Add(doTheMini);
+    float animPct = PFunc::ParamByVal(PFunc::Cube, animTime, animStartTime, animEndTime);
+    
+    for (int i = 0; i < numElements; ++i)
+    {
+      // position the element according to its base position stored
+      // in the positions vector plus how much it has moved toward the
+      // next position since the animation has started
+      float elementBaseP = elementAnimParameters[i];
+      float elementPOffset = elementIndexDistance * animPct;
+      if (animToLeft)
+      {
+        elementPOffset *= -1;
+      }
+      
+      // 0..1 value representing element's position from offscreen left to offscreen right
+      // if < 0 or > 1 no need to create and draw the image
+      float p = elementBaseP + elementPOffset;
+      if (p > 0 && p < 1)
+      {
+        int screenX = PFunc::Parametric(PFunc::Linear, p, 0 - constants.bannerSize, sys.vid.ScreenWidth());
+        int screenY = 200;
+      
+        // do a fancy zoom effect so the item coming into focus zooms up and the item
+        // going out of focus zooms down.
+        if (i == newFocusIndex)
+        {
+          SDL_Surface* banner = songMenuItems[elementMenuIndex].banner ? songMenuItems[elementMenuIndex].banner : gfx.images[Graphics::DefaultBanner];
+          SDL_Surface* final = NULL;
+
+          // if a zoom surface was allocated, free it
+          if (newFocusZoomSurface)
+          {
+            SDL_FreeSurface(newFocusZoomSurface);
+            newFocusZoomSurface = NULL;
+          }
+
+          // if we are at the last step of drawing, use the preloaded image
+          if (animStartTime == -1)
+          {
+            final = banner;
+          }
+          else
+          {
+            // else create a zoomed image according to the animation time and store pointer in a special var
+            float zoomFactor = PFunc::Parametric(PFunc::Linear, animPct, constants.bannerMiniZoomFactor, 1.0);
+            newFocusZoomSurface = zoomSurface(banner, zoomFactor, zoomFactor, 0);
+            final = newFocusZoomSurface;
+          }
+          
+          Image ban(final, screenX, screenY, 0, 0);
+          ban.offsetMode = Element::Center;
+          songSelect.Add(ban);
+        }
+        else if (i == oldFocusIndex)
+        {
+          SDL_Surface* banner = songMenuItems[elementMenuIndex].banner ? songMenuItems[elementMenuIndex].banner : gfx.images[Graphics::DefaultBanner];
+          SDL_Surface* final = NULL;
+
+          // if a zoom surface was allocated, free it
+          if (oldFocusZoomSurface)
+          {
+            SDL_FreeSurface(oldFocusZoomSurface);
+            oldFocusZoomSurface = NULL;
+          }
+
+          // if we are at the last step of drawing, use the preloaded image
+          if (animStartTime == -1)
+          {
+            final = songMenuItems[elementMenuIndex].bannerMini ? songMenuItems[elementMenuIndex].bannerMini : gfx.images[Graphics::DefaultBannerMini];
+          }
+          else
+          {
+            // else create a zoomed image according to the animation time and store pointer in a special var
+            float zoomFactor = PFunc::Parametric(PFunc::Linear, animPct, 1.0, constants.bannerMiniZoomFactor);
+            oldFocusZoomSurface = zoomSurface(banner, zoomFactor, zoomFactor, 0);
+            final = oldFocusZoomSurface;
+          }
+
+          Image ban(final, screenX, screenY, 0, 0);
+          ban.offsetMode = Element::Center;
+          songSelect.Add(ban);
+        }
+        else
+        {
+          // just draw a normal mini banner... for now muahaha
+          SDL_Surface* bannerMini = songMenuItems[elementMenuIndex].bannerMini ? songMenuItems[elementMenuIndex].bannerMini : gfx.images[Graphics::DefaultBannerMini];
+          Image mini(bannerMini, screenX, screenY, 0, 0);
+          mini.offsetMode = Element::Center;
+          songSelect.Add(mini);
+        }
+        
+      }
+      
+      // increment the menu index corresponding to the element
+      ++elementMenuIndex;
+      if (elementMenuIndex == (int)songMenuItems.size())
+      {
+        elementMenuIndex = 0;
+      }
+    }
     
     gui.SetScreen(songSelect);
   }
@@ -685,7 +901,10 @@ void Game::RunSelectSongv2()
     {
       menuIndex = 0;
     }
-    redraw = true;
+    setupAnim = true;
+    animToLeft = true;
+    animStartTime = SDL_GetTicks();
+    animEndTime = animStartTime + animLength;
     sound.PlaySample(Sound::MenuNav);
   }
   else if (sys.input.DirectionDown(-1, InputChannel::LEFT))
@@ -694,10 +913,12 @@ void Game::RunSelectSongv2()
     {
       menuIndex = songMenuItems.size() - 1;
     }
-    redraw = true;
+    setupAnim = true;
+    animToLeft = false;
+    animStartTime = SDL_GetTicks();
+    animEndTime = animStartTime + animLength;
     sound.PlaySample(Sound::MenuNav);
   }
-
 }
 
 void Game::RunSelectDifficulty()
@@ -762,27 +983,27 @@ void Game::RunSelectDifficulty()
       if (p.inputs.directionDown[InputChannel::UP] && p.difficulty > minDifficulty)
       {
         while (!songs[currentSong].DifficultyIsAvailable(--p.difficulty));
-        // play feedback wav
-        //HSSSSSSSSSS     getting double inputs on Wii only...
+        sound.PlaySample(Sound::Switch);
+        // getting double inputs on Wii only...
         usleep(10000);
       }
       else if (p.inputs.directionDown[InputChannel::DOWN] && p.difficulty < maxDifficulty)
       {
         while (!songs[currentSong].DifficultyIsAvailable(++p.difficulty));
-        // play feedback wav
-        //HSSSSSSSSSS     getting double inputs on Wii only...
+        sound.PlaySample(Sound::Switch);
+        // getting double inputs on Wii only...
         usleep(10000);
       }
       if (p.inputs.buttonDown[InputChannel::Button4])  // A button
       {
         p.ready = true;
-        // play feedback wav
+        sound.PlaySample(Sound::Select);
       }
     }
     else if (p.inputs.buttonDown[InputChannel::Button3])  // B button
     {
       p.ready = false;
-      // play feedback wav
+      sound.PlaySample(Sound::Select);
     }
   }
   
@@ -841,7 +1062,7 @@ void Game::PreloadSongs()
         if (songs[en.filename].Load(en.filename))
         {
           // song has valid steps so also create menu choice
-          SongMenuItem temp(sys, songs[en.filename]);
+          SongMenuItem temp(sys, constants, songs[en.filename]);
           songMenuItems.push_back(temp);
         }
       }
@@ -998,25 +1219,6 @@ bool Game::PreStartDelayFinished()
 
 void Game::RunScoreScreen()
 {
-  //#//TODO: multiplayer
-  //#player_data& pd = current_player_data[0];  
-//#
-  //#char temptext[100];
-  //#sprintf(temptext,"%d%s",p.marvellous," MARVELLOUS");
-  //#WiiDash_spritetext(rmode->viWidth/2,440-18*8,temptext,2);
-  //#sprintf(temptext,"%d%s",p.perfect," PERFECT");
-  //#WiiDash_spritetext(rmode->viWidth/2,440-18*7,temptext,2);
-  //#sprintf(temptext,"%d%s",p.great," GREAT");
-  //#WiiDash_spritetext(rmode->viWidth/2,440-18*6,temptext,2);
-  //#sprintf(temptext,"%d%s",p.good," GOOD");
-  //#WiiDash_spritetext(rmode->viWidth/2,440-18*5,temptext,2);
-  //#sprintf(temptext,"%d%s",p.boo," BOO");
-  //#WiiDash_spritetext(rmode->viWidth/2,440-18*4,temptext,2);
-  //#sprintf(temptext,"%d%s",p.longest_combo," MAX COMBO");
-  //#WiiDash_spritetext(rmode->viWidth/2,440-18*1,temptext,2);
-//#
-//#
-  //#if(WiiDash_button(rmode->viWidth-300-40,sys.vid.ScreenHeight()-10-40,100,10,0,1,(char*)"temp no score - Back"))gamestate=4;
 
 }
 

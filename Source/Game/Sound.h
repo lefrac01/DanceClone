@@ -48,6 +48,7 @@ public:
     RecordScratch,
     MenuNav,
     Select,
+    Switch,
     NUM_SOUNDS
   };
 

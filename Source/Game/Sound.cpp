@@ -64,6 +64,7 @@ bool Sound::Init()
   soundPaths[RecordScratch] = "Media/Game/recordscratch.wav";
   soundPaths[MenuNav] = "Media/Game/menunav.wav";
   soundPaths[Select] = "Media/Game/select.wav";
+  soundPaths[Switch] = "Media/Game/switch.wav";
 
   for (unsigned int i = 0; i < sounds.size(); ++i)
   {

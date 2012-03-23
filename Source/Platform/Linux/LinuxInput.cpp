@@ -59,13 +59,18 @@ void LinuxInput::Update()
     for(int a=0;a<mousecount;a++)if(event.button.button==a)mousestate[a]=0;
 */
 
+  // start with all button down states to false
+  for (int i = 0; i < InputChannel::NUM_BUTTONS; ++i)
+  {
+    inputChannels[0].buttonDown[i] = false;
+  }
+
   // just like C64 :)
   static bool debounceMouse = false;
   Uint8 mousestate = SDL_GetMouseState(&inputChannels[0].cursorX, &inputChannels[0].cursorY);
   
   if (debounceMouse)
   {
-    inputChannels[0].buttonDown[InputChannel::Button4] = false;
     if ((mousestate & SDL_BUTTON(1)) == 0)    // Wiimote button A
     {
       debounceMouse = false;

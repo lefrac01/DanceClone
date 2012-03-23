@@ -30,6 +30,7 @@ using std::vector;
 using Platform::OS;
 #include "../Platform/LOG.H"
 
+#include "Constants.h"
 #include "Song.h"
 
 namespace DanceClone
@@ -39,10 +40,11 @@ class SongMenuItem
 {
 private:
   OS& sys;
+  Constants& constants;
   SongMenuItem();
   
 public:
-  SongMenuItem(OS& os, Song& s);
+  SongMenuItem(OS& os, Constants& c, Song& s);
   SongMenuItem(const SongMenuItem& b);
   SongMenuItem& operator=(const SongMenuItem& b);
   ~SongMenuItem();

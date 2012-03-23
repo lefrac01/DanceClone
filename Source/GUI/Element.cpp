@@ -28,6 +28,7 @@ Element::Element() :
   y(-1),
   w(-1),
   h(-1),
+  offsetMode(TopLeft),
   visible(true),
   active(true),
   clicked(false),

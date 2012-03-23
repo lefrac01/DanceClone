@@ -65,6 +65,9 @@ public:
 
   float pixelsPerMsAt1Bpm;
 
+  int bannerSize;
+  float bannerMiniZoomFactor;
+
   void Init(string ConfigFilePath = "");
 };
 

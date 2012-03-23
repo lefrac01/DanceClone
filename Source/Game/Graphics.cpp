@@ -82,7 +82,7 @@ bool Graphics::Init(string configFilePath)
     }
     else
     {
-      images[DefaultBannerMini] = zoomSurface(images[DefaultBanner], 0.5, 0.5, 0);
+      images[DefaultBannerMini] = zoomSurface(images[DefaultBanner], constants.bannerMiniZoomFactor, constants.bannerMiniZoomFactor, 0);
     }
     
     images[DifficultyCursor] = sys.vid.LoadOptimizeAlpha(difficultyCursorImagePath.c_str());

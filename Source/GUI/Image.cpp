@@ -24,6 +24,7 @@ namespace Gooey
 
 
 Image::Image(SDL_Surface* s) :
+  Element(),
   surface(s)
 {
 }
@@ -34,6 +35,39 @@ Image::Image(SDL_Surface* s, int _x, int _y, int _w, int _h, int t) :
 {
 }
 
+Image::Image(const Image& b) :
+  surface(b.surface)
+{
+  tag = b.tag;
+  x = b.x;
+  y = b.y;
+  w = b.w;
+  h = b.h;
+  offsetMode = b.offsetMode;
+  visible = b.visible;
+  active = b.active;
+  clicked = b.clicked;
+  colour = b.colour;
+  text = b.text;
+}
+
+Image& Image::operator=(const Image& b)
+{
+  tag = b.tag;
+  x = b.x;
+  y = b.y;
+  w = b.w;
+  h = b.h;
+  offsetMode = b.offsetMode;
+  visible = b.visible;
+  active = b.active;
+  clicked = b.clicked;
+  colour = b.colour;
+  text = b.text;
+  surface = b.surface;
+  return *this;
+}
+  
 bool Image::Clicked(int testx, int testy)
 {
   return false;
