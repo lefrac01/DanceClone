@@ -30,11 +30,11 @@ Label::Label(string s) :
 }
 
 Label::Label(string s, int _x, int _y, int _w, int _h, int t) :
-  Element(_x, _y, _w, _h, true, true, false, s, t)
+  Element(_x, _y, _w, _h, true, true, s, t)
 {
 }
 
-bool Label::Clicked(int testx, int testy)
+bool Label::Clicked(int testx, int testy, int clickedBy)
 {
   return false;
 }

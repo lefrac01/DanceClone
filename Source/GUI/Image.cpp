@@ -30,7 +30,7 @@ Image::Image(SDL_Surface* s) :
 }
 
 Image::Image(SDL_Surface* s, int _x, int _y, int _w, int _h, int t) :
-  Element(_x, _y, _w, _h, true, true, false, "", t),
+  Element(_x, _y, _w, _h, true, true, "", t),
   surface(s)
 {
 }
@@ -68,7 +68,7 @@ Image& Image::operator=(const Image& b)
   return *this;
 }
   
-bool Image::Clicked(int testx, int testy)
+bool Image::Clicked(int testx, int testy, int clickedBy)
 {
   return false;
 }

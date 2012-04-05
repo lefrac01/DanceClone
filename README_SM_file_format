@@ -54,6 +54,54 @@ Description - This will be displayed on the gameplay screen. This can be any tex
 DifficultyClass - This value must be "beginner", "easy", "medium", "hard", or "challenge". These values correspond to the five levels of difficulty on the Select Difficulty screen.
 DifficultyMeter - The difficulty of these notes as a bar rating. The value must be an integer between 1 and traditionally 10, though many keyboard files go above ten.
 RadarValues - Five floating point numbers separated by commas that determine the "voltage", "stream", "chaos", "freeze", and "air" values for the set of steps, as is displayed in the "groove radar" in the default theme, for example.
+
+from stepmania forums:
+Freeze - the amount of holds
+Chaos - Number of off-beat notes
+Voltage - The density of the steps (how rapidly you need to hit them in the section with the most notes)
+Air - Amount of jumps
+Stream - The amount of steps
+
+also from stepmania forums:
+Stream:
+Rank=(number of taps + number of holds) / length of song in seconds / 7
+Judgment=Number of taps with at least Perfect judgment / Total number of taps
+
+Voltage:
+Rank=Number of taps for the window of 8 beats with the maximum number of taps * Average BPM / 10
+Judgment=Longest combo/Max possible combo
+
+The rank might need more explanation, the game checks groups of 8 beats for the number of taps and 
+uses the group with the largest number of taps.
+
+Air:
+Rank=Number of jumps / Length of song in seconds
+Judgment= Number of jumps with at least Perfect judgment / Number of jumps
+
+Freeze:
+Rank=Number of holds / Length of song in seconds
+Judgment= Number of passed holds + Number of passed rolls / Number of holds
+
+Chaos:
+Rank=Number of taps that is on 12th parts or smaller / Length of song in seconds / 2
+Judgment= Number of earned dancepoints / Number of possible dance points
+
+
+amendments:
+There are 2 misquoted values:
+The number of taps must be divided by the beat window, which is defined as 8. This is defined in the 
+source as "MaxDensity" and is an average of arrows/beat within that beat window. The function loops 
+to iterate through the whole song to find the "Max" for this value.
+
+It doesn't use BPM in the calculation. It's actually Average BPS (Beats per Second), a much smaller number. 
+It's calculated by "Number of Beats in Song / Song Length in Seconds." So here's the full formula for Voltage:
+
+[(Number of taps in window)/(Length of window in beats)*(Number of Beats)/(Length of Song)] / 10
+
+Which simplifies to: MaxDensity * avgBPS / 10
+
+
+
 NoteData - This value requires a longer explanation:
 Each note is represented by a character:
 0 = no note here

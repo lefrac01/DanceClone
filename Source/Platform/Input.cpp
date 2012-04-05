@@ -28,9 +28,6 @@ void Input::Init()
   //there is a way to reinit SDL adding joystick...
   //SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
   SDL_ShowCursor(SDL_DISABLE);
-  
-  //allocate basic channel.  no, not in base class
-  //inputChannels.resize(1);
 }
 
 bool Input::ButtonDown(int c, InputChannel::InputButton b)

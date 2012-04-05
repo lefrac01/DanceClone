@@ -1,4 +1,4 @@
-//      SimpleSongScroller.h
+//      Decal.h
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
 //      
@@ -16,44 +16,49 @@
 //      along with this program; if not, write to the Free Software
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
-
-#ifndef GUI_SIMPLE_SONG_SCROLLER_H
-#define GUI_SIMPLE_SONG_SCROLLER_H
+#ifndef DECAL_H
+#define DECAL_H
 
 #include <vector>
 using std::vector;
 
+#include <SDL.h>
+
 #include "../Platform/LOG.H"
 
-#include "Button.h"
+namespace DanceClone
+{
 
-namespace Gooey
+class Decal
 {
-  
-class SimpleSongScroller : public Element
-{
-private:
-  vector<Button> buttons;
-  vector<string> songChoices;
-  vector<int> songChoiceTags;
-  int currentOffset;
-  int selectionOffset;
-  int scrollOffset;
-  const static int scrollUpTag = 1;
-  const static int scrollDownTag = 2;
-  
 public:
-  SimpleSongScroller();
-  virtual ~SimpleSongScroller();
-  SimpleSongScroller(int _x, int _y, int _w, int _h, int ta = -1);
-  bool Clicked(int testx, int testy);
-  void CursorAt(int testx, int testy);
-  void AddSongChoice(string s, int t);
-  void Recalculate(int startOffset = -1);
-  int GetSelectionOffset();
-  vector<Button>& Buttons();
-};
+  enum AnimType
+  {
+    Static,
+    Once,
+    Loop
+  };
+  
+private:
+  Decal();
 
+public:
+
+  Decal(int p, SDL_Surface* s, AnimType ty, long start, int d);
+  Decal(const Decal& b);
+  const Decal& operator=(const Decal& b);
+  
+  int player;
+  SDL_Surface* surface;
+  AnimType animType;
+  long animStartTime;
+  int animDuration;
+  int frameDuration;
+  bool lastFrameLingers;
+  vector<SDL_Rect*> frameRects;
+  
+  SDL_Rect* CurrentFrameRect(long currentTime);
+};
 
 }
 

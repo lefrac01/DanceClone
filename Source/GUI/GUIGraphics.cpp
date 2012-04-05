@@ -35,7 +35,7 @@ Graphics::Graphics(OS& os) :
 //TODO: detail when returning false
 bool Graphics::Init()
 {
-  LOG(DEBUG_BASIC, "Gooey::Graphics::Init()" << endl)
+  LOG(DEBUG_MINOR, "Gooey::Graphics::Init()" << endl)
 
   string cursorImagePath = "Media/WiiDash/Cursor.PNG";
   string fontImagePath = "Media/WiiDash/Font.png";
@@ -59,19 +59,6 @@ bool Graphics::Init()
   arrowsImage = sys.vid.LoadOptimizeAlpha(arrowsImagePath.c_str());
   if (!arrowsImage) LOG(DEBUG_BASIC, "failed to load \"" << arrowsImagePath << "\"" << endl)
 
-  
-  //WDfontimage       = LoadOptimizeAlpha("Media/WiiDash/Font.png");
-  
-//TODO: move safe fat init to earlier place in WiiOS...
-//#ifdef WII
-//  while(!WDfontimage){
-//  WDfontimage     = LoadOptimizeAlpha("Media/WiiDash/Font.png");
-//  fatInitDefault();}
-//#endif
-//WDbuttonimage       = LoadOptimizeAlpha("Media/WiiDash/Button.png");
-//WDarrowsimage       = LoadOptimize("Media/WiiDash/Arrows.png");
-//WDcursorimage       = LoadOptimizeAlpha("Media/WiiDash/Cursor.png");
-//WDfontimagecolored    = LoadOptimizeAlpha("Media/WiiDash/Font.png");
 
   for(int a = 0; a < 95; a++)
   {

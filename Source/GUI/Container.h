@@ -31,7 +31,6 @@ using std::vector;
 #include "Button.h"
 #include "Container.h"
 #include "Label.h"
-#include "SimpleSongScroller.h"
 
 namespace Gooey
 {
@@ -41,7 +40,6 @@ class Container : public Element
 {
 protected:
   vector<Container> containers;
-  vector<SimpleSongScroller> simpleSongScrollers;
   vector<Image> images;
   vector<Button> buttons;
   vector<Label> labels;
@@ -52,13 +50,13 @@ public:
   virtual ~Container();
   Container(int _x, int _y, int _w, int _h, int ta = -1);
   vector<Container>& Containers();  
-  vector<SimpleSongScroller>& SimpleSongScrollers();
   vector<Image>& Images();
   vector<Button>& Buttons();
   vector<Button> AllButtons();
   vector<Label>& Labels();
   void Add(Element& e);
-  bool Clicked(int testx, int testy);
+  bool Clicked(int testx, int testy, int channel);
+  void CursorClear();
   void CursorAt(int testx, int testy);
 };
 

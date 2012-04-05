@@ -18,7 +18,6 @@
 //      MA 02110-1301, USA.
 
 #include "Container.h"
-#include "SimpleSongScroller.h"
 
 namespace Gooey
 {
@@ -30,7 +29,7 @@ Container::Container() :
 }
 
 Container::Container(int _x, int _y, int _w, int _h, int ta) :
-  Element(_x, _y, _w, _h, true, true, false, "", ta)
+  Element(_x, _y, _w, _h, true, true, "", ta)
 {
 }
 
@@ -41,11 +40,6 @@ Container::~Container()
 vector<Container>& Container::Containers()
 {
   return containers;
-}
-
-vector<SimpleSongScroller>& Container::SimpleSongScrollers()
-{
-  return simpleSongScrollers;
 }
 
 vector<Image>& Container::Images()
@@ -77,24 +71,11 @@ void Container::Add(Element& e)
   catch (...){}
   try 
   {
-    SimpleSongScroller& sss = dynamic_cast<SimpleSongScroller&>(e);
-    simpleSongScrollers.push_back(sss);
-    LOG(DEBUG_MINOR, "Container::Add() SimpleSongScroller sss: x: " << sss.x << " y: " << sss.y << endl)
-  }
-  catch (...){}
-  {
-  try 
-  {
-    //TODO: temp: all original menus use centered buttons.  hit detection is screwy elsewise so for the moment
-    // center in-place during add
-    
     Button& b = dynamic_cast<Button&>(e);
-    //b.x=b.x-b.w/2;b.y=b.y-b.h/2;
     buttons.push_back(b);
     LOG(DEBUG_MINOR, "Container::Add() button b: x: " << b.x << " y: " << b.y << " w: " << b.w << " h: " << b.h << " text: " << b.text << " tag: " << b.tag << endl)
   }
   catch (...){}
-  }
   try 
   {
     Image& i = dynamic_cast<Image&>(e);
@@ -113,7 +94,7 @@ void Container::Add(Element& e)
 }
 
 
-bool Container::Clicked(int testx, int testy)
+bool Container::Clicked(int testx, int testy, int clickedBy)
 {
   LOG(DEBUG_GUTS, "Container::Clicked() x: " << testx << " y: " << testy << endl)
   //opt, if outside self extent, no need to check
@@ -130,15 +111,7 @@ bool Container::Clicked(int testx, int testy)
   
   for (unsigned int i = 0; i < containers.size(); i++)
   {
-    if (containers[i].Clicked(testx, testy))
-    {
-      return true;
-    }
-  }
-  
-  for (unsigned int i = 0; i < simpleSongScrollers.size(); i++)
-  {
-    if (simpleSongScrollers[i].Clicked(testx, testy))
+    if (containers[i].Clicked(testx, testy, clickedBy))
     {
       return true;
     }
@@ -147,7 +120,7 @@ bool Container::Clicked(int testx, int testy)
   // check self
   for (unsigned int i = 0; i < buttons.size(); i++)
   {
-    if (buttons[i].Clicked(testx, testy))
+    if (buttons[i].Clicked(testx, testy, clickedBy))
     {
       return true;
     }
@@ -156,6 +129,18 @@ bool Container::Clicked(int testx, int testy)
   return false;
 }
 
+void Container::CursorClear()
+{
+  for (unsigned int i = 0; i < containers.size(); i++)
+  {
+    containers[i].CursorClear();
+  }
+  // check self
+  for (unsigned int i = 0; i < buttons.size(); i++)
+  {
+    buttons[i].state = Button::NORMAL;    //TODO: not valid with an animation of DOWN state.  for now that state is not used...
+  }
+}
 
 void Container::CursorAt(int testx, int testy)
 {
@@ -177,11 +162,6 @@ void Container::CursorAt(int testx, int testy)
     containers[i].CursorAt(testx, testy);
   }
   
-  for (unsigned int i = 0; i < simpleSongScrollers.size(); i++)
-  {
-    simpleSongScrollers[i].CursorAt(testx, testy);
-  }
-  
   // check self
   for (unsigned int i = 0; i < buttons.size(); i++)
   {
@@ -199,11 +179,6 @@ vector<Button> Container::AllButtons()
   for (unsigned int i = 0; i < containers.size(); i++)
   {
     temp.insert(temp.end(), containers[i].AllButtons().begin(), containers[i].AllButtons().end());
-  }
-
-  for (unsigned int i = 0; i < simpleSongScrollers.size(); i++)
-  {
-    temp.insert(temp.end(), simpleSongScrollers[i].Buttons().begin(), simpleSongScrollers[i].Buttons().end());
   }
 
   temp.insert(temp.end(), buttons.begin(), buttons.end());

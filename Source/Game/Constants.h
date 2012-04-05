@@ -68,6 +68,8 @@ public:
   int bannerSize;
   float bannerMiniZoomFactor;
 
+  int maxRecordFile;
+  
   void Init(string ConfigFilePath = "");
 };
 

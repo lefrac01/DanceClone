@@ -29,6 +29,8 @@
 using std::string;
 #include <vector>
 using std::vector;
+#include <map>
+using std::map;
 
 #include <iostream>
 using std::cerr;
@@ -37,7 +39,6 @@ using std::endl;
 #include <fstream>
 using std::ofstream;
 using std::ifstream;
-//#include <cmath>
 
 #include "SDL.h"
 
@@ -59,49 +60,69 @@ public:
   BpmChange(float b, float t, float bp);
 };
 
-class BeatTick
-{
-public:
-  long  yPos;
-  float timestamp;
-  float beat;
-  BeatTick(long y, float t, float b);
-};
-
-
 class Song
 {
+public:
+  enum RadarValues
+  {
+    Voltage,
+    Stream,
+    Chaos,
+    Freeze,
+    Air,
+    NumRadarValues
+  };
+
 private:
-  bool ReadStepData();
+  bool ReadBaseData();
+  void ReadRecords();
   bool ParseBpms(const string& s, vector<BpmChange>& v);
   string SMValGetString(const string& s);
  
 
 public:
   Song();
+  Song(const Song& s);
+  Song& operator= (const Song& b);
+  
   bool loaded;
   bool prepared;
   string filename;
+  string title;
   string bannerImageFilename;
   string backgroundImageFilename;
   float beat0Offset;
+  float length;
   vector<string> stepFileLines;
   vector< vector<Arrow> > arrows;
+  vector< vector<float> > radarValues;
+  vector< vector<float> > records;
+  vector< vector<int> > fullCombos;
   vector<BpmChange> bpmChanges;
   vector<bool> difficultyAvailable;
-  vector<BeatTick> beatTicks;
+  vector<int> stepRatings;
   SDL_Surface* backgroundImage;
   
   void Init();
   bool Load(string& f);
+  void VerifyRadarData();
   bool Prepare();
   string Path();
   string Name();
+  string Title();
   string StepFilePath();
-  string ScorePath();
+  string RecordPath();
   string BannerImagePath();
   string BackgroundImagePath();
+  float MinBPM();
+  float MaxBPM();
   bool DifficultyIsAvailable(int difficulty);  
+  void WriteRecords();
+  float GetRecord(int recordFile, int difficulty);
+  void SetRecord(int recordFile, int difficulty, float record);
+  bool GetFullCombo(int recordFile, int difficulty);
+  void SetFullCombo(int recordFile, int difficulty);
+  static float MsPerBeatFromBPM(float bpm);
 };
 
 }

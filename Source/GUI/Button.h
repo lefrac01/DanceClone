@@ -51,7 +51,7 @@ public:
   Button(string s, int t = -1);
   Button(string s, int _x, int _y, int _w, int _h, int t = -1);
   ButtonState state;
-  bool Clicked(int testx, int testy);
+  bool Clicked(int testx, int testy, int channel);
   void CursorAt(int testx, int testy);
   SDL_Rect& TestExtent();
 };

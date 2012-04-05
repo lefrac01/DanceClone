@@ -35,10 +35,10 @@ Dash::Dash(OS& os, GUI& g) :
 
 bool Dash::Init()
 {
-  LOG(DEBUG_BASIC, "Dash::Init()" << endl)
+  LOG(DEBUG_MINOR, "Dash::Init()" << endl)
   if (!gfx.Init())
   {
-    LOG(DEBUG_DETAIL, "Dash::Init() returning false cause gfx.Init() failed" << endl)
+    LOG(DEBUG_BASIC, "Dash::Init() returning false cause gfx.Init() failed" << endl)
     return false;
   }
   
@@ -63,10 +63,7 @@ void Dash::Run()
   int oldRunTime = runTime;
   runTime=SDL_GetTicks();
   frameTime=runTime-oldRunTime;
-  //frameRate=(int)(1000/(double)frameTime);
   if(double_same(onOffPercent,0))gameTime=gameTime+frameTime;
-  //if(onOffPercent==0)timeSpeed=(double)framecap/(double)frameRate;
-  //if(onOffPercent!=0)timeSpeed=60/(double)frameRate;
 
   RunOnOff();
   if(!double_same(onOffPercent,0)){
@@ -76,18 +73,6 @@ void Dash::Run()
     RunMenu(); 
     RunTopBottomBars();
   }
-  
-  //WiiDash_cursor();   // handled now but GUI::Update()
-  
-  /*#ifdef WIN
-  sys.vid.ApplySurface(0,0,WDborderimage,screen,NULL); 
-  #endif*/
-  
-  /*SDL_Rect temprect = {22,30,241,17};
-  SDL_FillRect(screen,&temprect,SDL_MapRGB(screen->format,150,150,150));
-  char temptext[100]; 
-  sprintf(temptext,"%s%d","Frames Per Second = ",frameRate);
-  gui.SpriteText(20,30,(char*)temptext,1);*/
 }
 
 int Dash::OnOffSlide(int onPos, int offPos)
@@ -137,7 +122,7 @@ void Dash::RunOnOff()
           pPosition++;
         }      
       }
-//      #endif
+
       LOG(DEBUG_GUTS, "copying stash 2 into stash 1" << endl)
       memcpy(prgb2,prgb1,sys.vid.ScreenWidth()*sys.vid.ScreenHeight()*3*sizeof(Uint8));
       LOG(DEBUG_GUTS, "initial blur on stash 2" << endl)

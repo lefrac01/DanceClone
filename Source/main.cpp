@@ -1,10 +1,9 @@
 #include "Platform/OS.h"
 
-#define GAMEVERSIONSTRING "DanceClone v0.61"
-
-
 #include "Game/Game.h"
 using DanceClone::Game;
+#include "Game/Constants.h"
+using DanceClone::Constants;
 
 #ifdef WIN
 #include "Platform/Win32/Win32OS.h"
@@ -44,6 +43,9 @@ int main(int argc, char* argv[])
   INIT_LOG
   LOG(DEBUG_BASIC, GAMEVERSIONSTRING << " startup" << endl)
   FLUSH_LOG
+
+  Constants constants;
+  constants.Init(); // may eventually use a config file 
 
   GUI gui(sys);
   if (!gui.Init())

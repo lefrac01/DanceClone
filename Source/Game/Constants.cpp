@@ -30,9 +30,9 @@ const char* Constants::difficultyText[] = {"Beginner", "Easy", "Medium", "Hard",
 void Constants::Init(string ConfigFilePath)
 {
   LOG(DEBUG_MINOR, "DanceClone::Constants::Init()" << endl)
-  arrowsHitAnimMs = 200.0;
+  arrowsHitAnimMs = 300.0;
   numDifficulties = 5;
-  songStartOffset = 100;
+  songStartOffset = 105;
 
   goalOffset = 0;
   maxPlayers = 2;
@@ -40,10 +40,10 @@ void Constants::Init(string ConfigFilePath)
   playerArrowFieldMargin = 20;
   
   preStartDelay = 3000;
-  songAbortDelay = 2500;
-  jumpAllowDelay = 100;
-  booDelay = 200;
-  goodDelay = 200;
+  songAbortDelay = 2000;
+  jumpAllowDelay = 80;
+  booDelay = 250;
+  goodDelay = 150;
   greatDelay = 100;
   perfectDelay = 50;
   marvellousDelay = 25;
@@ -65,7 +65,9 @@ void Constants::Init(string ConfigFilePath)
   
   bannerSize = 128;
   bannerMiniZoomFactor = 0.3;
+//  bannerMiniZoomFactor = 0.125;
 
+  maxRecordFile = 4;
 }
 
 }

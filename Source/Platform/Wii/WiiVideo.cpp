@@ -29,7 +29,7 @@ WiiVideo::WiiVideo() :
 
 bool WiiVideo::Init()
 {
-  LOG(DEBUG_BASIC, "Platform::Video::Init()" << endl)
+  LOG(DEBUG_MINOR, "Platform::Video::Init()" << endl)
   //TODO: there is a way to reinit adding support for just video...
   //SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
 

@@ -476,15 +476,23 @@ float PFunc::Parametric(Function f, float p, float start, float end)
 
 float PFunc::ParamByVal(Function f, float x, float start, float end)
 {
+  float min = 0;
+  float max = 0;
   if (start > end)
   {
-    start = end;
+    min = end;
+    max = start;
   }
-  if (x <= start)
+  else
+  {
+    max = end;
+    min = start;
+  }
+  if (x <= min)
   {
     return 0;
   }
-  else if (x >= end)
+  else if (x >= max)
   {
     return 1;
   }
@@ -492,11 +500,11 @@ float PFunc::ParamByVal(Function f, float x, float start, float end)
   switch(f)
   {
     case Linear:
-      return (x - start) / (end - start);   // end != start or already returned 0 or 1
+      return (x - min) / (max - min);   // end != start or already returned 0 or 1
     case Square:
-      return pow(ParamByVal(Linear, x, start, end), 0.5);
+      return pow(ParamByVal(Linear, x, min, max), 0.5);
     case Cube:
-      return pow(ParamByVal(Linear, x, start, end), 1.0/3.0);
+      return pow(ParamByVal(Linear, x, min, max), 1.0/3.0);
     case Log:
       return 0; // fail... been too long since uni
       //return exp(ParamByVal(Linear, x, start, end));

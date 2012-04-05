@@ -22,18 +22,20 @@
 namespace DanceClone
 {
 
-Arrow::Arrow(int d, long t, long y, long l, int ty) : 
+Arrow::Arrow(int d, float b, int ty) : 
   direction(d),
-  time(t),
-  yPos(y),
-  length(l),
+  beat(b),
+  time(0),
+  yPos(0),
+  beatLength(0.0),
+  length(0),
   type(ty),
   rating(RATING_NONE),
   freezeRating(FREEZE_NONE),
-  jump(false),
   hidden(false),
   animStartTime(-1)
 {
+  LOG(DEBUG_GUTS, "DanceClone::Arrow dear god you made me with a float beat! : " << beat << endl)
 }
 
   

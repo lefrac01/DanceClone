@@ -31,7 +31,7 @@ DashGraphics::DashGraphics(OS& os) :
 
 bool DashGraphics::Init()
 {
-  LOG(DEBUG_BASIC, "DashGraphics::Init()" << endl)
+  LOG(DEBUG_MINOR, "DashGraphics::Init()" << endl)
 
   background = SDL_DisplayFormat(sys.vid.screen);
   backgroundBlurred = SDL_DisplayFormat(sys.vid.screen);
@@ -63,7 +63,7 @@ bool DashGraphics::Init()
 
 void DashGraphics::Cleanup()
 {
-  LOG(DEBUG_BASIC, "DashGraphics::Cleanup()" << endl)
+  LOG(DEBUG_MINOR, "DashGraphics::Cleanup()" << endl)
   if (borderImage)
   {
     SDL_FreeSurface(borderImage);

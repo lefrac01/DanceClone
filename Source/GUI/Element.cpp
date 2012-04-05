@@ -28,24 +28,27 @@ Element::Element() :
   y(-1),
   w(-1),
   h(-1),
-  offsetMode(TopLeft),
+  offsetMode(Top | Left),
   visible(true),
   active(true),
   clicked(false),
+  clickedBy(-1),
   colour(noColour),
   text("")
 {
 }
 
-Element::Element(int _x, int _y, int _w, int _h, bool v, bool a, bool c, string tx, int t) :
+Element::Element(int _x, int _y, int _w, int _h, bool v, bool a, string tx, int t) :
   tag(t),
   x(_x),
   y(_y),
   w(_w),
   h(_h),
+  offsetMode(Top | Left),
   visible(v),
   active(a),
-  clicked(c),
+  clicked(false),
+  clickedBy(-1),
   colour(noColour),
   text(tx)
 {

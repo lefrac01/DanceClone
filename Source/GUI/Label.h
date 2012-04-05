@@ -35,8 +35,8 @@ private:
 public:
   virtual ~Label(){};
   Label(string s);
-  Label(string s, int _x, int _y, int _w, int _h, int t = -1);
-  bool Clicked(int testx, int testy);
+  Label(string s, int _x, int _y, int _w = 0, int _h = 0, int t = -1);
+  bool Clicked(int testx, int testy, int channel);
   void CursorAt(int testx, int testy);
 };
 

@@ -31,6 +31,7 @@ public:
   {
     RATING_NONE,
     MISS,
+    BOO,
     GOOD,
     GREAT,
     PERFECT,
@@ -63,20 +64,21 @@ public:
   };
 
 private:
-
+  Arrow();
 
 public:
   int direction;
+  float beat;
   long time;
   long yPos;
+  float beatLength;
   long length;
   int type; // for drawing based on note value
   Rating rating;
   FreezeRating freezeRating;
-  bool jump;
   bool hidden;
   long animStartTime;
-  Arrow(int d, long t, long y, long l, int ty);
+  Arrow(int d, float b, int ty);
 
   void Init();
 };

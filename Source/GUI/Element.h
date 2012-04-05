@@ -33,28 +33,33 @@ class Element
 public:
   enum OffsetMode
   {
-    TopLeft,
-    Center
+    Top     = (1u << 1),
+    Bottom  = (1u << 2),
+    Left    = (1u << 3),
+    Right   = (1u << 4),
+    HCenter = (1u << 5),
+    VCenter = (1u << 6),
   };
   
   const static Uint32 noColour = -1;
 
   Element();
   virtual ~Element(){};
-  Element(int _x, int _y, int _w, int _h, bool v, bool a, bool c, string tx, int t = -1);
+  Element(int _x, int _y, int _w, int _h, bool v, bool a, string tx = "", int t = -1);
 
   int tag;
   int x;
   int y;
   int w;
   int h;
-  OffsetMode offsetMode;
+  unsigned int offsetMode;
   bool visible;
   bool active;
   bool clicked;
+  int clickedBy;
   Uint32 colour;
   string text;
-  virtual bool Clicked(int testx, int testy) = 0;
+  virtual bool Clicked(int testx, int testy, int channel) = 0;
   virtual void CursorAt(int testx, int testy) = 0;
   void SetColour(Uint32 c);
 };

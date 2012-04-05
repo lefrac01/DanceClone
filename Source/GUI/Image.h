@@ -42,7 +42,7 @@ public:
   Image(SDL_Surface* s, int _x, int _y, int _w, int _h, int t = -1);
   
   SDL_Surface* surface;
-  bool Clicked(int testx, int testy);
+  bool Clicked(int testx, int testy, int channel);
   void CursorAt(int testx, int testy);
 };
 

@@ -17,6 +17,10 @@
 //      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 //      MA 02110-1301, USA.
 
+#define GAMESTRING "DanceClone"
+#define GAMEVERSION "v0.62"
+#define GAMEVERSIONSTRING "DanceClone v0.62"
+
 
 #include <string>
 using std::string;
@@ -44,8 +48,6 @@ using Gooey::Element;
 using Gooey::Button;
 using Gooey::Image;
 using Gooey::Label;
-#include "../GUI/SimpleSongScroller.h"
-using Gooey::SimpleSongScroller;
 #include "Constants.h"
 #include "Sound.h"
 #include "Graphics.h"
@@ -53,7 +55,7 @@ using DanceClone::Graphics;
 #include "Player.h"
 #include "Song.h"
 #include "SongMenuItem.h"
-
+#include "Decal.h"
 
 namespace DanceClone
 {
@@ -67,6 +69,7 @@ public:
     NONE,         //
     TITLE,        // 0
     CHOOSE_NUM_PLAYERS,
+    CHOOSE_RECORD_FILE,
     CREDITS,      // 1
     SCORE,        // 2, 9
     SELECT_SONG, // 3
@@ -99,10 +102,15 @@ private:
   vector<SongMenuItem> songMenuItems;
   
   long preStartTime;
-  int currentBeatTick;
-  int numBeatTicks;
   int currentBpmChange;
   int numBpmChanges;
+  long currentMeasure;
+  long currentBeat;
+  float currentBeatFraction;
+  float partialBeatFraction;
+  long lastBeatTime;
+  long beatTimeElapsedAtPreviousBPMs;
+  float beatFractionAtPreviousBPMs;
   long songStartTime;
   long songTime;
   long songAbortStartTime;
@@ -110,8 +118,9 @@ private:
   long viewportOffset;
   float pixelsPerMsAtCurrentBpm;
   float pixelsLeftToScroll;
-  
   SDL_Surface* songBg;
+  vector<Decal> ratingDecals;
+  
 public:
 
   Game(OS& os, GUI& g);
@@ -123,6 +132,7 @@ public:
   void RunCreditsScreen();
   void RunDebugScreen();
   void RunChooseNumPlayers();
+  void RunChooseRecordFile();
   void RunSelectSong();
   void RunSelectSongv2();
   void RunSelectDifficulty();

@@ -53,6 +53,7 @@ public:
     NUM_BUTTONS
   };
 
+  int number;
   bool active;
   bool danceMatActive;  //TEMP not generic enough
   

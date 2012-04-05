@@ -34,6 +34,7 @@ void WiiInput::Init()
   for (unsigned int i = 0; i < inputChannels.size(); ++i)
   {
     InputChannel& chan = inputChannels[i];
+    chan.number = i;
     for (unsigned int d = 0; d < InputChannel::NUM_DIRECTIONS; ++d)
     {
       chan.directionHeld[d] = false;

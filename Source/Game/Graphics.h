@@ -42,8 +42,13 @@ public:
   enum Images
   {
     DefaultBg,
+    SongSelectBg,
+    ScoreBg,
     Title,
-    //Ratings,
+    ComboLabel,
+    ComboNumbers,
+    OkNg,
+    Ratings,
     DefaultBanner,
     DefaultBannerMini,
     GetReady,
@@ -86,7 +91,9 @@ public:
 
   vector<SDL_Surface*> images;
   SDL_Rect difficultyCursorFrames[4];
-  SDL_Rect ratingsFrames[3];
+  SDL_Rect comboNumbersFrames[10];
+  SDL_Rect okNgFrames[2];
+  SDL_Rect ratingsFrames[7];
   
   // all non-hold arrows have same layout so use only one frames array
   SDL_Rect arrowsFrames[16];
@@ -101,15 +108,21 @@ public:
 
   Uint32 sdlWhite;
   Uint32 sdlBlack;
+  Uint32 sdlDarkGrey;
   Uint32 sdlGrey;
+  Uint32 sdlLightGrey;
   Uint32 sdlTeal;
   Uint32 sdlRed;
+  Uint32 sdlDarkRed;
   Uint32 sdlGreen;
   Uint32 sdlMediumGreen;
   Uint32 sdlDarkGreen;
+  Uint32 sdlLightGreen;
   Uint32 sdlBlue;
   Uint32 sdlYellow;
   Uint32 sdlCyan;
+  Uint32 sdlLightBlue;
+  Uint32 sdlBlueWhite;
 
   Graphics(OS& os);
   bool Init(string configFilePath = "");

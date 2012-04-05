@@ -30,7 +30,7 @@ gfx(os)
 
 bool GUI::Init()
 {
-  LOG(DEBUG_BASIC, "GUI::Init()" << endl)
+  LOG(DEBUG_MINOR, "GUI::Init()" << endl)
 
   hideCursor = false;
 
@@ -40,7 +40,7 @@ bool GUI::Init()
     return false;
   }
 
-  spriteTextColour = SDL_MapRGBA(gfx.fontImageColored->format, 255, 255, 255, 255);
+  spriteTextColour = SDL_MapRGBA(sys.vid.screen->format, 255, 255, 255, 255);
   
   return true;
 }
@@ -49,15 +49,24 @@ void GUI::Update()
 {
   LOG(DEBUG_GUTS, "GUI::Update()" << endl)
 
-  //TODO: support cursor and "select" action for use with dance mat
-  int numUsers = 1;
-  for (int i = 0; i < numUsers; i++)
+  // fix: multi-user gui on Wii means multiple cursors.  CursorAt() is
+  // called for each cursor and the hover state is set to false any time
+  // the x,y is not over the element.  this means the hover state should be
+  // valid only if for a given frame at least one cursor is over it.
+  // therefore clear hover states at start of frame, then OR hover state
+  // with each successive call to CursorAt()
+  screen.CursorClear();
+  
+  if (!hideCursor)
   {
-    InputChannel& chan = sys.input.inputChannels[0];
-    screen.CursorAt(chan.cursorX, chan.cursorY);
-    if (chan.buttonDown[InputChannel::Button4])
+    for (unsigned int i = 0; i < sys.input.inputChannels.size(); ++i)
     {
-      screen.Clicked(chan.cursorX, chan.cursorY);
+      InputChannel& chan = sys.input.inputChannels[i];
+      screen.CursorAt(chan.cursorX, chan.cursorY);
+      if (chan.buttonDown[InputChannel::Button4])
+      {
+        screen.Clicked(chan.cursorX, chan.cursorY, i);
+      }
     }
   }
   
@@ -102,9 +111,12 @@ void GUI::Render(Container &c)
     LOG(DEBUG_GUTS, "GUI::Render() element is image " << endl)
     int drawX = im.x;
     int drawY = im.y;
-    if (im.offsetMode == Element::Center)
+    if (im.offsetMode & Element::HCenter)
     {
       drawX = im.x - (im.w == 0 ? im.surface->w/2 : im.w/2);
+    }
+    if (im.offsetMode & Element::VCenter)
+    {
       drawY = im.y - (im.h == 0 ? im.surface->h/2 : im.h/2);
     }
     sys.vid.ApplySurface(drawX, drawY, im.surface, NULL, NULL);
@@ -115,12 +127,15 @@ void GUI::Render(Container &c)
     LOG(DEBUG_GUTS, "GUI::Render() element is label " << endl)
     int drawX = l.x;
     int drawY = l.y;
-    if (l.offsetMode == Element::Center)
+    //TODO: using hardcoded constants here because of the 1 fixed font.
+    // this needs to be redone if fonts are added
+    if (l.offsetMode & Element::HCenter)
     {
-      //TODO: using hardcoded constants here because of the 1 fixed font.
-      // this needs to be redone if fonts are added
-      drawX = l.x - l.w == 0 ? l.text.size()*11/2 : l.w/2;
-      drawY = l.y - l.h == 0 ? 21/2 : l.h/2;
+      drawX = l.x - (l.w == 0 ? l.text.size()*11/2 : l.w/2);
+    }
+    if (l.offsetMode & Element::VCenter)
+    {
+      drawY = l.y - (l.h == 0 ? 21/2 : l.h/2);
     }
     if (l.colour != Element::noColour)
     {
@@ -145,17 +160,6 @@ void GUI::Render(Container &c)
     Container& innerc = c.Containers()[i];
     LOG(DEBUG_GUTS, "GUI::Render() element is container " << endl)
     Render(innerc);
-  }
-  for (unsigned int i = 0; i < c.SimpleSongScrollers().size(); i++)
-  {
-    SimpleSongScroller& sss = c.SimpleSongScrollers()[i];
-    LOG(DEBUG_GUTS, "GUI::Render() element is simpleSongScroller " << endl)
-    for (unsigned int j = 0; j < sss.Buttons().size(); j++)
-    {
-      Button& b = sss.Buttons()[j];
-      LOG(DEBUG_GUTS, "GUI::Render() sss element is button " << endl)
-      DrawButton(b);
-    }
   }
 }
 
@@ -186,9 +190,12 @@ void GUI::DrawButton(Button& b)
   
   int drawX = b.x;
   int drawY = b.y;
-  if (b.offsetMode == Element::Center)
+  if (b.offsetMode & Element::HCenter)
   {
     drawX = b.x - b.w/2;
+  }
+  if (b.offsetMode & Element::VCenter)
+  {
     drawY = b.y - b.h/2;
   }
 
@@ -240,54 +247,16 @@ void GUI::DrawButton(Button& b)
     sys.vid.ApplySurface(drawX+a*21,drawY+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect6);
   SDL_Rect temprect7={8*21,buttonRow*21,b.w-b.w/21*21,b.h-b.h/21*21};
   sys.vid.ApplySurface(drawX+b.w/21*21,drawY+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect7);
-  /*
-  //corners
-  sys.vid.ApplySurface(b.x-21, b.y-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[0+buttonRow*9]);
-  sys.vid.ApplySurface(b.x-21, b.y+b.h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[1+buttonRow*9]);
-  sys.vid.ApplySurface(b.x+b.w,  b.y-21, gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[2+buttonRow*9]);
-  sys.vid.ApplySurface(b.x+b.w,  b.y+b.h,  gfx.buttonImage, sys.vid.screen, &gfx.buttonFrames[3+buttonRow*9]);
-  //edges
-  for(int a=0; a<b.w/21; a++)
-    sys.vid.ApplySurface(b.x+a*21,b.y+b.h,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[4+buttonRow*9]);
-  SDL_Rect temprect1={4*21,buttonRow*21,b.w-b.w/21*21,21};
-  sys.vid.ApplySurface(b.x+b.w/21*21,b.y+b.h,gfx.buttonImage,sys.vid.screen,&temprect1);
-  for(int a=0; a<b.h/21; a++)
-    sys.vid.ApplySurface(b.x+b.w,b.y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[5+buttonRow*9]);
-  SDL_Rect temprect2={5*21,buttonRow*21,21,b.h-b.h/21*21};
-  sys.vid.ApplySurface(b.x+b.w,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect2);
-  for(int a=0; a<b.w/21; a++)
-    sys.vid.ApplySurface(b.x+a*21,b.y-21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[6+buttonRow*9]);
-  SDL_Rect temprect3={6*21,buttonRow*21,b.w-b.w/21*21,21};
-  sys.vid.ApplySurface(b.x+b.w/21*21,b.y-21,gfx.buttonImage,sys.vid.screen,&temprect3);
-  for(int a=0; a<b.h/21; a++)
-    sys.vid.ApplySurface(b.x-21,b.y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[7+buttonRow*9]);
-  SDL_Rect temprect4={7*21,buttonRow*21,21,b.h-b.h/21*21};
-  sys.vid.ApplySurface(b.x-21,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect4);
-  //insides
-  for(int a=0; a<b.h/21; a++)for(int i=0; i<b.w/21; i++)
-    sys.vid.ApplySurface(b.x+i*21,b.y+a*21,gfx.buttonImage,sys.vid.screen,&gfx.buttonFrames[8+buttonRow*9]);
-  SDL_Rect temprect5={8*21,buttonRow*21,b.w-b.w/21*21,21};
-  for(int a=0; a<b.h/21; a++)
-    sys.vid.ApplySurface(b.x+b.w/21*21,b.y+a*21,gfx.buttonImage,sys.vid.screen,&temprect5);
-  SDL_Rect temprect6={8*21,buttonRow*21,21,b.h-b.h/21*21};
-  for(int a=0; a<b.w/21; a++)
-    sys.vid.ApplySurface(b.x+a*21,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect6);
-  SDL_Rect temprect7={8*21,buttonRow*21,b.w-b.w/21*21,b.h-b.h/21*21};
-  sys.vid.ApplySurface(b.x+b.w/21*21,b.y+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect7);
-  */
+
   // draw text!
   int tempx = b.x+b.w/2; 
   int tempy = b.y+b.h/2;
-  //x=x+w/2;y=y+h/2;
-  //DrawSpriteText(x,y-21/2,text,2);
-  //SpriteText(tempx,tempy-21/2,(char*)b.text.c_str(),2);
-  //SpriteTextColored(tempx,tempy-21/2,(char*)b.text.c_str(),2);
   
   Uint32 oldColour = GetSpriteTextColour();
   if (!b.active)
   {
     Uint32 inactive;
-    inactive = SDL_MapRGB(sys.vid.screen->format, 80, 80, 80);
+    inactive = SDL_MapRGBA(sys.vid.screen->format, 80, 80, 80, 80);
     SetSpriteTextColour(inactive);
   }
   else if (b.colour != Element::noColour)
@@ -309,14 +278,18 @@ Uint32 GUI::GetSpriteTextColour()
 void GUI::SetSpriteTextColour(Uint32 colour)
 {
   spriteTextColour = colour;
-  Uint8 r1,g1,b1;
-  SDL_GetRGB(colour,gfx.fontImage->format,&r1,&g1,&b1);
-  Uint8 r2,g2,b2,a2;
-  for(int x=0;x<gfx.fontImage->w;x++)for(int y=0;y<gfx.fontImage->h;y++){
-    colour=sys.vid.GetPixel(gfx.fontImage,x,y);
-    SDL_GetRGBA(colour,gfx.fontImage->format,&r2,&g2,&b2,&a2);
-    colour=SDL_MapRGBA(gfx.fontImageColored->format,r1,g1,b1,a2);
-    sys.vid.PutPixel(gfx.fontImageColored,x,y,colour);
+  Uint8 r1, g1, b1;
+  SDL_GetRGB(colour, sys.vid.screen->format, &r1, &g1, &b1);
+  Uint8 r2, g2, b2, a2;
+  for(int x = 0; x < gfx.fontImage->w; x++)
+  {
+    for(int y = 0; y < gfx.fontImage->h; y++)
+    {
+      colour = sys.vid.GetPixel(gfx.fontImage, x, y);
+      SDL_GetRGBA(colour, gfx.fontImage->format, &r2, &g2, &b2, &a2);
+      colour = SDL_MapRGBA(gfx.fontImage->format, r1, g1, b1, a2);
+      sys.vid.PutPixel(gfx.fontImageColored, x, y, colour);
+    }
   }
 }
 

@@ -40,15 +40,14 @@ public:
   Player& operator= (const Player& b);
   Player(InputChannel& ic);
   int playerNumber;
+  InputChannel& inputs;
   bool active;
   bool ready;
-  InputChannel& inputs;
   vector<long> directionDownTime;
   vector<bool> directionJumpActive;
 
-  //Constants::Difficulty difficulty;
   int difficulty;
-  //recordFileId      //note operator=
+  int recordFileNumber;
   vector<Arrow> arrows;
   int baseArrow;
   int numArrows;

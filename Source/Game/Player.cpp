@@ -34,8 +34,9 @@ Player& Player::operator= (const Player& b)
   playerNumber = b.playerNumber;
   active = b.active;
   ready = b.ready;
-  inputs = b.inputs;  //???
+  inputs = b.inputs;
   difficulty = b.difficulty;
+  recordFileNumber = b.recordFileNumber;
   arrows = b.arrows;
   numArrows = b.numArrows;
   longestCombo = b.longestCombo;
@@ -54,6 +55,7 @@ void Player::Init(int n)
   active = true;
   ready = false;
   difficulty = -1;
+  recordFileNumber = -1;
   arrowFieldXOffset = -1;
 }
 

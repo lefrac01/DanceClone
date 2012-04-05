@@ -40,11 +40,10 @@ class SongMenuItem
 {
 private:
   OS& sys;
-  Constants& constants;
   SongMenuItem();
   
 public:
-  SongMenuItem(OS& os, Constants& c, Song& s);
+  SongMenuItem(OS& os, Song& s);
   SongMenuItem(const SongMenuItem& b);
   SongMenuItem& operator=(const SongMenuItem& b);
   ~SongMenuItem();

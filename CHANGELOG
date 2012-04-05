@@ -1,5 +1,22 @@
 changelog
 --
+v0.62
+-music selection screen v0.1
+-radar values read from file and displayed
+-radar values calculated if not in file
+-best score displayed during music selection
+-per-player score and score persistance
+-redesigned arrow structure and generation
+-added boo rating
+-created rating and combo graphics
+-gui supports multiple cursors for hover state
+-gui support for which input channel clicks element
+-gui support for vertical and horizontal element centering
+-new code for parametric functions support
+-fix bugs with song synchronisation
+-fix bug with bpm changes not working properly
+-fix bug with text colour on Wii
+
 v0.61 "sexify" pt1
 -added per-song background image support
 -added sound effects support
