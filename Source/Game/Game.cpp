@@ -54,6 +54,8 @@ gfx(os)
 
 bool Game::Init(string ConfigFilePath)
 {
+  SDL_WM_SetCaption(GAMEVERSIONSTRING, NULL);
+
   numPlayers = 0;
   for (unsigned int i = 0; i < sys.input.inputChannels.size(); ++i)
   {
@@ -106,33 +108,27 @@ void Game::Run()
   switch (state)
   {
   case TITLE:
-    gfx.DrawBackground();
     RunTitleScreen();
     break;
   case CREDITS:
-    gfx.DrawBackground();
     RunCreditsScreen();
     break;
   case SCORE:
     RunScoreScreen();
     break;
   case CHOOSE_NUM_PLAYERS:
-    gfx.DrawBackground();
     RunChooseNumPlayers();
     break;
   case CHOOSE_RECORD_FILE:
-    gfx.DrawBackground();
     RunChooseRecordFile();
     break;
   case SELECT_SONG:
     RunSelectSong();
     break;
   case LOADING_SONG:
-    gfx.DrawBackground();
     RunLoadingSong();
     break;
   case SELECT_DIFFICULTY:
-    gfx.DrawBackground();
     RunSelectDifficulty();
     break;
   case STEP_CREATE:
@@ -155,6 +151,11 @@ void Game::Run()
   }
 
   gameStateChanged = oldState != state;
+
+  if (gameStateChanged)
+  {
+    FLUSH_LOG
+  }
 }
 
 Game::GameState Game::State()
@@ -175,18 +176,22 @@ void Game::RunTitleScreen()
     gui.SetSpriteTextColour(gfx.sdlBlack);
     
     Container title;
-    int border = 40;
+    Image bg(gfx.images[Graphics::DefaultBg], 0, 0, 0, 0);
+    title.Add(bg);
     
     Image titleImage(gfx.images[Graphics::Title], sys.vid.ScreenWidth()/2-300/2, 30, 0, 0);
     title.Add(titleImage);
 
-    Button play("Play", border,55+4*40,sys.vid.ScreenWidth()-border*2,10, playTag);
+    Button play("Play", sys.vid.ScreenWidth()/2, 55+4*40, 200, 10, playTag);
+    play.offsetMode |= Element::HCenter;
     title.Add(play);
 
-    Button credits("Credits", border,55+5*40,sys.vid.ScreenWidth()-border*2,10, creditsTag);
+    Button credits("Credits", sys.vid.ScreenWidth()/2, 55+5*40, 200, 10, creditsTag);
+    credits.offsetMode |= Element::HCenter;
     title.Add(credits);
 
-    Button debug("Debug", border,55+6*40,sys.vid.ScreenWidth()-border*2,10, debugTag);
+    Button debug("Debug", sys.vid.ScreenWidth()/2, 55+6*40, 200, 10, debugTag);
+    debug.offsetMode |= Element::HCenter;
     title.Add(debug);
     
     //title.SetRenderAnimation(GUI::SCREEN_WIPE); // FADE_IN // FADING_WIPE, etc
@@ -232,6 +237,9 @@ void Game::RunCreditsScreen()
     LOG(DEBUG_MINOR, "Game::RunCreditsScreen setting up" << endl)
     Container credits;
 
+    Image bg(gfx.images[Graphics::DefaultBg], 0, 0, 0, 0);
+    credits.Add(bg);
+    
     Label cred1("v0.50 Programming and graphics by ThatOtherPerson", 40, 60+20*0, 0, 0);
     Label cred2("thatotherdev.wordpress.com", 40, 60+20*1);
 
@@ -289,6 +297,9 @@ void Game::RunLoadingSong()
     LOG(DEBUG_MINOR, "Game::RunLoadingSong setting up" << endl)
     Container loadingSong;
 
+    Image bg(gfx.images[Graphics::DefaultBg], 0, 0, 0, 0);
+    loadingSong.Add(bg);
+    
     Label message("LOADING...", 240, 200+20*5);
 
     loadingSong.Add(message);
@@ -370,12 +381,14 @@ void Game::RunDebugScreen()
     LOG(DEBUG_MINOR, "Game::RunDebugScreen setting up" << endl)
     Container debug;
 
+    Image bg(gfx.images[Graphics::DefaultBg], 0, 0, 0, 0);
+    debug.Add(bg);
+    
     int y=40;
 
     Label title("debug", 25, y);
     debug.Add(title);
 
-   
     Image freezeHit(gfx.images[Graphics::ComboHit], 30, 70, 0, 0);
     debug.Add(freezeHit);
     
@@ -415,6 +428,14 @@ void Game::RunDebugScreen()
     //#
   }
 
+  int y = 120;
+  for (int i = 0; i < Element::NUM_FONTS; ++i)
+  {
+//    gui.DrawText(136, y, "abciWWiMMi#%jklABCDE", (Element::Font)i, SDL_MapRGBA(sys.vid.screen->format, 255, 255, 255, 255), 24);
+    gui.DrawText(136, y, "The quick brown fox...", (Element::Font)i, SDL_MapRGBA(sys.vid.screen->format, 255, 255, 255, 255), 24);
+    y += 30;
+  }
+   
   sys.vid.ApplySurface(80, 260, gfx.images[Graphics::FreezeArrowsTail], NULL, &gfx.freezeTailFrames[3]); //12
   sys.vid.ApplySurface(80, 132, gfx.images[Graphics::FreezeArrowsBody], NULL, &gfx.freezeBodyFrames[3]); //12
   sys.vid.ApplySurface(80, 100, gfx.images[Graphics::FreezeArrowsHead], NULL, &gfx.freezeHeadFrames[3]); //16
@@ -466,10 +487,12 @@ void Game::RunChooseNumPlayers()
     numPlayersDetected = num;
     
     Container chooseNumPlayers;
+    Image bg(gfx.images[Graphics::DefaultBg], 0, 0, 0, 0);
+    chooseNumPlayers.Add(bg);
     
     Label title("Choose number of players", sys.vid.ScreenWidth() / 2, 25);
     title.colour = gfx.sdlWhite;
-    title.offsetMode = Element::HCenter | Element::VCenter;
+    title.offsetMode = Element::HCenter;
     chooseNumPlayers.Add(title);
 
     gui.SetSpriteTextColour(gfx.sdlBlack);
@@ -548,12 +571,15 @@ void Game::RunChooseRecordFile()
   {
     redraw = false;
     Container chooseRecordFile;
-
+    
+    Image bg(gfx.images[Graphics::DefaultBg], 0, 0, 0, 0);
+    chooseRecordFile.Add(bg);
+    
     gui.SetSpriteTextColour(gfx.sdlBlack);
 
     Label title("Choose record file", sys.vid.ScreenWidth() / 2, 25);
     title.colour = gfx.sdlWhite;
-    title.offsetMode = Element::HCenter | Element::VCenter;
+    title.offsetMode = Element::HCenter;
     chooseRecordFile.Add(title);
 
     // draw a button for each record file
@@ -776,6 +802,7 @@ void Game::RunSelectSong()
   }
   if (animStartTime != -1)
   {
+    
     if (animTime >= animEndTime)
     {
       animStartTime = -1;
@@ -799,14 +826,13 @@ void Game::RunSelectSong()
       }
     }
 
-
     // build screen
     Container songSelect;
 
     Image bg(gfx.images[Graphics::SongSelectBg], 0, 0, 0, 0);
     songSelect.Add(bg);
 
-    float animPct = PFunc::ParamByVal(PFunc::Cube, animTime, animStartTime, animEndTime);
+    float animPct = PFunc::ParamByVal(PFunc::Square, animTime, animStartTime, animEndTime);
     
     for (int i = 0; i < numElements; ++i)
     {
@@ -918,7 +944,7 @@ void Game::RunSelectSong()
         }
         else
         {
-          // just draw a normal mini banner... for now muahaha
+          // just draw a normal mini banner
           SDL_Surface* bannerMini = songMenuItems[elementMenuIndex].bannerMini ? songMenuItems[elementMenuIndex].bannerMini : gfx.images[Graphics::DefaultBannerMini];
           Image mini(bannerMini, screenX, screenY, 0, 0);
           mini.offsetMode = Element::HCenter | Element::VCenter;
@@ -941,7 +967,8 @@ void Game::RunSelectSong()
       // title, bpm(min and max),
       // difficulties available and for each: rating, record, full combo achieved
       Song& s = songMenuItems[menuIndex].song;
-      Label title(s.Title(), sys.vid.ScreenWidth()/2, 25);
+      Label title(s.Title(), sys.vid.ScreenWidth()/2, 23);
+      title.font = Element::CardewThree;
       title.colour = gfx.sdlWhite;
       title.offsetMode |= Element::HCenter;
       songSelect.Add(title);
@@ -961,6 +988,7 @@ void Game::RunSelectSong()
       }
       
       Label bpm(bpmLabel, 544, 58);
+      bpm.font = Element::Cryta;
       bpm.colour = gfx.sdlBlueWhite;
       bpm.offsetMode = Element::HCenter | Element::VCenter;
       songSelect.Add(bpm);
@@ -1067,8 +1095,8 @@ void Game::RunSelectSong()
           break;
         }
       }
-      
     }
+    
     gui.SetScreen(songSelect);
   }
 
@@ -1127,6 +1155,9 @@ void Game::RunSelectDifficulty()
 
     Container selectDifficulty;
 
+    Image bg(gfx.images[Graphics::DefaultBg], 0, 0, 0, 0);
+    selectDifficulty.Add(bg);
+    
     bool firstDifficulty = true;
    
     for (int i = 0; i < constants.numDifficulties; ++i)
@@ -1156,7 +1187,7 @@ void Game::RunSelectDifficulty()
   // Apply player difficulty selection cursor according to currently selected difficulty
   for (int i = 0; i < numPlayers; ++i)
   {
-      sys.vid.ApplySurface(x + w + 20 + i * 50, baseY - 16 + players[i].difficulty * rowHeight, gfx.images[Graphics::DifficultyCursor], NULL, &gfx.difficultyCursorFrames[players[i].ready ? 2+i : i]);
+    sys.vid.ApplySurface(x + w + 20 + i * 50, baseY - 16 + players[i].difficulty * rowHeight, gfx.images[Graphics::DifficultyCursor], NULL, &gfx.difficultyCursorFrames[players[i].ready ? 2+i : i]);
   }
 
   // directly check inputs for changing each player's difficulty
@@ -2309,7 +2340,7 @@ void Game::RateArrows(Player& p)
             {
             case Arrow::MARVELLOUS:
               d.animType = Decal::Loop;
-              d.frameDuration = 1;
+              d.frameDuration = 3;
               d.frameRects.push_back(&gfx.ratingsFrames[0]);
               d.frameRects.push_back(&gfx.ratingsFrames[1]);
               break;
@@ -2413,6 +2444,11 @@ void Game::RateArrows(Player& p)
   
   //TODO: all rating of arrows should be looping by arrow not by direction
   // might be nice to be able to do if (pl.control_active[ar.direction])
+}
+
+bool Game::CanInterrupt()
+{
+  return state != PLAY_PREP1 && state != PLAY_PREP2 && state != PLAY;
 }
 
 }

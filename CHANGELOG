@@ -1,5 +1,14 @@
 changelog
 --
+v0.64
+-add TTF font handling
+
+v0.63
+-fix dash blur effect
+-recode dash using gui class
+-fix button drawing when using centered offset mode
+-fix decal loop animation not using all frames
+
 v0.62
 -music selection screen v0.1
 -radar values read from file and displayed

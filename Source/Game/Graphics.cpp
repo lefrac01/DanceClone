@@ -77,10 +77,10 @@ bool Graphics::Init(string configFilePath)
   
 
   //TODO: fix hard-coded constants
-  images[DefaultBg] = sys.vid.LoadOptimizeAlpha(backgroundImagePath.c_str());
+  images[DefaultBg] = sys.vid.LoadOptimize(backgroundImagePath.c_str());
   if (!images[DefaultBg]) LOG(DEBUG_BASIC, "failed to load \"" << backgroundImagePath << "\"" << endl)
 
-  images[SongSelectBg] = sys.vid.LoadOptimizeAlpha(songSelectBackgroundImagePath.c_str());
+  images[SongSelectBg] = sys.vid.LoadOptimize(songSelectBackgroundImagePath.c_str());
   if (!images[SongSelectBg]) LOG(DEBUG_BASIC, "failed to load \"" << songSelectBackgroundImagePath << "\"" << endl)
 
   images[ScoreBg] = sys.vid.LoadOptimizeAlpha(scoreBackgroundImagePath.c_str());
@@ -350,11 +350,6 @@ void Graphics::Cleanup()
       images[i] = NULL;
     }
   }
-}
-
-void Graphics::DrawBackground()
-{
-  sys.vid.ApplySurface(0, 0, images[DefaultBg], sys.vid.screen, NULL);
 }
 
 }

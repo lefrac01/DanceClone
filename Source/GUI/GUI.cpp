@@ -23,8 +23,10 @@ namespace Gooey
 {
 
 GUI::GUI(OS& os) :
-sys(os),
-gfx(os)
+  sys(os),
+  gfx(os),
+  defaultFontBitmap(FontBitmap(os, "fontname", 12, SDL_MapRGBA(os.vid.screen->format, 255, 255, 255, 255))),
+  fonts(Element::NUM_FONTS)
 {
 }
 
@@ -39,6 +41,14 @@ bool GUI::Init()
     LOG(DEBUG_BASIC, "ERROR: GUI::Init()   gfx.Init() failed" << endl)
     return false;
   }
+
+  fonts[Element::DefaultFont]  = "Media/Gui/Hall Fetica.ttf";
+  fonts[Element::AeroliteSky]  = "Media/Gui/Aerolite Sky.ttf";
+  fonts[Element::CardewThree]  = "Media/Gui/CardewThreeRounded.ttf";
+  fonts[Element::Cryta]        = "Media/Gui/Crysta.ttf";
+  fonts[Element::D3Euronism]   = "Media/Gui/D3Euronism_b_i.ttf";
+  fonts[Element::Future]       = "Media/Gui/Future World.ttf";
+  fonts[Element::Research]     = "Media/Gui/Research Remix Normal.ttf";
 
   spriteTextColour = SDL_MapRGBA(sys.vid.screen->format, 255, 255, 255, 255);
   
@@ -125,29 +135,7 @@ void GUI::Render(Container &c)
   {
     Label& l = c.Labels()[i];
     LOG(DEBUG_GUTS, "GUI::Render() element is label " << endl)
-    int drawX = l.x;
-    int drawY = l.y;
-    //TODO: using hardcoded constants here because of the 1 fixed font.
-    // this needs to be redone if fonts are added
-    if (l.offsetMode & Element::HCenter)
-    {
-      drawX = l.x - (l.w == 0 ? l.text.size()*11/2 : l.w/2);
-    }
-    if (l.offsetMode & Element::VCenter)
-    {
-      drawY = l.y - (l.h == 0 ? 21/2 : l.h/2);
-    }
-    if (l.colour != Element::noColour)
-    {
-      Uint32 oldColour = GetSpriteTextColour();
-      SetSpriteTextColour(l.colour);
-      SpriteTextColored(drawX, drawY, (char*)l.text.c_str(), 1);
-      SetSpriteTextColour(oldColour);
-    }
-    else
-    {
-      SpriteTextColored(drawX, drawY, (char*)l.text.c_str(), 1);
-    }
+    DrawLabel(l);
   }
   for (unsigned int i = 0; i < c.Buttons().size(); i++)
   {
@@ -166,22 +154,22 @@ void GUI::Render(Container &c)
 void GUI::Cleanup()
 {
   gfx.Cleanup();
+
+  while (fontBitmapCache.size() > 0)
+  {
+    delete fontBitmapCache.begin()->second;
+    fontBitmapCache.erase(fontBitmapCache.begin());
+  }
+
+  if (TTF_WasInit())
+  {
+    TTF_Quit();
+  }
 }
 
 void GUI::DrawSpriteText(int posx,int posy,char* texttosprite,int leftmiddleright)
 {
-  int textlength=strlen(texttosprite);
-  int textnumber;
-  int letterprintx=0;
-  int letterprinty=posy;
-  if(leftmiddleright==1)letterprintx=posx;
-  if(leftmiddleright==2)letterprintx=posx-textlength*11/2;
-  if(leftmiddleright==3)letterprintx=posx-textlength*11;
-  for(int b=0;b<textlength;b++){
-    textnumber=getnumberfromchar(texttosprite[b]);
-    sys.vid.ApplySurface(letterprintx, letterprinty, gfx.fontImage, sys.vid.screen, &gfx.fontFrames[textnumber]);
-    letterprintx+=11;
-  }
+  DrawText(posx, posy, texttosprite, Element::DefaultFont, GetSpriteTextColour(), 24);
 }
 
 void GUI::DrawButton(Button& b)
@@ -249,25 +237,11 @@ void GUI::DrawButton(Button& b)
   sys.vid.ApplySurface(drawX+b.w/21*21,drawY+b.h/21*21,gfx.buttonImage,sys.vid.screen,&temprect7);
 
   // draw text!
-  int tempx = b.x+b.w/2; 
-  int tempy = b.y+b.h/2;
-  
-  Uint32 oldColour = GetSpriteTextColour();
-  if (!b.active)
-  {
-    Uint32 inactive;
-    inactive = SDL_MapRGBA(sys.vid.screen->format, 80, 80, 80, 80);
-    SetSpriteTextColour(inactive);
-  }
-  else if (b.colour != Element::noColour)
-  {
-    SetSpriteTextColour(b.colour);
-  }
-  SpriteTextColored(tempx,tempy-21/2,(char*)b.text.c_str(),2);
-  if (!b.active || b.colour != Element::noColour)
-  {
-    SetSpriteTextColour(oldColour);
-  }
+  Label l(b.text, drawX + b.w/2, drawY + b.h/2);
+  l.offsetMode = Element::HCenter | Element::VCenter;
+  l.colour = b.colour;
+  l.pointSize = b.pointSize;
+  DrawLabel(l);
 }
 
 Uint32 GUI::GetSpriteTextColour()
@@ -278,55 +252,74 @@ Uint32 GUI::GetSpriteTextColour()
 void GUI::SetSpriteTextColour(Uint32 colour)
 {
   spriteTextColour = colour;
-  Uint8 r1, g1, b1;
-  SDL_GetRGB(colour, sys.vid.screen->format, &r1, &g1, &b1);
-  Uint8 r2, g2, b2, a2;
-  for(int x = 0; x < gfx.fontImage->w; x++)
-  {
-    for(int y = 0; y < gfx.fontImage->h; y++)
-    {
-      colour = sys.vid.GetPixel(gfx.fontImage, x, y);
-      SDL_GetRGBA(colour, gfx.fontImage->format, &r2, &g2, &b2, &a2);
-      colour = SDL_MapRGBA(gfx.fontImage->format, r1, g1, b1, a2);
-      sys.vid.PutPixel(gfx.fontImageColored, x, y, colour);
-    }
-  }
 }
 
 void GUI::SpriteTextColored(int posx,int posy,char* texttosprite,int leftmiddleright)
 {
-  int textlength=strlen(texttosprite);
-  int textnumber;
-  int letterprintx=0;
-  int letterprinty=posy;
-  if(leftmiddleright==1)letterprintx=posx;
-  if(leftmiddleright==2)letterprintx=posx-textlength*11/2;
-  if(leftmiddleright==3)letterprintx=posx-textlength*11;
-  for(int b=0;b<textlength;b++){
-    textnumber=getnumberfromchar(texttosprite[b]);
-    sys.vid.ApplySurface(letterprintx,letterprinty,gfx.fontImageColored,sys.vid.screen,&gfx.fontFrames[textnumber]);
-    letterprintx+=11;
-  }
+  DrawText(posx, posy, texttosprite, Element::DefaultFont, GetSpriteTextColour(), 16);
 }
 
 void GUI::SpriteText(int posx,int posy,char* texttosprite,int leftmiddleright)
 {
-  int textlength=strlen(texttosprite);
-  int textnumber;
-  int letterprintx=0;
-  int letterprinty=posy;
-  if(leftmiddleright==1)letterprintx=posx;
-  if(leftmiddleright==2)letterprintx=posx-textlength*11/2;
-  if(leftmiddleright==3)letterprintx=posx-textlength*11;
-  for(int b=0;b<textlength;b++){
-    textnumber=getnumberfromchar(texttosprite[b]);
-    sys.vid.ApplySurface(letterprintx,letterprinty,gfx.fontImage,sys.vid.screen,&gfx.fontFrames[textnumber]);
-    letterprintx+=11;
+  DrawText(posx, posy, texttosprite);
+}
+
+void GUI::DrawText(int x, int y, string text)
+{
+  DrawText(x, y, text, Element::DefaultFont, SDL_MapRGBA(sys.vid.screen->format, 255, 255, 255, 255), 16);
+}
+
+void GUI::DrawText(int x, int y, string text, Element::Font f, Uint32 colour, int pointSize)
+{
+  int textWidth = 0;
+  FontBitmap* fb = GetCachedFont(fonts[f], pointSize, colour);
+  if (fb)
+  {
+    for (unsigned int i = 0; i < text.size(); ++i)
+    {
+      if (fb->CharExists(text.at(i)))
+      {
+        SDL_Rect destRect;
+        destRect.x = x + textWidth;
+        destRect.y = y;
+        SDL_BlitSurface(fb->surface, fb->FrameFromChar(text.at(i)), sys.vid.screen, &destRect);
+        textWidth += destRect.w;
+      }
+    }
+  }
+}
+
+void GUI::DrawLabel(Label& l)
+{
+  int hOffset = 0;
+  int vOffset = 0;
+  int textWidth = 0;
+  
+  FontBitmap* fb = GetCachedFont(fonts[l.font], l.pointSize, l.colour);
+  if (fb)
+  {
+    if (l.offsetMode & Element::HCenter)
+    {
+      for (unsigned int i = 0; i < l.text.size(); ++i)
+      {
+        if (fb->CharExists(l.text.at(i)))
+        {
+          textWidth += fb->FrameFromChar(l.text.at(i))->w;
+        }
+      }
+      hOffset = textWidth / 2;
+    }
+    if (l.offsetMode & Element::VCenter)
+    {
+      vOffset = fb->height / 2;
+    }
+    
+    DrawText(l.x - hOffset, l.y - vOffset, l.text, l.font, l.colour, l.pointSize);
   }
 }
 
 int GUI::SpriteTextWrapped(int posx,int posy,char* texttosprite,int length)
-{
+{/*
   int textlength=strlen(texttosprite);
   int textnumber;
   int letterprintx=posx;
@@ -347,37 +340,10 @@ int GUI::SpriteTextWrapped(int posx,int posy,char* texttosprite,int length)
     letterprintx+=11;
   }
   return linecount;
+  */
+  return 0;
 }
-/*
-void WiiDash_savebmpscreenshot(){
-  #ifdef WII
-  ifstream test;char filename[64];int filenumber=1;
-  sprintf(filename,"sd:/screenshot%d.bmp",filenumber);
-  test.open(filename);test.close();
-  if(!test.fail()){
-    while(!test.fail()){
-      filenumber=filenumber+1;
-      sprintf(filename,"sd:/screenshot%d.bmp",filenumber);
-      test.open(filename);test.close();
-    }
-  }
-  SDL_SaveBMP(WDbackground,filename);
-  #endif
-  #ifdef WIN
-  ifstream test;char filename[64];int filenumber=1;
-  sprintf(filename,"screenshot%d.bmp",filenumber);
-  test.open(filename);test.close();
-  if(!test.fail()){
-    while(!test.fail()){
-      filenumber=filenumber+1;
-      sprintf(filename,"screenshot%d.bmp",filenumber);
-      test.open(filename);test.close();
-    }
-  }
-  SDL_SaveBMP(WDbackground,filename);
-  #endif
-}
-*/
+
 void GUI::SavePngScreenshot()
 {
   //TODO: save png
@@ -396,6 +362,38 @@ void GUI::SavePngScreenshot()
   IMG_SavePNG((char*)filename, gfx.background, Z_BEST_COMPRESSION);
   #endif
   */
+}
+
+
+FontBitmap* GUI::GetCachedFont(string filename, int pointSize, Uint32 colour)
+{
+  FontBitmap* result = NULL;
+  
+  FontBitmapKey key(filename, pointSize, colour);
+  FontBitmapCacheMap::iterator it;
+  it = fontBitmapCache.find(key);
+  if (it == fontBitmapCache.end())
+  {
+    FontBitmap* temp = new FontBitmap(sys, filename, pointSize, colour);
+    if (temp)
+    {
+      if (temp->ready)
+      {
+        fontBitmapCache[key] = temp;
+        result = temp;
+      }
+      else
+      {
+        delete temp;
+      }
+    }
+  }
+  else
+  {
+    result = it->second;
+  }
+  
+  return result;
 }
 
 }

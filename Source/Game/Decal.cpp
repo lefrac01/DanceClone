@@ -83,7 +83,7 @@ SDL_Rect* Decal::CurrentFrameRect(long currentTime)
         }
         else
         {
-          rectIndex = ((int)((frameRects.size() - 1) * ((currentTime - animStartTime) / (float)frameDuration))) % (frameRects.size() - 1);
+          rectIndex = ((int)(frameRects.size() * ((currentTime - animStartTime) / (float)frameDuration))) % frameRects.size();
         }
       }
       break;

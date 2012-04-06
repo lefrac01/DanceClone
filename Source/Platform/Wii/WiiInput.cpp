@@ -92,8 +92,8 @@ void WiiInput::Update()
     
     //#chan.buttonDown[InputChannel::Button5] = WiiButtonsDown[i] & WPAD_BUTTON_MINUS;
     //#chan.buttonHeld[InputChannel::Button5] = WiiButtonsHeld[i] & WPAD_BUTTON_MINUS;
-    //#chan.buttonDown[InputChannel::Button6] = WiiButtonsDown[i] & WPAD_BUTTON_HOME;
-    //#chan.buttonHeld[InputChannel::Button6] = WiiButtonsHeld[i] & WPAD_BUTTON_HOME;
+    chan.buttonDown[InputChannel::Button6] = WiiButtonsDown[i] & WPAD_BUTTON_HOME;
+    chan.buttonHeld[InputChannel::Button6] = WiiButtonsHeld[i] & WPAD_BUTTON_HOME;
     //#chan.buttonDown[InputChannel::Button7] = WiiButtonsDown[i] & WPAD_BUTTON_PLUS;
     //#chan.buttonHeld[InputChannel::Button7] = WiiButtonsHeld[i] & WPAD_BUTTON_PLUS;
 
@@ -150,9 +150,6 @@ void WiiInput::Update()
     WPAD_IR(i, &ir[i]);
     if (ir[i].valid)
     {
-      //NOTE: GUI-graphic-specific adjustments.  1.25 could be calculated relative to screen width / height vs cursor width / height
-      //chan.cursorX = ir[i].x*1.25-80;
-      //chan.cursorY = ir[i].y*1.25-60;
       chan.cursorX = ir[i].x;
       chan.cursorY = ir[i].y;
     }
@@ -168,6 +165,8 @@ void WiiInput::Update()
     chan.buttonDown[InputChannel::Button3] = GCButtonsDown[i] & PAD_BUTTON_B;
     chan.buttonDown[InputChannel::Button5] = GCButtonsDown[i] & PAD_TRIGGER_Z;
     chan.buttonDown[InputChannel::Button5] = GCButtonsDown[i] & PAD_BUTTON_MENU;
+    chan.buttonDown[InputChannel::Button6] = WiiButtonsDown[i] & WPAD_BUTTON_HOME;
+    chan.buttonHeld[InputChannel::Button6] = WiiButtonsHeld[i] & WPAD_BUTTON_HOME;
     chan.buttonDown[InputChannel::Button7] = GCButtonsDown[i] & PAD_BUTTON_START;
 
     chan.buttonHeld[InputChannel::Button4] = (GCButtonsHeld[i] & PAD_BUTTON_A || WiiButtonsHeld[i] & WPAD_BUTTON_A);

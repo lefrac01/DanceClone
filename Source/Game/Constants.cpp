@@ -65,7 +65,6 @@ void Constants::Init(string ConfigFilePath)
   
   bannerSize = 128;
   bannerMiniZoomFactor = 0.3;
-//  bannerMiniZoomFactor = 0.125;
 
   maxRecordFile = 4;
 }

@@ -37,8 +37,10 @@ bannerMini(NULL)
       // if necessary, resize the banner image to match app banner size
       if (banner->w != constants.bannerSize || banner->h != constants.bannerSize)
       {
-        SDL_Surface* temp = banner;
-        banner = zoomSurface(temp, (float)constants.bannerSize / banner->w, (float)constants.bannerSize / banner->h, 0);
+        // zoomSurface does an automatic conversion to 32 bit...
+        SDL_Surface* temp = zoomSurface(banner, (float)constants.bannerSize / banner->w, (float)constants.bannerSize / banner->h, 0);
+        SDL_FreeSurface(banner);
+        banner = SDL_DisplayFormat(temp);
         SDL_FreeSurface(temp);
       }
       bannerMini = zoomSurface(banner, constants.bannerMiniZoomFactor, constants.bannerMiniZoomFactor, 0);

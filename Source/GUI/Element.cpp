@@ -34,7 +34,9 @@ Element::Element() :
   clicked(false),
   clickedBy(-1),
   colour(noColour),
-  text("")
+  text(""),
+  font(DefaultFont),
+  pointSize(24)
 {
 }
 
@@ -50,7 +52,9 @@ Element::Element(int _x, int _y, int _w, int _h, bool v, bool a, string tx, int 
   clicked(false),
   clickedBy(-1),
   colour(noColour),
-  text(tx)
+  text(tx),
+  font(DefaultFont),
+  pointSize(24)
 {
 }
 

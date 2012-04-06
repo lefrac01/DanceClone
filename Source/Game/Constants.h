@@ -24,7 +24,7 @@ using std::string;
 #include <vector>
 using std::vector;
 
-#include "../Platform/OS.h" // which platform is defined...
+#include "../Platform/OS.h"
 #include "../Platform/LOG.H"
 
 namespace DanceClone

@@ -32,10 +32,6 @@ Button::Button(string s, int _x, int _y, int _w, int _h, int t) :
   Element(_x, _y, _w, _h, true, true, s, t),
   state(NORMAL)
 {
-  //TODO: this is from orig drawing code (still used!) the extents of the
-  // button are modified to allow for the button edge graphics so use this
-  // for the moment for click detection
-  //if(useCursor[a] && sys.input.cursorx[a]>x-14 && sys.input.cursory[a]>y-14 && sys.input.cursorx[a]<x+w+13 && sys.input.cursory[a]<y+h+13)
   testExtent.x = x-14;
   testExtent.y = y-14;
   testExtent.w = w+14;
@@ -76,6 +72,24 @@ void Button::CursorAt(int testx, int testy)
 
 SDL_Rect& Button::TestExtent()
 {
+  //TODO: this is from orig drawing code (still used!) the extents of the
+  // button are modified to allow for the button edge graphics so use this
+  // for the moment for click detection
+  //if(useCursor[a] && sys.input.cursorx[a]>x-14 && sys.input.cursory[a]>y-14 && sys.input.cursorx[a]<x+w+13 && sys.input.cursory[a]<y+h+13)
+  int tempX = x;
+  int tempY = y;
+  if (offsetMode & Element::HCenter)
+  {
+    tempX = x - w/2;
+  }
+  if (offsetMode & Element::VCenter)
+  {
+    tempY = y - h/2;
+  }
+  testExtent.x = tempX-14;
+  testExtent.y = tempY-14;
+  testExtent.w = w+14;
+  testExtent.h = h+20;
   return testExtent;
 }
 

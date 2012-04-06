@@ -44,6 +44,7 @@ int main(int argc, char* argv[])
   LOG(DEBUG_BASIC, GAMEVERSIONSTRING << " startup" << endl)
   FLUSH_LOG
 
+
   Constants constants;
   constants.Init(); // may eventually use a config file 
 
@@ -80,23 +81,23 @@ int main(int argc, char* argv[])
   {
     sys.Pump();
     
-    if (game.State() != Game::PLAY_PREP2 && game.State() != Game::PLAY)
-    dash.Run();
     if (dash.UserWantsOut())
     {
       done = true;
     }
     
+    if (game.CanInterrupt())
+    {
+      gui.Update();
+      dash.Run();
+    }
+
     if (!dash.Visible())
     {
       game.Run();
-      
-      if (game.State() != Game::PLAY_PREP1 && game.State() != Game::PLAY_PREP2 && game.State() != Game::PLAY)
-      {
-        gui.Update();
-      }
     }
-        
+
+      
     SDL_Event event;
     
     LOG(DEBUG_GUTS, "Entering main loop" << endl)
@@ -106,7 +107,7 @@ int main(int argc, char* argv[])
       if(event.type == SDL_QUIT)
       {
         LOG(DEBUG_GUTS, "got SDL_QUIT" << endl)
-        done = 1;
+        done = true;
       }
     }
   }

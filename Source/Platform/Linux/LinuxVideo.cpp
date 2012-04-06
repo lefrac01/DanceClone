@@ -33,12 +33,8 @@ bool LinuxVideo::Init()
   LOG(DEBUG_MINOR, "Platform::Video::Init()" << endl)
   //TODO: there is a way to reinit adding support for just video...
   //SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
-  //SDL_ShowCursor(SDL_DISABLE);
 
-
-  screen = SDL_SetVideoMode(screenWidth, screenHeight, 32, SDL_DOUBLEBUF);
-  //SDL_WM_SetCaption( GAMEVERSIONSTRING, NULL );
-
+  screen = SDL_SetVideoMode(screenWidth, screenHeight, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
 
   return true;
 }

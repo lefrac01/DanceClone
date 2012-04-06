@@ -127,7 +127,6 @@ public:
   Graphics(OS& os);
   bool Init(string configFilePath = "");
   void Cleanup();
-  void DrawBackground();
 };
 
 }

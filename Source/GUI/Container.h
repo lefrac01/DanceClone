@@ -39,16 +39,19 @@ class Container;
 class Container : public Element
 {
 protected:
+
+
+public:
   vector<Container> containers;
   vector<Image> images;
   vector<Button> buttons;
   vector<Label> labels;
   
-
-public:
+  
   Container();
-  virtual ~Container();
   Container(int _x, int _y, int _w, int _h, int ta = -1);
+  virtual ~Container();
+  
   vector<Container>& Containers();  
   vector<Image>& Images();
   vector<Button>& Buttons();

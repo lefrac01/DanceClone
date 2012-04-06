@@ -37,9 +37,9 @@ bool DashGraphics::Init()
   backgroundBlurred = SDL_DisplayFormat(sys.vid.screen);
   
   
-  string borderImagePath ="Media/WiiDash/Border.png";
-  string topBottomBorderImagePath = "Media/WiiDash/TopBottomBorder.png";
-  string cursorImageImagePath = "Media/WiiDash/Cursor.PNG";
+  string borderImagePath ="Media/Gui/Border.png";
+  string topBottomBorderImagePath = "Media/Gui/TopBottomBorder.png";
+  string cursorImageImagePath = "Media/Gui/Cursor.PNG";
 
   borderImage = sys.vid.LoadOptimize(borderImagePath.c_str());
   if (!borderImage) LOG(DEBUG_BASIC, "failed to load \"" << borderImagePath << "\"" << endl)

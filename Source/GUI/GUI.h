@@ -29,6 +29,8 @@ using Platform::InputChannel;
 #include "GUIGraphics.h"
 #include "../Platform/Tools.h"
 #include "Container.h"
+#include "Element.h"
+
 
 namespace Gooey
 {
@@ -40,9 +42,17 @@ private:
   GUI();
   OS& sys;
   Graphics gfx;
-
+  FontBitmap defaultFontBitmap;
+  FontBitmapCacheMap fontBitmapCache;
+  FontBitmap* GetCachedFont(string filename, int pointSize, Uint32 colour);
+  
   
 public:
+
+  Container screen;
+  bool hideCursor;
+  Uint32 spriteTextColour;
+  vector<string> fonts;
 
   GUI(OS& os);
   bool Init();
@@ -51,6 +61,9 @@ public:
   void DrawSpriteText(int posx,int posy,char* texttosprite,int leftmiddleright);
   void DrawButton(Button& b);
   bool DoButton(int x, int y,int w,int h,bool center,bool clickable,char* text);
+  void DrawText(int x, int y, string text);
+  void DrawText(int x, int y, string text, Element::Font f, Uint32 colour, int pointSize);
+  void DrawLabel(Label& l);
   int SpriteTextWrapped(int posx,int posy,char* texttosprite,int length);
   void SpriteText(int posx,int posy,char* texttosprite,int leftmiddleright);
   void SpriteTextColored(int posx,int posy,char* texttosprite,int leftmiddleright);
@@ -59,10 +72,6 @@ public:
   void SavePngScreenshot(); //TODO: fix
   void SetScreen(Container& c);
   void Render(Container& c);
-  Container screen;  // clash with sys.vid concept
-  bool hideCursor;
-  Uint32 spriteTextColour;
-  //void WiiDash_savebmpscreenshot();
 };
 
 }

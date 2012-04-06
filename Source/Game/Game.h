@@ -18,8 +18,8 @@
 //      MA 02110-1301, USA.
 
 #define GAMESTRING "DanceClone"
-#define GAMEVERSION "v0.62"
-#define GAMEVERSIONSTRING "DanceClone v0.62"
+#define GAMEVERSION "v0.64"
+#define GAMEVERSIONSTRING "DanceClone v0.64"
 
 
 #include <string>
@@ -148,6 +148,7 @@ public:
   void Frame();
   void PartialFrame(long begin, long end);
   void RateArrows(Player& p);
+  bool CanInterrupt();
 };
 
 }

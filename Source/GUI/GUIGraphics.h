@@ -45,26 +45,13 @@ private:
   OS& sys;
   
 public:
-/*
-  SDL_Surface *WDcursorimage;
-  SDL_Rect WDcursorframes[16];
-  SDL_Surface *WDfontimage;
-  SDL_Rect WDfontframes[95];
-  SDL_Surface *WDbuttonimage;
-  SDL_Rect WDbuttonframes[18];
-  SDL_Surface *WDarrowsimage;
-  SDL_Rect WDarrowsframes[4];
-  SDL_Surface *WDfontimagecolored;
-  */
+
   SDL_Surface *cursorImage;
   SDL_Rect cursorFrames[16];
-  SDL_Surface *fontImage;
-  SDL_Rect fontFrames[95];
   SDL_Surface *buttonImage;
   SDL_Rect buttonFrames[27];
   SDL_Surface *arrowsImage;
   SDL_Rect arrowsFrames[4];
-  SDL_Surface *fontImageColored;
   
   Graphics(OS& os);
   bool Init();

@@ -28,6 +28,8 @@
 
 #include <vector>
 using std::vector;
+#include <map>
+using std::map;
 
 #include <stdlib.h>
 #include <stdio.h>

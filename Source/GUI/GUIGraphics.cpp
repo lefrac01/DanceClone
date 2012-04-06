@@ -25,10 +25,8 @@ namespace Gooey
 Graphics::Graphics(OS& os) :
   sys(os),
   cursorImage(NULL),
-  fontImage(NULL),
   buttonImage(NULL),
-  arrowsImage(NULL),
-  fontImageColored(NULL)
+  arrowsImage(NULL)
 {
 }
 
@@ -37,36 +35,21 @@ bool Graphics::Init()
 {
   LOG(DEBUG_MINOR, "Gooey::Graphics::Init()" << endl)
 
-  string cursorImagePath = "Media/WiiDash/Cursor.PNG";
-  string fontImagePath = "Media/WiiDash/Font.png";
-  string buttonImagePath = "Media/WiiDash/Button.png";
-  string fontImageColouredPath = "Media/WiiDash/Font.png";
-  string arrowsImagePath = "Media/WiiDash/Arrows.png";
+  string cursorImagePath = "Media/Gui/Cursor.PNG";
+  string buttonImagePath = "Media/Gui/Button.png";
+  string arrowsImagePath = "Media/Gui/Arrows.png";
   
   
   cursorImage = sys.vid.LoadOptimizeAlpha(cursorImagePath.c_str());
   if (!cursorImage) LOG(DEBUG_BASIC, "failed to load \"" << cursorImagePath << "\"" << endl)
 
-  fontImage = sys.vid.LoadOptimizeAlpha(fontImagePath.c_str());
-  if (!fontImage) LOG(DEBUG_BASIC, "failed to load \"" << fontImagePath << "\"" << endl)
-
   buttonImage = sys.vid.LoadOptimizeAlpha(buttonImagePath.c_str());
   if (!buttonImage) LOG(DEBUG_BASIC, "failed to load \"" << buttonImagePath << "\"" << endl)
-
-  fontImageColored = sys.vid.LoadOptimizeAlpha(fontImageColouredPath.c_str());
-  if (!fontImageColored) LOG(DEBUG_BASIC, "failed to load \"" << fontImageColouredPath << "\"" << endl)
 
   arrowsImage = sys.vid.LoadOptimizeAlpha(arrowsImagePath.c_str());
   if (!arrowsImage) LOG(DEBUG_BASIC, "failed to load \"" << arrowsImagePath << "\"" << endl)
 
 
-  for(int a = 0; a < 95; a++)
-  {
-    fontFrames[a].x = a*15;
-    fontFrames[a].y = 0;
-    fontFrames[a].w = 15;
-    fontFrames[a].h = 21;
-  }
   for(int b = 0; b < 3; b++)
   {
     for(int a = 0; a < 9; a++)
@@ -92,7 +75,7 @@ bool Graphics::Init()
     cursorFrames[a].h = 96;
   }
 
-  return (cursorImage && fontImage && buttonImage && fontImageColored && arrowsImage);
+  return (cursorImage && buttonImage && arrowsImage);
 }
 
 void Graphics::Cleanup()
@@ -102,21 +85,11 @@ void Graphics::Cleanup()
     SDL_FreeSurface(cursorImage);
     cursorImage = NULL;
   }  
-  if (fontImage)
-  {
-    SDL_FreeSurface(fontImage);
-    fontImage = NULL;
-  }  
   if (buttonImage)
   {
     SDL_FreeSurface(buttonImage);
     buttonImage = NULL;
   }  
-  if (fontImageColored)
-  {
-    SDL_FreeSurface(fontImageColored);
-    fontImageColored = NULL;
-  }
   if (arrowsImage)
   {
     SDL_FreeSurface(arrowsImage);

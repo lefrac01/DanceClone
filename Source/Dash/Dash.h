@@ -29,6 +29,11 @@ using Platform::OS;
 #include "../Platform/Tools.h"
 #include "../GUI/GUI.h"
 using Gooey::GUI;
+using Gooey::Container;
+using Gooey::Element;
+using Gooey::Button;
+using Gooey::Image;
+using Gooey::Label;
 #include "DashGraphics.h"
 #ifdef WII
 #include <gccore.h>
@@ -44,9 +49,13 @@ private:
   DashGraphics gfx;
   bool userWantsOut;
   double onOffPercent;
-  bool onOff;
-  Uint8* prgb1;
-  Uint8* prgb2;
+  bool displayDash;
+  bool stateChanged;
+  SDL_Surface* dashBg;
+  Container oldGuiScreen;
+  bool oldGuiCursorHidden;
+  //Uint8* prgb1;
+  //Uint8* prgb2;
   int screenWidth;
   int screenHeight;
   struct tm* dashTime;
@@ -55,13 +64,12 @@ private:
   static const char* monthNames[];
   static const char* dayNames[];
 
-  int runTime;
-  int gameTime;
-  int frameTime;
-  int framerate;
-  double timespeed;
-
-  char extraCredits[100];
+  static const int resumeTag = 1;
+  static const int exitTag = 2;
+  static const int restartTag = 3;
+  static const int shutdownTag = 4;
+  static const int screenshotTag = 5;
+  
   Uint8 In8bitRange(int num);
   
 public:

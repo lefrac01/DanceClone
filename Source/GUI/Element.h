@@ -25,6 +25,8 @@ using std::string;
 
 #include <SDL.h>
 
+#include "FontBitmap.h"
+
 namespace Gooey
 {
 
@@ -40,6 +42,20 @@ public:
     HCenter = (1u << 5),
     VCenter = (1u << 6),
   };
+
+enum Font
+  {
+    DefaultFont,
+    AeroliteSky,
+    CardewThree,
+    Cryta,
+    D3Euronism,
+    Future,
+    Research,
+    NUM_FONTS
+  };
+
+
   
   const static Uint32 noColour = -1;
 
@@ -59,6 +75,8 @@ public:
   int clickedBy;
   Uint32 colour;
   string text;
+  Font font;
+  int pointSize;
   virtual bool Clicked(int testx, int testy, int channel) = 0;
   virtual void CursorAt(int testx, int testy) = 0;
   void SetColour(Uint32 c);
