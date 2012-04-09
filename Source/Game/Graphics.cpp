@@ -103,8 +103,8 @@ bool Graphics::Init(string configFilePath)
 
   for(int a = 0; a < 10; a++)
   {
-    comboNumbersFrames[a].x = a*44;   comboNumbersFrames[a].y = 0;
-    comboNumbersFrames[a].w = 44;     comboNumbersFrames[a].h = 66;
+    comboNumbersFrames[a].x = a*22;   comboNumbersFrames[a].y = 0;
+    comboNumbersFrames[a].w = 22;     comboNumbersFrames[a].h = 33;
   }
 
   for(int a = 0; a < 2; a++)
@@ -279,9 +279,6 @@ void Graphics::ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* des
   SDL_Surface* temp_src = IMG_Load(source_file.c_str());
   if (!temp_src)
   {
-    //error_log.open("errors", std::ios_base::app);
-    //error_log << "failed to load graphics resource \"" << source_file.c_str() << "\"" << endl;
-    //error_log.close();
     string exceptionDetail = "ExpandArrows() failed to load file \"";
     exceptionDetail += source_file;
     exceptionDetail += "\"";

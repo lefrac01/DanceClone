@@ -125,6 +125,14 @@ SDL_Rect* Decal::CurrentFrameRect(long currentTime)
       result = frameRects[rectIndex];
     }
   }
+  //TODO: recode this.  bad bad boy!
+  else
+  {
+    if (frameRects.size() > 0)
+    {
+      result = frameRects[frameRects.size() - 1];
+    }
+  }
   return result;
 }
 

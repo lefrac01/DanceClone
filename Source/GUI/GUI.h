@@ -51,24 +51,17 @@ public:
 
   Container screen;
   bool hideCursor;
-  Uint32 spriteTextColour;
   vector<string> fonts;
 
   GUI(OS& os);
   bool Init();
   void Update();
   void Cleanup();
-  void DrawSpriteText(int posx,int posy,char* texttosprite,int leftmiddleright);
   void DrawButton(Button& b);
   bool DoButton(int x, int y,int w,int h,bool center,bool clickable,char* text);
   void DrawText(int x, int y, string text);
   void DrawText(int x, int y, string text, Element::Font f, Uint32 colour, int pointSize);
   void DrawLabel(Label& l);
-  int SpriteTextWrapped(int posx,int posy,char* texttosprite,int length);
-  void SpriteText(int posx,int posy,char* texttosprite,int leftmiddleright);
-  void SpriteTextColored(int posx,int posy,char* texttosprite,int leftmiddleright);
-  Uint32 GetSpriteTextColour();
-  void SetSpriteTextColour(Uint32 colour);
   void SavePngScreenshot(); //TODO: fix
   void SetScreen(Container& c);
   void Render(Container& c);

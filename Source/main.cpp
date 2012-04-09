@@ -80,24 +80,22 @@ int main(int argc, char* argv[])
   while(!done)
   {
     sys.Pump();
-    
-    if (dash.UserWantsOut())
-    {
-      done = true;
-    }
-    
+
     if (game.CanInterrupt())
     {
       gui.Update();
       dash.Run();
+      if (dash.UserWantsOut())
+      {
+        done = true;
+      }
     }
-
+    
     if (!dash.Visible())
     {
       game.Run();
     }
 
-      
     SDL_Event event;
     
     LOG(DEBUG_GUTS, "Entering main loop" << endl)

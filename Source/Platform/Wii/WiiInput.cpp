@@ -52,74 +52,18 @@ void WiiInput::WiiInputInit(int w, int h)
 bool WiiInput::GCControllerPresent(u32 scan, int chan)
 {
   u8 chanbit = 1 << chan;
-  scan &= chanbit;
-  return scan != 0;
+  return (scan & chanbit) != 0;
 }
 
 void WiiInput::Update()
 {
-  //bool wiimoteactive[maxChannels];
   u32 WiiButtonsHeld[maxChannels];
   u32 WiiButtonsDown[maxChannels];
-  //u32 WiiButtonsUp[maxChannels];
   u16 GCButtonsHeld[maxChannels];
   u16 GCButtonsDown[maxChannels];
-  //u16 GCButtonsUp[maxChannels];   // never received??
   ir_t ir[maxChannels];
   
-  //Input::Update();
   LOG(DEBUG_GUTS, "WiiInput::Update()" << endl)
-/*
-  WPAD_ScanPads();
-  for (int i = 0; i < maxChannels; i++)
-  {
-    InputChannel& chan = inputChannels[i];
-    u32 ext;
-    chan.active = (WPAD_Probe(i, &ext)!=WPAD_ERR_NO_CONTROLLER);
-    WiiButtonsHeld[i] = WPAD_ButtonsHeld(i);
-    WiiButtonsDown[i] = WPAD_ButtonsDown(i);
-    //WiiButtonsUp[i] = WPAD_ButtonsUp(i);
-    
-    //#chan.buttonDown[InputChannel::Button1] = WiiButtonsDown[i] & WPAD_BUTTON_2;
-    //#chan.buttonHeld[InputChannel::Button1] = WiiButtonsHeld[i] & WPAD_BUTTON_2;
-    //#chan.buttonDown[InputChannel::Button2] = WiiButtonsDown[i] & WPAD_BUTTON_1;
-    //#chan.buttonHeld[InputChannel::Button2] = WiiButtonsHeld[i] & WPAD_BUTTON_1;
-    //#chan.buttonDown[InputChannel::Button3] = WiiButtonsDown[i] & WPAD_BUTTON_B;
-    //#chan.buttonHeld[InputChannel::Button3] = WiiButtonsHeld[i] & WPAD_BUTTON_B;
-    //#
-    chan.buttonDown[InputChannel::Button4] = WiiButtonsDown[i] & WPAD_BUTTON_A;
-    chan.buttonHeld[InputChannel::Button4] = WiiButtonsHeld[i] & WPAD_BUTTON_A;
-    
-    //#chan.buttonDown[InputChannel::Button5] = WiiButtonsDown[i] & WPAD_BUTTON_MINUS;
-    //#chan.buttonHeld[InputChannel::Button5] = WiiButtonsHeld[i] & WPAD_BUTTON_MINUS;
-    chan.buttonDown[InputChannel::Button6] = WiiButtonsDown[i] & WPAD_BUTTON_HOME;
-    chan.buttonHeld[InputChannel::Button6] = WiiButtonsHeld[i] & WPAD_BUTTON_HOME;
-    //#chan.buttonDown[InputChannel::Button7] = WiiButtonsDown[i] & WPAD_BUTTON_PLUS;
-    //#chan.buttonHeld[InputChannel::Button7] = WiiButtonsHeld[i] & WPAD_BUTTON_PLUS;
-
-    //#chan.directionDown[InputChannel::UP] =    WiiButtonsDown[i] & WPAD_BUTTON_UP;
-    //#chan.directionDown[InputChannel::DOWN] =  WiiButtonsDown[i] & WPAD_BUTTON_DOWN;
-    //#chan.directionDown[InputChannel::LEFT] =  WiiButtonsDown[i] & WPAD_BUTTON_LEFT;
-    //#chan.directionDown[InputChannel::RIGHT] = WiiButtonsDown[i] & WPAD_BUTTON_RIGHT;
-    //#chan.directionHeld[InputChannel::UP] =    WiiButtonsHeld[i] & WPAD_BUTTON_UP;
-    //#chan.directionHeld[InputChannel::DOWN] =  WiiButtonsHeld[i] & WPAD_BUTTON_DOWN;
-    //#chan.directionHeld[InputChannel::LEFT] =  WiiButtonsHeld[i] & WPAD_BUTTON_LEFT;
-    //#chan.directionHeld[InputChannel::RIGHT] = WiiButtonsHeld[i] & WPAD_BUTTON_RIGHT;
-    //#
-
-    WPAD_IR(i, &ir[i]);
-    if (ir[i].valid)
-    {
-      //NOTE: GUI-graphic-specific adjustments.  1.25 could be calculated relative to screen width / height vs cursor width / height
-      //chan.cursorX = ir[i].x*1.25-80;
-      //chan.cursorY = ir[i].y*1.25-60;
-      chan.cursorX = ir[i].x;
-      chan.cursorY = ir[i].y;
-    }
-  }
-  LOG(DEBUG_GUTS, "wiimoteactive[0]:" << inputChannels[0].active << " [1]:" << inputChannels[1].active << endl)
-*/
-
 
   //NOTE: Wii GC Dance Mat to GC controller mappings:
   //minus PAD_TRIGGER_Z     }- both?
@@ -132,12 +76,9 @@ void WiiInput::Update()
   //UP    PAD_BUTTON_UP
   //DOWN  PAD_BUTTON_DOWN
   
-  //NOTE not considering dance mat buttons and wiimote buttons as separate
-  // this would be unexpected for many other applications!!! but no time to
-  // spare.. must get done quickly for DanceNight
+  VIDEO_WaitVSync();
   WPAD_ScanPads();
-  u32 scanResult;
-  scanResult = PAD_ScanPads();
+  u32 scanResult = PAD_ScanPads();
   for (int i = 0; i < maxChannels; i++)
   {
     InputChannel& chan = inputChannels[i];
@@ -145,7 +86,6 @@ void WiiInput::Update()
     chan.active = (WPAD_Probe(i, &ext)!=WPAD_ERR_NO_CONTROLLER);
     WiiButtonsHeld[i] = WPAD_ButtonsHeld(i);
     WiiButtonsDown[i] = WPAD_ButtonsDown(i);
-    //WiiButtonsUp[i] = WPAD_ButtonsUp(i);
     
     WPAD_IR(i, &ir[i]);
     if (ir[i].valid)
@@ -156,7 +96,6 @@ void WiiInput::Update()
         
     GCButtonsHeld[i] = PAD_ButtonsHeld(i);
     GCButtonsDown[i] = PAD_ButtonsDown(i);
-    //GCButtonsUp[i] = PAD_ButtonsUp(i);    // never received?????
     
     chan.danceMatActive = GCControllerPresent(scanResult, i);
     
@@ -173,13 +112,6 @@ void WiiInput::Update()
     chan.buttonHeld[InputChannel::Button3] = GCButtonsHeld[i] & PAD_BUTTON_B;
     chan.buttonHeld[InputChannel::Button5] = (GCButtonsHeld[i] & PAD_TRIGGER_Z || GCButtonsHeld[i] & PAD_BUTTON_MENU);
     chan.buttonHeld[InputChannel::Button7] = GCButtonsHeld[i] & PAD_BUTTON_START;
-    //#chan.buttonHeld[InputChannel::Button3] = !chan.buttonHeld[InputChannel::Button4] && GCButtonsDown[i] & PAD_BUTTON_B;
-    //#chan.buttonHeld[InputChannel::Button5] = !chan.buttonHeld[InputChannel::Button4] && (GCButtonsDown[i] & PAD_TRIGGER_Z || GCButtonsDown[i] & PAD_BUTTON_MENU);
-    //#chan.buttonHeld[InputChannel::Button7] = !chan.buttonHeld[InputChannel::Button4] && GCButtonsDown[i] & PAD_BUTTON_START;
-    //#chan.buttonHeld[InputChannel::Button3] = GCButtonsHeld[i] & PAD_BUTTON_B;
-    //#chan.buttonHeld[InputChannel::Button5] = GCButtonsHeld[i] & PAD_TRIGGER_Z;
-    //#chan.buttonHeld[InputChannel::Button5] = GCButtonsHeld[i] & PAD_BUTTON_MENU;
-    //#chan.buttonHeld[InputChannel::Button7] = GCButtonsHeld[i] & PAD_BUTTON_START;
 
     chan.buttonHeld[InputChannel::Button4] = !chan.buttonHeld[InputChannel::Button4] && GCButtonsDown[i] & PAD_BUTTON_A;
     

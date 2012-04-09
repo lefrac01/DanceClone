@@ -151,11 +151,12 @@ void Game::Run()
   }
 
   gameStateChanged = oldState != state;
-
+/*
   if (gameStateChanged)
   {
     FLUSH_LOG
   }
+  */
 }
 
 Game::GameState Game::State()
@@ -172,8 +173,6 @@ void Game::RunTitleScreen()
   if (gameStateChanged)
   {
     LOG(DEBUG_BASIC, "Game::RunTitleScreen setting up" << endl)
-    
-    gui.SetSpriteTextColour(gfx.sdlBlack);
     
     Container title;
     Image bg(gfx.images[Graphics::DefaultBg], 0, 0, 0, 0);
@@ -250,6 +249,12 @@ void Game::RunCreditsScreen()
     Label cred4("Dance, NOW! music by RekcahDam", 40, 60+20*5);
     Label cred5("rekcahdam.blogspot.com", 40, 60+20*6);
     
+    cred1.colour = gfx.sdlWhite;
+    cred2.colour = gfx.sdlWhite;
+    cred3.colour = gfx.sdlWhite;
+    cred4.colour = gfx.sdlWhite;
+    cred5.colour = gfx.sdlWhite;
+    
     credits.Add(cred1);
     credits.Add(cred2);
     credits.Add(cred3);
@@ -261,8 +266,6 @@ void Game::RunCreditsScreen()
     credits.Add(back);
     
     gui.SetScreen(credits);
-    
-    gui.SetSpriteTextColour(gfx.sdlWhite);
   }
 
 
@@ -301,30 +304,35 @@ void Game::RunLoadingSong()
     loadingSong.Add(bg);
     
     Label message("LOADING...", 240, 200+20*5);
-
+    message.colour = gfx.sdlWhite;
     loadingSong.Add(message);
     
     gui.SetScreen(loadingSong);
-    gui.SetSpriteTextColour(gfx.sdlWhite);
     c=-2;
-    ready = false;
+    ready = songs[currentSong].Prepare();
   }
   
-  if (c==-2) c=-3;
-  else if (c==-3)
+  if (c==-2) c=0;
+  else
   {
     LOG(DEBUG_MINOR, "Game::RunLoadingSong pt 2 of setup" << endl)
     Container loadingSong;
 
     Label message("LOADING...  READY!", 240, 200+20*5);
-
+    switch(++c)
+    {
+      case 0: message.colour = gfx.sdlWhite; break;
+      case 1: message.colour = gfx.sdlYellow; break;
+      case 2: message.colour = gfx.sdlGrey; break;
+      case 3: message.colour = gfx.sdlGreen; break;
+    }
+    if (c==4)c=-1;
     loadingSong.Add(message);
     
-    if(songs[currentSong].Prepare())
+    if(ready)
     {
       Button back("Continue", sys.vid.ScreenWidth()-200-40, sys.vid.ScreenHeight()-10-40, 100, 10);
       loadingSong.Add(back);
-      ready = true;
     }
     else
     {
@@ -332,20 +340,7 @@ void Game::RunLoadingSong()
       loadingSong.Add(back);
     }
     gui.SetScreen(loadingSong);
-    
-    c=-1;
   }
-  else
-  {
-    switch(++c)
-    {
-      case 0: gui.SetSpriteTextColour(gfx.sdlWhite); break;
-      case 1: gui.SetSpriteTextColour(gfx.sdlYellow); break;
-      case 2: gui.SetSpriteTextColour(gfx.sdlGrey); break;
-      case 3: gui.SetSpriteTextColour(gfx.sdlGreen); break;
-    }
-    if (c==4)c=-1;
-  }  
 
   if (ready && sys.input.ButtonDown(-1, InputChannel::Button4))
   {
@@ -393,12 +388,12 @@ void Game::RunDebugScreen()
     debug.Add(freezeHit);
     
     Button back("Back", sys.vid.ScreenWidth()-200-40, sys.vid.ScreenHeight()-10-40, 100, 10, backButtonTag);
+    back.colour = gfx.sdlCyan;
     debug.Add(back);
     
     gui.SetScreen(debug);
 
-    gui.SetSpriteTextColour(gfx.sdlCyan);
-    
+   
     //#LOG(DEBUG_BASIC, "Custom spacer 0.2 to 112:" << endl)
     //#for (int i = 0; i <= 1000; i++)
     //#{
@@ -495,8 +490,6 @@ void Game::RunChooseNumPlayers()
     title.offsetMode = Element::HCenter;
     chooseNumPlayers.Add(title);
 
-    gui.SetSpriteTextColour(gfx.sdlBlack);
-    
     // Detect max input channels and those with an active dance mat
     // add i < 4 to not use the wii balance board
     int tempx = 55;
@@ -575,8 +568,6 @@ void Game::RunChooseRecordFile()
     Image bg(gfx.images[Graphics::DefaultBg], 0, 0, 0, 0);
     chooseRecordFile.Add(bg);
     
-    gui.SetSpriteTextColour(gfx.sdlBlack);
-
     Label title("Choose record file", sys.vid.ScreenWidth() / 2, 25);
     title.colour = gfx.sdlWhite;
     title.offsetMode = Element::HCenter;
@@ -716,8 +707,6 @@ void Game::RunSelectSong()
         menuIndex = 0;
       }
 
-      gui.SetSpriteTextColour(gfx.sdlBlack);
-      
       // if there are no choices, preload songs.  worst case there are no songs
       // and the preload is done every time the menu is entered...
       if (songMenuItems.size() == 0)
@@ -832,7 +821,7 @@ void Game::RunSelectSong()
     Image bg(gfx.images[Graphics::SongSelectBg], 0, 0, 0, 0);
     songSelect.Add(bg);
 
-    float animPct = PFunc::ParamByVal(PFunc::Square, animTime, animStartTime, animEndTime);
+    float animPct = PFunc::ParamByVal(PFunc::Cube, animTime, animStartTime, animEndTime);
     
     for (int i = 0; i < numElements; ++i)
     {
@@ -1153,13 +1142,7 @@ void Game::RunSelectDifficulty()
   {
     LOG(DEBUG_MINOR, "Game::RunSelectDifficulty setting up" << endl)
 
-    Container selectDifficulty;
-
-    Image bg(gfx.images[Graphics::DefaultBg], 0, 0, 0, 0);
-    selectDifficulty.Add(bg);
-    
     bool firstDifficulty = true;
-   
     for (int i = 0; i < constants.numDifficulties; ++i)
     {
       if (songs[currentSong].DifficultyIsAvailable(i))
@@ -1170,25 +1153,38 @@ void Game::RunSelectDifficulty()
           minDifficulty = i;
         }
         maxDifficulty = i;
-        Button b(Constants::difficultyText[i], x, baseY + i * rowHeight, w, 10, baseDifficultyTag + i);
-        selectDifficulty.Add(b);
       }
     }
-    
+  
     for (int i = 0; i < numPlayers; ++i)
     {
       players[i].difficulty = minDifficulty;
       players[i].ready = false;
     }
     
-    gui.SetScreen(selectDifficulty);
   }
 
-  // Apply player difficulty selection cursor according to currently selected difficulty
+  Container selectDifficulty;
+
+  Image bg(gfx.images[Graphics::DefaultBg], 0, 0, 0, 0);
+  selectDifficulty.Add(bg);
+  
+  for (int i = 0; i < constants.numDifficulties; ++i)
+  {
+    if (songs[currentSong].DifficultyIsAvailable(i))
+    {
+      Button b(Constants::difficultyText[i], x, baseY + i * rowHeight, w, 10, baseDifficultyTag + i);
+      selectDifficulty.Add(b);
+    }
+  }
+  
+  // Add player difficulty selection cursor according to currently selected difficulty
   for (int i = 0; i < numPlayers; ++i)
   {
     sys.vid.ApplySurface(x + w + 20 + i * 50, baseY - 16 + players[i].difficulty * rowHeight, gfx.images[Graphics::DifficultyCursor], NULL, &gfx.difficultyCursorFrames[players[i].ready ? 2+i : i]);
   }
+  gui.SetScreen(selectDifficulty);
+
 
   // directly check inputs for changing each player's difficulty
   for (int i = 0; i < numPlayers; ++i)
@@ -1689,8 +1685,8 @@ void Game::RunPlay()
     // draw ratings from oldest to newest
     // center in player's field and just below home arrows
     // rating decals drift downward over the course of their animation
-    int decalX = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth - constants.playerArrowColumnWidth / 2;
-    int decalY = constants.goalOffset + 100;
+    int decalX = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth - gfx.ratingsFrames[0].w / 2;
+    int decalY = constants.goalOffset + 130;
     int decalAnimH = 32;
     for (unsigned int j = 0; j < ratingDecals.size(); ++j)
     {
@@ -1705,7 +1701,115 @@ void Game::RunPlay()
         }
       }
     }
-  }  
+
+    // remove combo number for a player if his/her combo has been reset
+    unsigned int j = 0;
+    if (p.combo < 5)
+    {
+      while (j < comboDecals.size())
+      {
+        if (comboDecals[j].player == i)
+        {
+          comboDecals.erase(comboDecals.begin() + j);
+        }
+        else
+        {
+          ++j;
+        }
+      }
+    }
+    else
+    {
+      // keep only latest combo up.
+      long lastComboNumberTime = 0;
+      for (unsigned int k = 0; k < comboDecals.size(); ++k)
+      {
+        if (comboDecals[j].player == i)
+        {
+          lastComboNumberTime = comboDecals[k].animStartTime;
+        }
+      }
+      unsigned int k = 0;
+      while (k < comboDecals.size())
+      {
+        if (comboDecals[k].player == i
+         && comboDecals[k].animStartTime != lastComboNumberTime)
+        {
+          comboDecals.erase(comboDecals.begin() + k);
+        }
+        else
+        {
+          ++k;
+        }
+      }
+    }
+
+    
+
+    
+    // draw combo numbers.  numbers are composed of digits with the same time in the vector, last digit first
+    // center them in the player arrow field according to number of digits 
+    decalX = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth;
+    decalY = constants.goalOffset + 250;
+    decalAnimH = 10;
+    //TODO: hardcoded.  figure out a way to learn png size from resource
+    int comboLabelWidth = 96;
+    int comboLabelHeight = 32;
+    int playerComboNumbers = 0;
+    for (unsigned int j = 0; j < comboDecals.size(); ++j)
+    {
+      if (comboDecals[j].player == i)
+      {
+        ++playerComboNumbers;
+      }
+    }
+    if (playerComboNumbers > 0)
+    {
+      int tempX = decalX - comboLabelWidth / 2;
+      int tempY = decalY - comboLabelHeight - 4;
+      sys.vid.ApplySurface(tempX, tempY, gfx.images[Graphics::ComboLabel], sys.vid.screen, NULL);
+    }
+
+    long comboNumberTime = 0;
+    int numberDigits = 0;
+    unsigned int comboNumberStartIndex = 0;
+    unsigned int comboNumberEndIndex = 0;
+    j = 0;
+    int digitWidth = gfx.comboNumbersFrames[0].w;
+    while (j < comboDecals.size())
+    {
+      if (comboDecals[j].player == i)
+      {
+        comboNumberTime = comboDecals[j].animStartTime;
+        comboNumberStartIndex = j;
+        comboNumberEndIndex = comboNumberStartIndex;
+        while (comboNumberEndIndex+1 < comboDecals.size() 
+            && comboDecals[comboNumberEndIndex+1].player == i 
+            && comboDecals[comboNumberEndIndex+1].animStartTime == comboNumberTime)
+        {
+          ++comboNumberEndIndex;
+        }
+        numberDigits = comboNumberEndIndex - comboNumberStartIndex + 1;
+        
+        for (unsigned int k = comboNumberStartIndex; k <= comboNumberEndIndex; ++k)
+        {
+          Decal& c = comboDecals[k];
+          SDL_Rect* tempSrcRect = c.CurrentFrameRect(songTime);
+          if (tempSrcRect)
+          {
+            int tempY = decalY + PFunc::Parametric(PFunc::Linear, PFunc::ParamByVal(PFunc::Square, songTime, c.animStartTime, c.animStartTime + c.animDuration), 0, decalAnimH);
+            int tempX = decalX + numberDigits * digitWidth / 2 - (k-comboNumberStartIndex+1) * digitWidth;
+            sys.vid.ApplySurface(tempX, tempY, c.surface, sys.vid.screen, tempSrcRect);
+          }
+        }
+        j = comboNumberEndIndex+1;
+      }
+      else
+      {
+        ++j;
+      }
+    }
+  }
 
   
   // animate arrows
@@ -2216,7 +2320,7 @@ void Game::RateArrows(Player& p)
       {
         ar.freezeRating = Arrow::FREEZE_FAILED;
       }
-      p.combo=0;
+      p.combo = 0;
     }
   }
 
@@ -2302,13 +2406,13 @@ void Game::RateArrows(Player& p)
             // if the rating is still good, apply it to all arrows in the jump
             if (newRating != Arrow::RATING_NONE)
             {
+              ++p.combo;
               for (int i = minJumpArrowIndex; i <= maxJumpArrowIndex; i++)
               {
                 Arrow& jmpAr = p.arrows[i];
                 
                 jmpAr.animStartTime = songTime;
                 jmpAr.rating = newRating;
-                ++p.combo;
                 if (jmpAr.length == 0)
                 {
                   jmpAr.hidden = true;
@@ -2323,7 +2427,14 @@ void Game::RateArrows(Player& p)
             {
               ar.animStartTime = songTime;
               ar.rating = newRating;
-              ++p.combo;
+              if (newRating == Arrow::MISS)
+              {
+                p.combo = 0;
+              }
+              else
+              {
+                ++p.combo;
+              }
               if (ar.length == 0)
               {
                 ar.hidden = true;
@@ -2369,6 +2480,21 @@ void Game::RateArrows(Player& p)
               break;
             }
             ratingDecals.push_back(d);
+
+
+            if (p.combo >= 5)
+            {
+              // add combo decal(s)
+              int temp = p.combo;
+              while (temp > 0)
+              {
+                int digit = temp % 10;
+                Decal comboDigit(p.playerNumber - 1, gfx.images[Graphics::ComboNumbers], Decal::Static, songTime, 800);
+                comboDigit.frameRects.push_back(&gfx.comboNumbersFrames[digit]);
+                comboDecals.push_back(comboDigit);
+                temp /= 10;
+              }
+            }
             
             break;
           }

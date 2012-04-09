@@ -63,30 +63,7 @@ FontBitmap::FontBitmap(OS& os, string f, int p, Uint32 c) :
       }
     }
 
-/*
-    int numGlyphs = 0;
-    int widest = 0;
-    for (unsigned int i = 0; i < sizeof fontCharsAll / sizeof fontCharsAll[0]; ++i)
-    {
-      int w = 0;
-      int h = 0;
-      if (TTF_SizeText(ttfFont, fontCharsAll[i], &w, &h) == 0)
-      {
-        ++numGlyphs;
-        if (w > widest)
-        {
-          widest = w;
-        }
-      }
-      else
-      {
-        LOG(DEBUG_DETAIL, "font " << filename << " does not support glyph " << fontCharsAll[i] << endl)
-      }
-    }
-    charW = widest;
-*/    
     // create bitmap and rects
-//    surface = SDL_CreateRGBSurface(SDL_HWSURFACE, charW * numGlyphs, charH, 32,
     surface = SDL_CreateRGBSurface(SDL_HWSURFACE, totalWidth, height, 32,
                     0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
     if (surface)
@@ -120,37 +97,6 @@ FontBitmap::FontBitmap(OS& os, string f, int p, Uint32 c) :
           }
         }
       }
-  
-/*      
-      int currentGlyph = 0;
-      SDL_Rect destRect;
-      destRect.y = 0;
-      destRect.w = charW;
-      destRect.h = charH;
-      for (unsigned int i = 0; i < sizeof fontCharsAll / sizeof fontCharsAll[0]; ++i)
-      {
-        SDL_Surface* temp;
-        int w = 0;
-        int h = 0;
-        if (TTF_SizeText(ttfFont, fontCharsAll[i], &w, &h) == 0)
-        {
-          temp = TTF_RenderText_Blended(ttfFont, fontCharsAll[i], sdlColour);
-          if (temp)
-          {
-            SDL_SetAlpha(temp, 0, SDL_ALPHA_OPAQUE);
-            destRect.x = charW * currentGlyph;
-            destRect.w = charW;
-            charFrames[fontCharsAll[i][0]] = destRect;
-            // center smaller characters horizontally
-            destRect.x += (int)((charW - w) / 2.0);
-            destRect.w -= (int)((charW - w) / 2.0);
-            SDL_BlitSurface(temp, NULL, surface, &destRect);
-            SDL_FreeSurface(temp);
-            ++currentGlyph;
-          }
-        }
-      }
-      */
       
       SDL_Surface* temp = surface;
       surface = SDL_DisplayFormatAlpha(surface);

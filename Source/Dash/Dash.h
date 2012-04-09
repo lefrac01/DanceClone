@@ -54,8 +54,6 @@ private:
   SDL_Surface* dashBg;
   Container oldGuiScreen;
   bool oldGuiCursorHidden;
-  //Uint8* prgb1;
-  //Uint8* prgb2;
   int screenWidth;
   int screenHeight;
   struct tm* dashTime;

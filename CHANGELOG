@@ -1,5 +1,10 @@
 changelog
 --
+v0.65
+-add combo display during game play
+-fix problem with PAD_ScanPads being called too quickly
+-fix jumps being counted as two steps for the combo total
+
 v0.64
 -add TTF font handling
 

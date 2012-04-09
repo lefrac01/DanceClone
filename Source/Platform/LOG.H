@@ -57,7 +57,9 @@ static ofstream logFile;
 #else
   #define LOG(lev, content) if (LOG_LEVEL >= lev) { logFile << content; }
   
-  #define INIT_LOG  logFile.open("debug", std::ios_base::trunc);
+  #define INIT_LOG  logFile.open("debug", std::ios_base::trunc);  \
+                    logFile.close(); \
+                    logFile.open("debug", std::ios_base::app);
                     
   #define CLOSE_LOG logFile.close();
   #define FLUSH_LOG logFile.close(); logFile.open("debug", std::ios_base::app);

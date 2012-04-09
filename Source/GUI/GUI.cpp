@@ -25,7 +25,7 @@ namespace Gooey
 GUI::GUI(OS& os) :
   sys(os),
   gfx(os),
-  defaultFontBitmap(FontBitmap(os, "fontname", 12, SDL_MapRGBA(os.vid.screen->format, 255, 255, 255, 255))),
+  defaultFontBitmap(FontBitmap(os, "fontname", 12, SDL_MapRGBA(os.vid.screen->format, 0, 0, 0, 255))),
   fonts(Element::NUM_FONTS)
 {
 }
@@ -50,8 +50,6 @@ bool GUI::Init()
   fonts[Element::Future]       = "Media/Gui/Future World.ttf";
   fonts[Element::Research]     = "Media/Gui/Research Remix Normal.ttf";
 
-  spriteTextColour = SDL_MapRGBA(sys.vid.screen->format, 255, 255, 255, 255);
-  
   return true;
 }
 
@@ -167,11 +165,6 @@ void GUI::Cleanup()
   }
 }
 
-void GUI::DrawSpriteText(int posx,int posy,char* texttosprite,int leftmiddleright)
-{
-  DrawText(posx, posy, texttosprite, Element::DefaultFont, GetSpriteTextColour(), 24);
-}
-
 void GUI::DrawButton(Button& b)
 {
   LOG(DEBUG_GUTS, "GUI::DrawButton(" << b.x << ", " << b.y << ", " << b.w << ", " << b.h << endl)
@@ -244,33 +237,17 @@ void GUI::DrawButton(Button& b)
   DrawLabel(l);
 }
 
-Uint32 GUI::GetSpriteTextColour()
-{
-  return spriteTextColour;
-}
-  
-void GUI::SetSpriteTextColour(Uint32 colour)
-{
-  spriteTextColour = colour;
-}
-
-void GUI::SpriteTextColored(int posx,int posy,char* texttosprite,int leftmiddleright)
-{
-  DrawText(posx, posy, texttosprite, Element::DefaultFont, GetSpriteTextColour(), 16);
-}
-
-void GUI::SpriteText(int posx,int posy,char* texttosprite,int leftmiddleright)
-{
-  DrawText(posx, posy, texttosprite);
-}
-
 void GUI::DrawText(int x, int y, string text)
 {
-  DrawText(x, y, text, Element::DefaultFont, SDL_MapRGBA(sys.vid.screen->format, 255, 255, 255, 255), 16);
+  DrawText(x, y, text, Element::DefaultFont, SDL_MapRGBA(sys.vid.screen->format, 0, 0, 0, 255), 16);
 }
 
 void GUI::DrawText(int x, int y, string text, Element::Font f, Uint32 colour, int pointSize)
 {
+  if (colour == Element::noColour)
+  {
+    colour = SDL_MapRGBA(sys.vid.screen->format, 0, 0, 0, 255);
+  }
   int textWidth = 0;
   FontBitmap* fb = GetCachedFont(fonts[f], pointSize, colour);
   if (fb)
@@ -316,32 +293,6 @@ void GUI::DrawLabel(Label& l)
     
     DrawText(l.x - hOffset, l.y - vOffset, l.text, l.font, l.colour, l.pointSize);
   }
-}
-
-int GUI::SpriteTextWrapped(int posx,int posy,char* texttosprite,int length)
-{/*
-  int textlength=strlen(texttosprite);
-  int textnumber;
-  int letterprintx=posx;
-  int letterprinty=posy-20;
-  int linecount=0;
-  int lineend=0;
-  for(int b=0;b<textlength;b++){
-    if(b==lineend){
-      lineend=b+length;
-      if(b+length<textlength)
-      for(int a=b;a<b+length;a++)if(texttosprite[a]==' ')lineend=a+1;
-      linecount++;
-      letterprintx=posx;
-      letterprinty+=20;
-    }
-    textnumber=getnumberfromchar(texttosprite[b]);
-    sys.vid.ApplySurface(letterprintx,letterprinty,gfx.fontImage,sys.vid.screen,&gfx.fontFrames[textnumber]);
-    letterprintx+=11;
-  }
-  return linecount;
-  */
-  return 0;
 }
 
 void GUI::SavePngScreenshot()

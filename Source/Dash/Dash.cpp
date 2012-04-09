@@ -43,9 +43,7 @@ bool Dash::Init()
   }
   
   dashBg = SDL_DisplayFormatAlpha(sys.vid.screen);
-  //prgb1 = (Uint8*)malloc(screenWidth * screenHeight * 3 * sizeof(Uint8));
-  //prgb2 = (Uint8*)malloc(screenWidth * screenHeight * 3 * sizeof(Uint8));
-  
+
   LOG(DEBUG_DETAIL, "Dash::Init() setting onOff to default value 0" << endl)
   displayDash = false;
   stateChanged = false;
@@ -87,174 +85,6 @@ void Dash::RunOnOff()
     // Home button pressed.  toggle dash display
     displayDash = !displayDash;
     stateChanged = true;
-    
-      //Blur code.  works but slow on Wii
-        
-      /* 
-      if(double_same(onOffPercent,0))
-      {
-        
-        Uint32 color;
-        Uint16* pPosition=(Uint16*)sys.vid.screen->pixels;
-        LOG(DEBUG_GUTS, "extracting separate rgb pixels into stash 1" << endl)
-
-        for(int y = 0; y < screenHeight; ++y)
-        {
-          int inner_offset_base = y * screenWidth * 3;
-          int lower_bound = inner_offset_base;
-          int upper_bound = inner_offset_base + screenWidth * 3;
-          for (int inner_offset = lower_bound; inner_offset < upper_bound; inner_offset += 3)
-          {
-            color=*pPosition;
-            prgb1[inner_offset  ]=(((color&63488)>>11)<<3);
-            prgb1[inner_offset+1]=(((color&2016)>>5)<<2);
-            prgb1[inner_offset+2]=(((color&31)>>0)<<3);
-            ++pPosition;
-          }      
-        }
-
-        LOG(DEBUG_GUTS, "copying stash 1 into stash 2" << endl)
-        memcpy(prgb2, prgb1, sys.vid.ScreenWidth() * sys.vid.ScreenHeight() * 3 * sizeof(Uint8));
-        
-        
-        LOG(DEBUG_GUTS, "initial blur on stash 2" << endl)
-        for(int y = 3; y < screenHeight - 3; ++y)
-        {
-          int inner_base =  y    * screenWidth * 3;
-          int inner_up =   (y-3) * screenWidth * 3 + 3*3;
-          int inner_down = (y+3) * screenWidth * 3 + 3*3;
-          
-          int lower_bound = inner_base + 3*3;
-          int upper_bound = inner_base + (screenWidth-3)*3;
-          int inner_left =  inner_base - 3*3;
-          int inner_right = inner_base + 3*3;
-          for (int inner = lower_bound; inner < upper_bound; inner += 3, inner_left += 3, inner_right += 3, inner_up += 3, inner_down += 3)
-          {
-            prgb2[inner  ] = (  prgb1[inner_up  ] + prgb1[inner_down  ] + prgb1[inner_left  ] + prgb1[inner_right  ]  )/4;
-            prgb2[inner+1] = (  prgb1[inner_up+1] + prgb1[inner_down+1] + prgb1[inner_left+1] + prgb1[inner_right+1]  )/4;
-            prgb2[inner+2] = (  prgb1[inner_up+2] + prgb1[inner_down+2] + prgb1[inner_left+2] + prgb1[inner_right+2]  )/4;
-          }
-        }
-        
-        for(int y = 3; y < screenHeight - 3; ++y)
-        {
-          int inner_base =  y    * screenWidth * 3;
-          int inner_up =   (y-3) * screenWidth * 3 + 3*3;
-          int inner_down = (y+3) * screenWidth * 3 + 3*3;
-          
-          int lower_bound = inner_base + 3*3;
-          int upper_bound = inner_base + (screenWidth-3) * 3;
-          int inner_left =  inner_base - 3*3;
-          int inner_right = inner_base + 3*3;
-          for (int inner = lower_bound; inner < upper_bound; inner += 3, inner_left += 3, inner_right += 3, inner_up += 3, inner_down += 3)
-          {
-            prgb1[inner  ] = (  prgb2[inner_up  ] + prgb2[inner_down  ] + prgb2[inner_left  ] + prgb2[inner_right  ] + 1 )/4;
-            prgb1[inner+1] = (  prgb2[inner_up+1] + prgb2[inner_down+1] + prgb2[inner_left+1] + prgb2[inner_right+1] + 1 )/4;
-            prgb1[inner+2] = (  prgb2[inner_up+2] + prgb2[inner_down+2] + prgb2[inner_left+2] + prgb2[inner_right+2] + 1 )/4;
-          }
-        }
-
-      
-        LOG(DEBUG_GUTS, "second blur back to stash 1" << endl)
-        for(int a = 0; a < 2; ++a)
-        {
-          for(int y = 1; y < screenHeight - 1; ++y)
-          {
-            int inner_base =  y    * screenWidth * 3;
-            int inner_up =   (y-1) * screenWidth * 3 + 1*3;
-            int inner_down = (y+1) * screenWidth * 3 + 1*3;
-            
-            int lower_bound = inner_base + 1*3;
-            int upper_bound = inner_base + (screenWidth-1)*3;
-            int inner_left  = inner_base - 1*3;
-            int inner_right = inner_base + 1*3;
-            for (int inner = lower_bound; inner < upper_bound; ++inner, ++inner_left, ++inner_right, ++inner_up, ++inner_down)
-            {
-              prgb2[inner  ] = (  prgb1[inner_up  ] + prgb1[inner_down  ] + prgb1[inner_left  ] + prgb1[inner_right  ]  )/4;
-              prgb2[inner+1] = (  prgb1[inner_up+1] + prgb1[inner_down+1] + prgb1[inner_left+1] + prgb1[inner_right+1]  )/4;
-              prgb2[inner+2] = (  prgb1[inner_up+2] + prgb1[inner_down+2] + prgb1[inner_left+2] + prgb1[inner_right+2]  )/4;
-            }
-          }
-          for(int y = 1; y < screenHeight - 1; ++y)
-          {
-            int inner_base =  y    * screenWidth * 3;
-            int inner_up =   (y-1) * screenWidth * 3 + 1*3;
-            int inner_down = (y+1) * screenWidth * 3 + 1*3;
-            
-            int lower_bound = inner_base + 1*3;
-            int upper_bound = inner_base + (screenWidth-1)*3;
-            int inner_left  = inner_base - 1*3;
-            int inner_right = inner_base + 1*3;
-            for (int inner = lower_bound; inner < upper_bound; inner ++, inner_left ++, inner_right ++, inner_up ++, inner_down ++)
-            {
-              prgb1[inner  ] = (  prgb2[inner_up  ] + prgb2[inner_down  ] + prgb2[inner_left  ] + prgb2[inner_right  ]  )/4;
-              prgb1[inner+1] = (  prgb2[inner_up+1] + prgb2[inner_down+1] + prgb2[inner_left+1] + prgb2[inner_right+1]  )/4;
-              prgb1[inner+2] = (  prgb2[inner_up+2] + prgb2[inner_down+2] + prgb2[inner_left+2] + prgb2[inner_right+2]  )/4;
-            }
-          }
-        }
-        
-        // Brightness pixel by pixel
-        
-        LOG(DEBUG_GUTS, "brightness effect on stash 1" << endl)
-        for(int y = 0; y < screenHeight; ++y)
-        {
-          int inner_offset_base = y * screenWidth * 3;
-          int lower_bound = inner_offset_base;
-          int upper_bound = inner_offset_base + screenWidth * 3;
-          for (int inner_offset = lower_bound; inner_offset < upper_bound; inner_offset += 3)
-          {
-            prgb1[inner_offset  ] = In8bitRange( prgb1[inner_offset  ] - 50);
-            prgb1[inner_offset+1] = In8bitRange( prgb1[inner_offset+1] - 50);
-            prgb1[inner_offset+2] = In8bitRange( prgb1[inner_offset+2] - 50);
-            prgb1[inner_offset  ] = In8bitRange( prgb1[inner_offset  ] + 100);
-            prgb1[inner_offset+1] = In8bitRange( prgb1[inner_offset+1] + 100);
-            prgb1[inner_offset+2] = In8bitRange( prgb1[inner_offset+2] + 100);
-            prgb1[inner_offset  ] = In8bitRange( prgb1[inner_offset  ] - 100);
-            prgb1[inner_offset+1] = In8bitRange( prgb1[inner_offset+1] - 100);
-            prgb1[inner_offset+2] = In8bitRange( prgb1[inner_offset+2] - 100);
-          }
-        }
-        
-        
-        LOG(DEBUG_GUTS, "recompose separated RGB values for blur into screen backgroundBlurred" << endl)
-        pPosition=(Uint16*)gfx.backgroundBlurred->pixels;
-        for(int y = 0; y < screenHeight; ++y)
-        {
-          int inner_offset_base = y * screenWidth * 3;
-          int lower_bound = inner_offset_base;
-          int upper_bound = inner_offset_base + screenWidth * 3;
-          for (int inner_offset = lower_bound; inner_offset < upper_bound; inner_offset += 3)
-          {
-            *pPosition = 
-              (prgb1[inner_offset  ] >> 3 << 11) |
-              (prgb1[inner_offset+1] >> 2 << 5 ) |
-              (prgb1[inner_offset+2] >> 3 << 0 );
-            pPosition++;
-          }
-        }
-        
-        LOG(DEBUG_GUTS, "copy gfx.background pixels into stash 2" << endl)
-        for(int y = 0; y < screenHeight; ++y)
-        {
-          int inner_offset_base = y * screenHeight * 3;
-          int lower_bound = inner_offset_base;
-          int upper_bound = inner_offset_base + screenHeight * 3;
-          int x = 0;
-          for (int inner_offset = lower_bound; inner_offset < upper_bound; inner_offset += 3, ++x)
-          {
-            SDL_GetRGB(sys.vid.GetPixel(gfx.background, x, y), gfx.background->format,
-              &(prgb2[inner_offset  ]), &(prgb2[inner_offset+1]), &(prgb2[inner_offset+2]) );
-          }
-        }
-      }
-    }
-    else
-    {
-      onOff = 0;
-      stateChanged = true;
-    }
-    */
   }
 
   if(displayDash == false)
@@ -286,20 +116,7 @@ Uint8 Dash::In8bitRange(int num)
 
 void Dash::Cleanup()
 {
-  /*
-  if (prgb1)
-  {
-    free(prgb1);
-    prgb1 = NULL;
-  }
-  if (prgb2)
-  {
-    free(prgb2);
-    prgb2 = NULL;
-  }
-  */
   SDL_FreeSurface(dashBg);
-  
   gfx.Cleanup();
 }
 
@@ -413,7 +230,8 @@ void Dash::RunTopBottomBars()
       dayNames[dashTime->tm_mday-1], " ",
       1900+dashTime->tm_year
       );
-  gui.SpriteText(screenWidth-20,-70-trans+131-43,temptext,3);
+  //TODO: make label once right-aligned labels work
+  gui.DrawText(screenWidth-20-170, -70-trans+131-43, temptext);
 
   strcpy(temptext,"");
   if(dashTime->tm_hour>12){
@@ -430,10 +248,11 @@ void Dash::RunTopBottomBars()
   if(dashTime->tm_hour>11){
   strcat(temptext," PM");}else{
   strcat(temptext," AM");}
-  gui.SpriteText(screenWidth-20,-70-trans+131-23,temptext,3);
+  //TODO: make label
+  gui.DrawText(screenWidth-20-170, -70-trans+131-23, temptext);
 
   sys.vid.ApplySurface(0,screenHeight-61+trans,gfx.topBottomBorderImage,sys.vid.screen,NULL);
-  gui.SpriteText(20,screenHeight-61+trans+23,(char*)"thatotherdev.wordpress.com",1);
+  gui.DrawText(20, screenHeight-61+trans+23, "special thanks to thatotherdev.wordpress.com!");
 }
 
 

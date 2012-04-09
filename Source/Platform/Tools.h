@@ -30,14 +30,6 @@
 
 #define PI 3.141592654
 
-int getnumberfromchar(char text);
-char getcharfromnumber(int textnumber);
-bool charmatch(char* text1,char* text2);
-bool charmatchstart(char* fulltext,char* partial);
-bool charmatchend(char* fulltext,char* partial);
-char* charuppercase(char* text);
-char* charlowercase(char* originaltext);
-char* charpartial(char* originaltext,int start,int end);
 double dist(double x1,double y1,double x2,double y2);
 double angle(double x1,double y1,double x2,double y2);
 int lownumber(int a,int b);
