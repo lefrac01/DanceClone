@@ -60,9 +60,15 @@ vector<Label>& Container::Labels()
 
 void Container::Add(Element& e)
 {
+  /* err yes, but this is too lame
+  if this is to be done, have it be done right.  store relative child
+  coordinates and return their absolute when queried so as container
+  moves child moves with it...
+  
   // offset child to self
   e.x += x;
   e.y += y;
+  */
   try 
   {
     Container& c = dynamic_cast<Container&>(e);

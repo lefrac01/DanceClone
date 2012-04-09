@@ -26,7 +26,10 @@ GUI::GUI(OS& os) :
   sys(os),
   gfx(os),
   defaultFontBitmap(FontBitmap(os, "fontname", 12, SDL_MapRGBA(os.vid.screen->format, 0, 0, 0, 255))),
-  fonts(Element::NUM_FONTS)
+  fonts(Element::NUM_FONTS),
+  cursorRenderXOffset(0),
+  cursorRenderYOffset(0),
+  cursorRenderZoom(1.0)
 {
 }
 
@@ -41,6 +44,10 @@ bool GUI::Init()
     LOG(DEBUG_BASIC, "ERROR: GUI::Init()   gfx.Init() failed" << endl)
     return false;
   }
+  
+  cursorRenderXOffset = - gfx.cursorFrames[0].w;
+  cursorRenderYOffset = - gfx.cursorFrames[0].h;
+  cursorRenderZoom = sys.vid.ScreenWidth() / (float)(sys.vid.ScreenWidth() + cursorRenderXOffset);
 
   fonts[Element::DefaultFont]  = "Media/Gui/Hall Fetica.ttf";
   fonts[Element::AeroliteSky]  = "Media/Gui/Aerolite Sky.ttf";
@@ -88,7 +95,7 @@ void GUI::Update()
       InputChannel& chan = sys.input.inputChannels[i];
       if (chan.active)
       {
-        sys.vid.ApplySurface(chan.cursorX-48, chan.cursorY-48, gfx.cursorImage, sys.vid.screen, &gfx.cursorFrames[6+i*3]);
+        sys.vid.ApplySurface(chan.cursorX * cursorRenderZoom + cursorRenderXOffset, chan.cursorY * cursorRenderZoom + cursorRenderYOffset, gfx.cursorImage, sys.vid.screen, &gfx.cursorFrames[6+i*3]);
       }
     }
   }

@@ -18,8 +18,8 @@
 //      MA 02110-1301, USA.
 
 #define GAMESTRING "DanceClone"
-#define GAMEVERSION "v0.65"
-#define GAMEVERSIONSTRING "DanceClone v0.65"
+#define GAMEVERSION "v0.66"
+#define GAMEVERSIONSTRING "DanceClone v0.66"
 
 
 #include <string>
@@ -121,6 +121,7 @@ private:
   SDL_Surface* songBg;
   vector<Decal> ratingDecals;
   vector<Decal> comboDecals;
+  vector<Decal> okNgDecals;
   
 public:
 

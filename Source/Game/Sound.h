@@ -49,6 +49,7 @@ public:
     MenuNav,
     Select,
     Switch,
+    CrowdOhh,
     NUM_SOUNDS
   };
 

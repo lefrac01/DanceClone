@@ -65,7 +65,8 @@ bool Sound::Init()
   soundPaths[MenuNav] = "Media/Game/menunav.wav";
   soundPaths[Select] = "Media/Game/select.wav";
   soundPaths[Switch] = "Media/Game/switch.wav";
-
+  soundPaths[CrowdOhh] = "Media/Game/crowd_ohh.wav";
+  
   for (unsigned int i = 0; i < sounds.size(); ++i)
   {
     if (!sounds[i].Load(soundPaths[i]))

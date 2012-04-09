@@ -29,7 +29,8 @@ Decal::Decal(int p, SDL_Surface* s, AnimType ty, long start, int d) :
   animStartTime(start),
   animDuration(d),
   frameDuration(-1),
-  lastFrameLingers(false)
+  lastFrameLingers(false),
+  userInfo(0)
 {
 }
 
@@ -40,7 +41,8 @@ Decal::Decal(const Decal& b) :
   animStartTime(b.animStartTime),
   animDuration(b.animDuration),
   frameDuration(b.frameDuration),
-  lastFrameLingers(b.lastFrameLingers)
+  lastFrameLingers(b.lastFrameLingers),
+  userInfo(b.userInfo)
 {
   frameRects = b.frameRects;
 }
@@ -55,6 +57,7 @@ const Decal& Decal::operator=(const Decal& b)
   frameDuration = b.frameDuration;
   lastFrameLingers = b.lastFrameLingers;
   frameRects = b.frameRects;
+  userInfo = b.userInfo;
   return *this;
 }
 

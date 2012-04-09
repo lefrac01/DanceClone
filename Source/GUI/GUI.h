@@ -52,7 +52,10 @@ public:
   Container screen;
   bool hideCursor;
   vector<string> fonts;
-
+  int cursorRenderXOffset;
+  int cursorRenderYOffset;
+  float cursorRenderZoom;
+  
   GUI(OS& os);
   bool Init();
   void Update();

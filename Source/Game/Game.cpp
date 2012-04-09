@@ -1,26 +1,3 @@
-//TODO:
-/*
-
-1b  assist tick, sons d'atmosphère
-
-1c  arranger ça pour que les flèches n'apparaissent pas déja sur l'écran
-  au début de la chanson
-
-                UNE CLASSE DOIT RÉPONDRE À LA QUESTION "QUELLE EST LA PROCHAINE FLÈCHE
-                COTABLE APRÈS X?" (DANS LA MÊME DIRECTION)
-                
-1e  visualisation des cotes
-
-1f  animation des visualisations de cote
-
-*/
-//TODO: constant for title position so screens have flow
-
-//TODO: jumps only count as 1 for combos and points...
-
-//TODO: still scroll screen and arrows during intro delay so arrows
-// don't pop up already on-screen
-
 //      Game.cpp
 //      
 //      Copyright 2012 Carl Lefrançois <carl.lefrancois@gmail.com>
@@ -151,12 +128,11 @@ void Game::Run()
   }
 
   gameStateChanged = oldState != state;
-/*
+
   if (gameStateChanged)
   {
     FLUSH_LOG
   }
-  */
 }
 
 Game::GameState Game::State()
@@ -383,6 +359,10 @@ void Game::RunDebugScreen()
 
     Label title("debug", 25, y);
     debug.Add(title);
+
+    Image holmes(gfx.images[Graphics::HomeArrows], 200, 120, 0, 0);
+    debug.Add(holmes);
+
 
     Image freezeHit(gfx.images[Graphics::ComboHit], 30, 70, 0, 0);
     debug.Add(freezeHit);
@@ -1342,10 +1322,10 @@ void Game::RunPlayPrep()
   for (int i = 0; i < numPlayers; ++i)
   {
     Player& p = players[i];
-    sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[6]);
-    sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[2]);
-    sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[10]);
-    sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[14]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[8]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[2]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[14]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[20]);
   }
   
   // getready.png 300 x 120
@@ -1507,14 +1487,25 @@ void Game::RunScoreScreen()
 
       //TODO: support larger font d00d!
       int scoreOutHeight = 20;
-      float maxDancePoints = numArrows*2 + numOK*6 + numMissed*6;
-      float playerDancePoints = numMarvellous*2 + numPerfect*2 + numGreat + numOK*6 - numGood*4 - numMissed*8;
+      
+      // MAX system
+      //#float maxDancePoints = numArrows*2 + numOK*6 + numMissed*6;
+      //#float playerDancePoints = numMarvellous*2 + numPerfect*2 + numGreat + numOK*6 - numGood*4 - numMissed*8;
+      // MIGS system
+      float maxDancePoints = numArrows*3 + numOK*6 + numMissed*6;
+      float playerDancePoints = numMarvellous*3 + numPerfect*2 + numGreat + numOK*6 - numGood*4 - numMissed*8;
+
       float scorePct = maxDancePoints == 0 ? 0 : playerDancePoints / maxDancePoints * 100.0;
       //NOTE: very easy to get negative scoring.  at least because my test songs are very short, the penalties allow
       // for going negative.  in DDR, this DancePoint score is only used to display a letter grade from
       // AAA to E with D being less than 45%.  a negative score would then be D.
       // the options are to not use % scoring in this code or to do the entire DDR play point calculation
       // and display that on the score screen.
+      
+      if (scorePct < 0)
+      {
+        scorePct = 0;
+      }
       
       string letterRank = "E";
       if (scorePct > 99.9)
@@ -1651,21 +1642,25 @@ void Game::RunPlay()
   {
     Player& p = players[i];  
   
+    bool stepLeft  = songTime - p.directionDownTime[0] < constants.homeArrowAnimDelay;
+    bool stepDown  = songTime - p.directionDownTime[1] < constants.homeArrowAnimDelay;
+    bool stepUp    = songTime - p.directionDownTime[2] < constants.homeArrowAnimDelay;
+    bool stepRight = songTime - p.directionDownTime[3] < constants.homeArrowAnimDelay;
     if (current16thTick == 0)
     {
-      // first 16th of a quarter note, draw flashing home arrows
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[4]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[0]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[8]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[12]);
+      // first 16th of a quarter note, draw lit home arrow
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepLeft  ? 10 : 6]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepDown  ? 4  : 0]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepUp    ? 16 : 12]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepRight ? 22 : 18]);
     }
     else
     {
-      // other 15 16ths of quarter, draw lit home arrow only if player presses it
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[p.inputs.directionDown[InputChannel::LEFT]  ? 4  : 6]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[p.inputs.directionDown[InputChannel::DOWN]  ? 0  : 2]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[p.inputs.directionDown[InputChannel::UP]    ? 8  : 10]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.arrowsFrames[p.inputs.directionDown[InputChannel::RIGHT] ? 12 : 14]);
+      // other 15 16ths of quarter, draw normal home arrow
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepLeft  ? 10 : 8]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepDown  ? 4  : 2]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepUp    ? 16 : 14]);
+      sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepRight ? 22 : 20]);
     }
   }    
 
@@ -1678,15 +1673,60 @@ void Game::RunPlay()
     ratingDecals.erase(ratingDecals.begin());
   }
   
+  // clean okNg decals.  oldest ratings are at the front.
+  while (okNgDecals.size() > 0 && okNgDecals.front().animStartTime + okNgDecals.front().animDuration < songTime)
+  {
+    okNgDecals.erase(okNgDecals.begin());
+  }
+  
   for (int i = 0; i < numPlayers; ++i)
   {
     Player& p = players[i];  
+
+    // energy
+    // for now text
+    
+    // cap.  very non OO hihi
+    if (p.energyFailTime > 0 || p.energyMeter < 0)
+    {
+      if (p.energyFailTime < 0)
+      {
+        p.energyFailTime = songTime;
+// Possibly this causes the slowdown:  :(  that would mean no assist tick         
+//        sound.PlaySample(Sound::CrowdOhh);
+      }
+      p.energyMeter = 0;
+    }
+    else if (p.energyMeter > 100)
+    {
+      p.energyMeter = 100;
+    }
+    int decalX = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth;
+    int decalY = constants.goalOffset - 80;
+    //#if (p.energyMeter == 0)
+    //#{
+      //#energy.text = "Awwwwwww...";
+      //#energy.colour = gfx.sdlRed;
+    //#}
+    //#energy.offsetMode = Element::HCenter | Element::VCenter;
+    //#gui.DrawLabel(energy);
+    if (p.energyMeter > 0)
+    {
+      char temp[100];
+      sprintf(temp, "%3.0f%%", p.energyMeter);
+      Label energy(temp, decalX, decalY, 0, 0);
+      energy.colour = gfx.sdlBlueWhite;
+      energy.offsetMode = Element::HCenter | Element::VCenter;
+      gui.DrawLabel(energy);
+    }
+
+
     
     // draw ratings from oldest to newest
     // center in player's field and just below home arrows
     // rating decals drift downward over the course of their animation
-    int decalX = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth - gfx.ratingsFrames[0].w / 2;
-    int decalY = constants.goalOffset + 130;
+    decalX = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth - gfx.ratingsFrames[0].w / 2;
+    decalY = constants.goalOffset + 130;
     int decalAnimH = 32;
     for (unsigned int j = 0; j < ratingDecals.size(); ++j)
     {
@@ -1698,6 +1738,29 @@ void Game::RunPlay()
         {
           int tempY = decalY + (int)(decalAnimH * ((songTime - d.animStartTime) / (float)d.animDuration));
           sys.vid.ApplySurface(decalX, tempY, d.surface, sys.vid.screen, tempSrcRect);
+        }
+      }
+    }
+
+    // draw ok ng decals
+    decalX = p.arrowFieldXOffset;
+    decalY = constants.goalOffset + gfx.arrowHeight + 20;
+    for (unsigned int j = 0; j < okNgDecals.size(); ++j)
+    {
+      Decal& o = okNgDecals[j];
+      if (o.player == i)
+      {
+        int tempY = decalY;
+        if (p.arrows[o.userInfo].freezeRating == Arrow::FREEZE_FAILED)
+        {
+          // move decal down to just under failed arrow
+          tempY += p.arrows[o.userInfo].length - 24;
+        }
+        SDL_Rect* tempSrcRect = o.CurrentFrameRect(songTime);
+        if (tempSrcRect)
+        {
+          int tempX = decalX + p.arrows[o.userInfo].direction * constants.playerArrowColumnWidth + constants.playerArrowColumnWidth / 2 - gfx.okNgFrames[0].w / 2;
+          sys.vid.ApplySurface(tempX, tempY, o.surface, sys.vid.screen, tempSrcRect);
         }
       }
     }
@@ -1927,6 +1990,19 @@ void Game::RunPlay()
             int current_freeze_length = ar.length + 32; // part of the freeze tail is overlapped by the head
             int blit_height = -1; // SDL_BlitSurface uses dest rect as output... just to be safe
 
+            // if player steps before arrow arrives at home arrow but it counts as success,
+            // grow arrow up to home arrow row while the arrow is held.
+            if ((ar.rating != Arrow::RATING_NONE) && (ar.freezeRating != Arrow::FREEZE_FAILED))
+            {
+              if (screenYPos > constants.goalOffset)
+              {
+                current_freeze_length += screenYPos - constants.goalOffset;
+                current_freeze_top += screenYPos - constants.goalOffset;
+              }
+              screenYPos = constants.goalOffset;
+            }
+
+
             // all freeze bitmaps are indexed according to direction
             freeze_tail_frame_index += ar.direction;
             freeze_body_frame_index += ar.direction;
@@ -2001,12 +2077,6 @@ void Game::RunPlay()
               }
             }
             // head
-            // if being held, arrow head is drawn over home arrow
-            if ((ar.rating != Arrow::RATING_NONE) && (ar.freezeRating != Arrow::FREEZE_FAILED))
-            {
-              screenYPos = constants.goalOffset;
-            }
-            
             sys.vid.ApplySurface(xpos, screenYPos, gfx.images[Graphics::FreezeArrowsHead], NULL, &gfx.freezeHeadFrames[freeze_head_frame_index]);
           }
           else
@@ -2138,6 +2208,22 @@ void Game::RunPlay()
   if (CheckAbort())
   {
     sound.PlaySample(Sound::RecordScratch);
+    RunPlayCleanup();
+    state = SCORE;
+  }
+
+  bool playerAlive = false;
+  for (int i = 0; i < numPlayers; ++i)
+  {
+    if (players[i].energyFailTime < 0 || songTime - players[i].energyFailTime < constants.energyFailAbortDelay)
+    {
+      playerAlive = true;
+      break;
+    }
+  }
+  if (!playerAlive)
+  {
+    sound.PlaySample(Sound::CrowdOhh);
     RunPlayCleanup();
     state = SCORE;
   }
@@ -2315,12 +2401,20 @@ void Game::RateArrows(Player& p)
     Arrow& ar = p.arrows[a];
     if (ar.rating == Arrow::RATING_NONE && songTime - ar.time > constants.booDelay)
     {
-      ar.rating = Arrow::MISS;
-      if (ar.type == Arrow::HOLD)
-      {
-        ar.freezeRating = Arrow::FREEZE_FAILED;
-      }
       p.combo = 0;
+      p.energyMeter += constants.missEnergy * p.energyDifficultyFactor;
+      // loop to affect all arrows in a jump with same rating
+      long failArrowTime = ar.time;
+      while (a <= p.lastVisibleArrow && p.arrows[a].time == failArrowTime)
+      {
+        Arrow& jumpAr = p.arrows[a];
+        jumpAr.rating = Arrow::MISS;
+        if (jumpAr.type == Arrow::HOLD)
+        {
+          jumpAr.freezeRating = Arrow::FREEZE_FAILED;
+        }
+        ++a;
+      }
     }
   }
 
@@ -2407,6 +2501,21 @@ void Game::RateArrows(Player& p)
             if (newRating != Arrow::RATING_NONE)
             {
               ++p.combo;
+
+              float energyChange = 0.0;
+              switch(newRating)
+              {
+                case Arrow::MARVELLOUS: energyChange = constants.marvellousEnergy; break;
+                case Arrow::PERFECT: energyChange = constants.perfectEnergy; break;
+                case Arrow::GREAT: energyChange = constants.greatEnergy; break;
+                case Arrow::GOOD: energyChange = constants.goodEnergy; break;
+                case Arrow::BOO: energyChange = constants.booEnergy; break;
+                case Arrow::MISS: energyChange = constants.missEnergy; break;
+                default: energyChange = 0.0; break;
+              }
+              p.energyMeter += energyChange * p.energyDifficultyFactor;
+              
+              
               for (int i = minJumpArrowIndex; i <= maxJumpArrowIndex; i++)
               {
                 Arrow& jmpAr = p.arrows[i];
@@ -2439,6 +2548,20 @@ void Game::RateArrows(Player& p)
               {
                 ar.hidden = true;
               }
+              
+
+              float energyChange = 0.0;
+              switch(newRating)
+              {
+                case Arrow::MARVELLOUS: energyChange = constants.marvellousEnergy; break;
+                case Arrow::PERFECT: energyChange = constants.perfectEnergy; break;
+                case Arrow::GREAT: energyChange = constants.greatEnergy; break;
+                case Arrow::GOOD: energyChange = constants.goodEnergy; break;
+                case Arrow::BOO: energyChange = constants.booEnergy; break;
+                case Arrow::MISS: energyChange = constants.missEnergy; break;
+                default: energyChange = 0.0; break;
+              }
+              p.energyMeter += energyChange * p.energyDifficultyFactor;
             }
             LOG(DEBUG_DETAIL, "arrow rated at song time " << songTime << " viewP: " << viewportOffset << "  arrow time: " << ar.time << " ypos: " << ar.yPos << " rated to " << (int)newRating << endl)
           }
@@ -2520,6 +2643,13 @@ void Game::RateArrows(Player& p)
             if (ar.length != 0)
             {
               ar.freezeRating = Arrow::FREEZE_OK;
+              
+              // add OK decal
+              Decal ok(p.playerNumber - 1, gfx.images[Graphics::OkNg], Decal::Static, songTime, 600);
+              ok.frameRects.push_back(&gfx.okNgFrames[0]);
+              // add arrow index to use in determining screen x position
+              ok.userInfo = a;
+              okNgDecals.push_back(ok);
             }
             ar.hidden = true;
             ar.animStartTime = songTime;
@@ -2545,6 +2675,15 @@ void Game::RateArrows(Player& p)
             long oldYPos = ar.yPos;
             ar.yPos += viewportOffset - ar.yPos;
             ar.length -= ar.yPos - oldYPos;
+            
+            // add NG decal
+            Decal ng(p.playerNumber - 1, gfx.images[Graphics::OkNg], Decal::Static, songTime, 600);
+            ng.frameRects.push_back(&gfx.okNgFrames[1]);
+            // add arrow index to use in determining screen x position
+            ng.userInfo = a;
+            okNgDecals.push_back(ng);
+            
+            p.energyMeter += constants.ngEnergy * p.energyDifficultyFactor;
           }
           else
           {
@@ -2558,6 +2697,16 @@ void Game::RateArrows(Player& p)
               if (ar.length != 0)
               {
                 ar.freezeRating = Arrow::FREEZE_OK;
+                
+                // add OK decal.. again :(
+                // this duplication is a sign of not enough OO in the design
+                Decal ok(p.playerNumber - 1, gfx.images[Graphics::OkNg], Decal::Static, songTime, 600);
+                ok.frameRects.push_back(&gfx.okNgFrames[0]);
+                // add arrow index to use in determining screen x position
+                ok.userInfo = a;
+                okNgDecals.push_back(ok);
+                
+                p.energyMeter += constants.okEnergy * p.energyDifficultyFactor;
               }
               ar.hidden = true;
               ar.animStartTime = songTime;

@@ -1,0 +1,30 @@
+DanceClone v0.66 startup
+Game::RunTitleScreen setting up
+Game::RunChooseNumPlayers got 1
+Song::Load(un_ciel_pour_le_soleil_charles_dube.mp3)
+Song::Load(Offspring - The Kids Aren't All Right.mp3)
+Song::Load(Third Eye Blind - Semi Charmed Life.mp3)
+Song::Load(Pink - Feel Good Time.mp3)
+Song::Load(wigglemaker.mp3)
+Song::Load(Eminem - Without Me.mp3)
+Song::Load(BTO_Let_it_ride.mp3)
+Song::Load(the_best_thing_about_me_is_you.mp3)
+Song::Load(CannedHeat.mp3)
+WARN: failed to read banner image ../Music/CannedHeatBN.jpg for song CannedHeat
+Song::Load(Jeanette_Herrera_El_ritmo_te_controla.mp3)
+Song::Load(good_quality_no_video_Motorhead_Ace_of_spades.mp3)
+Song::Load(RAtt_short_test.mp3)
+chose song wigglemaker.mp3
+Song::Prepare() for song wigglemaker.mp3
+SONG:: DONE looping through 192 arrows.  it took 0.002 seconds 
+SONG:: DONE looping through 0 arrows.  it took 0 seconds 
+SONG:: DONE looping through 33 arrows.  it took 0.001 seconds 
+SONG:: DONE looping through 0 arrows.  it took 0 seconds 
+SONG:: DONE looping through 0 arrows.  it took 0 seconds 
+chose song CannedHeat.mp3
+Song::Prepare() for song CannedHeat.mp3
+SONG:: DONE looping through 421 arrows.  it took 0.009 seconds 
+SONG:: DONE looping through 497 arrows.  it took 0.005 seconds 
+SONG:: DONE looping through 497 arrows.  it took 0.005 seconds 
+SONG:: DONE looping through 1271 arrows.  it took 0.004 seconds 
+SONG:: DONE looping through 1609 arrows.  it took 0.005 seconds 

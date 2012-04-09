@@ -33,7 +33,8 @@ void Constants::Init(string ConfigFilePath)
   arrowsHitAnimMs = 300.0;
   numDifficulties = 5;
   songStartOffset = 105;
-
+  homeArrowAnimDelay = 160;
+  
   goalOffset = 0;
   maxPlayers = 2;
   playerArrowColumnWidth = 65;
@@ -51,6 +52,18 @@ void Constants::Init(string ConfigFilePath)
   freezeLengthAllow = 25;
   // how many pixels before the end of a freeze arrow the player is
   //  allowed to lift off without failing the freeze
+
+  // % energy change upon rating
+  marvellousEnergy = 5.0;
+  perfectEnergy = 4.0;
+  greatEnergy = 2.0;
+  goodEnergy = 1.0;
+  booEnergy = -4.0;
+  missEnergy = -8.0;
+  okEnergy = 2.0;
+  ngEnergy = -4.0;
+  energyFailAbortDelay = 2000;
+
 
   #ifdef LINUX
   musicFileRoot = "../Music/";  // to avoid potential of music data ending up in git repository.  you probably want to change this if actually planning to use on Linux :)

@@ -19,8 +19,8 @@
 
 
 //#define WIN
-//#define WII
-#define LINUX
+#define WII
+//#define LINUX
 
 
 #ifndef OS_H

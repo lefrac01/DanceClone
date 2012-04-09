@@ -95,6 +95,7 @@ public:
   SDL_Rect okNgFrames[2];
   SDL_Rect ratingsFrames[7];
   
+  SDL_Rect homeArrowsFrames[24];
   // all non-hold arrows have same layout so use only one frames array
   SDL_Rect arrowsFrames[16];
   SDL_Rect freezeBodyFrames[12];

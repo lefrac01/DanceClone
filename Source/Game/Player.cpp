@@ -44,7 +44,9 @@ Player& Player::operator= (const Player& b)
   firstVisibleArrow = b.firstVisibleArrow;
   lastVisibleArrow = b.lastVisibleArrow;
   arrowFieldXOffset = b.arrowFieldXOffset;
-
+  energyMeter = b.energyMeter;
+  energyDifficultyFactor = b.energyDifficultyFactor;
+  energyFailTime = b.energyFailTime;
   return *this;
 }
   
@@ -57,6 +59,7 @@ void Player::Init(int n)
   difficulty = -1;
   recordFileNumber = -1;
   arrowFieldXOffset = -1;
+  energyDifficultyFactor = 1.0;
 }
 
 void Player::Prepare()
@@ -70,6 +73,8 @@ void Player::Prepare()
   firstVisibleArrow = -1;
   lastVisibleArrow = -1;
   nextOffscreenArrow = -1;
+  energyMeter = 60.0;
+  energyFailTime = -1;
   
   std::fill(directionDownTime.begin(), directionDownTime.end(), -1);
   std::fill(directionJumpActive.begin(), directionJumpActive.end(), false);

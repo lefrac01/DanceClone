@@ -1,5 +1,14 @@
 changelog
 --
+v0.66
+-better animation of home arrows when player steps
+-add rating of freeze arrows when held / failed
+-add energy meter
+-fix line of pixels not drawn on right and bottom edge of screen
+-fix cursor sticking on edge of screen
+-fix gap in hold arrows when stepped on early.
+-fix negative scores
+
 v0.65
 -add combo display during game play
 -fix problem with PAD_ScanPads being called too quickly

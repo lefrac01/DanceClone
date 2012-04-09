@@ -58,6 +58,9 @@ public:
   int firstVisibleArrow;
   int lastVisibleArrow;
   int arrowFieldXOffset;
+  float energyMeter;
+  float energyDifficultyFactor;
+  long energyFailTime;
   
   void Init(int n);
   void Prepare();

@@ -109,8 +109,8 @@ bool Graphics::Init(string configFilePath)
 
   for(int a = 0; a < 2; a++)
   {
-    okNgFrames[a].x = 0;        okNgFrames[a].y = a*64;
-    okNgFrames[a].w = 71;       okNgFrames[a].h = 32;
+    okNgFrames[a].x = 0;        okNgFrames[a].y = a*16;
+    okNgFrames[a].w = 36;       okNgFrames[a].h = 16;
   }
 
   for(int a = 0; a < 7; a++)
@@ -151,8 +151,8 @@ bool Graphics::Init(string configFilePath)
   // expand source PNGs creating other arrow directions
   //optimistically using SDL_HWSURFACE but not all these can fit into the hardware memory ;)
   //http://en.wikipedia.org/wiki/Wii states 3MB framebuffer of which 1.2 is used per screen + dbl buffering... not leaving much
-  images[HomeArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/home_arrows.png", images[HomeArrows], arrowsFrames, 4);
+  images[HomeArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 384, 384, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+  ExpandArrows("Media/Game/home_arrows.png", images[HomeArrows], homeArrowsFrames, 6);
 
   images[QuarterArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
   ExpandArrows("Media/Game/04thnote.png", images[QuarterArrows], arrowsFrames, 4);
@@ -296,7 +296,7 @@ void Graphics::ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* des
   rotation_src.w = aw; 
   rotation_src.h = ah;  
   
-  // for each of the arrows to rotate (columns 0 to 3)
+  // for each of the arrows to rotate
   for (int col = 0; col < src_cols; col++)
   {
     // set up blit rectangles

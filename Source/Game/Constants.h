@@ -40,6 +40,7 @@ private:
 public:
 
   float arrowsHitAnimMs;
+  int homeArrowAnimDelay;
   int numDifficulties;
   static const char* difficultyText[];
   long songStartOffset;
@@ -59,7 +60,16 @@ public:
   int marvellousDelay;
   int freezeFailDelay;
   int freezeLengthAllow;
-
+  float marvellousEnergy;
+  float perfectEnergy;
+  float greatEnergy;
+  float goodEnergy;
+  float booEnergy;
+  float missEnergy;
+  float okEnergy;
+  float ngEnergy;
+  int energyFailAbortDelay;
+  
   string musicFileRoot;
   int baseFileButtonTag;
 

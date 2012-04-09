@@ -56,6 +56,7 @@ public:
   int frameDuration;
   bool lastFrameLingers;
   vector<SDL_Rect*> frameRects;
+  int userInfo;
   
   SDL_Rect* CurrentFrameRect(long currentTime);
 };
