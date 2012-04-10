@@ -76,7 +76,6 @@ void WiiInput::Update()
   //UP    PAD_BUTTON_UP
   //DOWN  PAD_BUTTON_DOWN
   
-  VIDEO_WaitVSync();
   WPAD_ScanPads();
   u32 scanResult = PAD_ScanPads();
   for (int i = 0; i < maxChannels; i++)

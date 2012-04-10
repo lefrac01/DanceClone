@@ -41,6 +41,7 @@ void Constants::Init(string ConfigFilePath)
   playerArrowFieldMargin = 20;
   
   preStartDelay = 3000;
+  songStartAllow = 5; // a small delay to allow music subsystem time to start before checking for end of playback
   songAbortDelay = 2000;
   jumpAllowDelay = 80;
   booDelay = 250;
@@ -58,10 +59,10 @@ void Constants::Init(string ConfigFilePath)
   perfectEnergy = 4.0;
   greatEnergy = 2.0;
   goodEnergy = 1.0;
-  booEnergy = -4.0;
-  missEnergy = -8.0;
+  booEnergy = -2.0;
+  missEnergy = -4.0;
   okEnergy = 2.0;
-  ngEnergy = -4.0;
+  ngEnergy = -2.0;
   energyFailAbortDelay = 2000;
 
 

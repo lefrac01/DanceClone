@@ -69,6 +69,8 @@ bool Game::Init(string ConfigFilePath)
   state = TITLE;
   gameStateChanged = true;
   
+  songBg = NULL;
+  
   return true;
 }
 
@@ -112,10 +114,10 @@ void Game::Run()
     //#Game_menu_stepcreate();
     break;
   case PLAY_PREP1:
-  case PLAY_PREP2:
     RunPlayPrep();
     break;
   case PLAY:
+  case PLAY_PREP2:
     RunPlay();
     break;
   case DEBUG:
@@ -1257,155 +1259,102 @@ void Game::RunPlayCleanup()
 {
   sound.StopMusic();
   
-  if (songs[currentSong].backgroundImageFilename != "")
+  if (songBg)
   {
     SDL_FreeSurface(songBg);
   }
   songBg = NULL;
+  
+  ratingDecals.clear();
+  comboDecals.clear();
+  okNgDecals.clear();
   
   gui.hideCursor = false;
 }
 
 void Game::RunPlayPrep()
 {
-
-  if (state == PLAY_PREP1)
+  LOG(DEBUG_MINOR, "Game::RunPlayPrep setting up" << endl)
+  
+  if (songs[currentSong].backgroundImageFilename.size() > 0)
   {
-    LOG(DEBUG_MINOR, "Game::RunPlayPrep setting up" << endl)
-    
-    // Initialise music
-    sound.PrepMusic(songs[currentSong].Path());
-    
-    songBg = NULL;
-    if (songs[currentSong].backgroundImageFilename.size() > 0)
-    {
-      songBg = sys.vid.LoadOptimize(songs[currentSong].BackgroundImagePath());
-      if (songBg == NULL)
-      {
-        // the path doesn't work!! noooes!
-        // must set to blank or free surface will be called ...
-        songs[currentSong].backgroundImageFilename = "";
-        songBg = gfx.images[Graphics::DefaultBg];
-      }
-    }
-    else
-    {
-      songBg = gfx.images[Graphics::DefaultBg];
-    }
-    
-    preStartTime = -1;
+    songBg = sys.vid.LoadOptimize(songs[currentSong].BackgroundImagePath());
+  }
   
-    switch(numPlayers)
-    {
-      case 1:
-        players[0].arrowFieldXOffset = sys.vid.ScreenWidth() / 2 - constants.playerArrowColumnWidth * 4 / 2;
+  switch(numPlayers)
+  {
+    case 1:
+      players[0].arrowFieldXOffset = sys.vid.ScreenWidth() / 2 - constants.playerArrowColumnWidth * 4 / 2;
 
-      break;
-      case 2:
-        players[0].arrowFieldXOffset = constants.playerArrowFieldMargin;
-        players[1].arrowFieldXOffset = sys.vid.ScreenWidth() - constants.playerArrowColumnWidth * 4 - constants.playerArrowFieldMargin;
-      break;
-    }
+    break;
+    case 2:
+      players[0].arrowFieldXOffset = constants.playerArrowFieldMargin;
+      players[1].arrowFieldXOffset = sys.vid.ScreenWidth() - constants.playerArrowColumnWidth * 4 - constants.playerArrowFieldMargin;
+    break;
+  }
+
+  LOG(DEBUG_MINOR, "preparing for PLAY state" << endl)
+  currentMeasure = 0;
+  currentBeat = 0;
+  currentBeatFraction = 0.0;
+  partialBeatFraction = 0.0;
+  lastBeatTime = constants.songStartOffset;
+  beatTimeElapsedAtPreviousBPMs = 0;
+  beatFractionAtPreviousBPMs = 0.0;
+  songStartTime = SDL_GetTicks();
+  songTime = 0;
+  songAbortStartTime = -1;
   
-    Container blank;
-    gui.SetScreen(blank);
+  #ifdef WII
+  sound.PrepMusic(songs[currentSong].Path());
+  #endif
+  
+  for (int i = 0; i < numPlayers; i++)
+  {
+    Player&p = players[i];
+    p.Prepare();
+    p.arrows = songs[currentSong].arrows[p.difficulty];
+    LOG(DEBUG_MINOR, "copied " << p.arrows.size() << " arrows" << " for player " << i << " at difficulty " << p.difficulty << endl)
+    p.numArrows = p.arrows.size();
+    if (p.numArrows)
+    {
+        p.nextOffscreenArrow = 0;
+    }
+  }
+
+  numBpmChanges = songs[currentSong].bpmChanges.size();
+  if (numBpmChanges > 0)
+  {
+    currentBpmChange = 0;
+    pixelsPerMsAtCurrentBpm = constants.pixelsPerMsAt1Bpm * songs[currentSong].bpmChanges.front().bpm;
+  }
+  
+  if (songs[currentSong].prepared && currentBpmChange == 0)
+  {
+    LOG(DEBUG_MINOR, "RunPlayPrep() finished ok with initial bpm: " << songs[currentSong].bpmChanges.front().bpm << endl)
+
+    InitialFrame();
+
+    // correct last beat time to take into account pre start offset
+    while (lastBeatTime > -constants.preStartDelay)
+    {
+      // move beat time back an integral beat
+      lastBeatTime -= Song::MsPerBeatFromBPM(songs[currentSong].bpmChanges[currentBpmChange].bpm);
+    }
+    LOG(DEBUG_MINOR, "RunPlayPrep() initial lastBeatTime: " << lastBeatTime << " using ms per beat " << Song::MsPerBeatFromBPM(songs[currentSong].bpmChanges[currentBpmChange].bpm) << endl)
+    
+    
+    // switch to pre start
     state = PLAY_PREP2;
-  }  
-  
-  //TEMP: ripped code from drawing routine to at least show home arrows during pre-play pause
-  // other 15 16ths of quarter, draw lit home arrow only if player presses it
-
-  // bg
-  sys.vid.ApplySurface(0, 0, songBg, sys.vid.screen, NULL);
-  
-  
-  for (int i = 0; i < numPlayers; ++i)
-  {
-    Player& p = players[i];
-    sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[8]);
-    sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[2]);
-    sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[14]);
-    sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[20]);
-  }
-  
-  // getready.png 300 x 120
-  sys.vid.ApplySurface(gfx.screenWidth/2 - 300/2, gfx.screenHeight/2 - 120/2, gfx.images[Graphics::GetReady], NULL, NULL);
-  
-  if (PreStartDelayFinished())
-  {
-    LOG(DEBUG_MINOR, "preparing for PLAY state" << endl)
-    currentBpmChange = -1;
-    currentMeasure = 0;
-    currentBeat = 0;
-    currentBeatFraction = 0.0;
-    partialBeatFraction = 0.0;
-    lastBeatTime = 0;
-    beatTimeElapsedAtPreviousBPMs = 0;
-    beatFractionAtPreviousBPMs = 0.0;
-    songStartTime = SDL_GetTicks();
-    songTime = 0;
-    songAbortStartTime = -1;
-    
-    for (int i = 0; i < numPlayers; i++)
-    {
-      Player&p = players[i];
-      p.Prepare();
-      p.arrows = songs[currentSong].arrows[p.difficulty];
-      LOG(DEBUG_MINOR, "copied " << p.arrows.size() << " arrows" << " for player " << i << " at difficulty " << p.difficulty << endl)
-      p.numArrows = p.arrows.size();
-      if (p.numArrows)
-      {
-          p.nextOffscreenArrow = 0;
-      }
-    }
-
-    numBpmChanges = songs[currentSong].bpmChanges.size();
-    if (numBpmChanges > 0)
-    {
-      currentBpmChange = 0;
-      pixelsPerMsAtCurrentBpm = constants.pixelsPerMsAt1Bpm * songs[currentSong].bpmChanges.front().bpm;
-    }
-    
-    if (songs[currentSong].prepared && currentBpmChange == 0)
-    {
-      LOG(DEBUG_MINOR, "RunPlayPrep() finished ok with initial bpm: " << songs[currentSong].bpmChanges.front().bpm << endl)
-      sound.StartMusic();
-
-      // synchronise play data just after mp3 code has had a chance
-      // to finish beginning play
-      
-      InitialFrame();
-      
-      // switch to play state
-      state = PLAY;
-    }
-    else
-    {
-      // game state should not be moving forward.  time to go back to the menu!
-      state = SELECT_SONG;
-      RunPlayCleanup();
-    }
-  }
-}
-
-bool Game::PreStartDelayFinished()
-{
-  if (preStartTime == -1)
-  {
-    preStartTime = SDL_GetTicks();
-    LOG(DEBUG_GUTS, "Game::PreStartDelayFinished initialised to " << preStartTime << endl)
-  }
-  LOG(DEBUG_GUTS, "checking if " << SDL_GetTicks() << " - " << preStartTime << " > " << constants.preStartDelay << endl)
-  if ((long)SDL_GetTicks() - preStartTime > constants.preStartDelay)
-  {
-    preStartTime = -1;
-    return true;
   }
   else
   {
-    return false;
+    // game state should not be moving forward.  time to go back to the menu!
+    state = SELECT_SONG;
+    RunPlayCleanup();
   }
 }
+
 
 void Game::RunScoreScreen()
 {
@@ -1622,587 +1571,52 @@ void Game::RunScoreScreen()
 
 void Game::RunPlay()
 {
-  LOG(DEBUG_MINOR, "Game::RunPlay" << endl)
-  for (unsigned int i = 0; i < players.size(); i++)
-  {
-    players[i].DoJumpProcessing(songTime);
-  }
+  LOG(DEBUG_GUTS, "Game::RunPlay" << endl)
 
-  LOG(DEBUG_GUTS, "Game::Play" << endl)
-
-  // update 
+  // update song time and viewport
   Frame();
   
   // bg
-  sys.vid.ApplySurface(0, 0, songBg, sys.vid.screen, NULL);
-  
-  // animate home arrows
-  int current16thTick = (int)(currentBeatFraction / 0.25);
+  sys.vid.ApplySurface(0, 0, songBg ? songBg : gfx.images[Graphics::DefaultBg], sys.vid.screen, NULL);
+
   for (int i = 0; i < numPlayers; ++i)
   {
-    Player& p = players[i];  
-  
-    bool stepLeft  = songTime - p.directionDownTime[0] < constants.homeArrowAnimDelay;
-    bool stepDown  = songTime - p.directionDownTime[1] < constants.homeArrowAnimDelay;
-    bool stepUp    = songTime - p.directionDownTime[2] < constants.homeArrowAnimDelay;
-    bool stepRight = songTime - p.directionDownTime[3] < constants.homeArrowAnimDelay;
-    if (current16thTick == 0)
-    {
-      // first 16th of a quarter note, draw lit home arrow
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepLeft  ? 10 : 6]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepDown  ? 4  : 0]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepUp    ? 16 : 12]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepRight ? 22 : 18]);
-    }
-    else
-    {
-      // other 15 16ths of quarter, draw normal home arrow
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepLeft  ? 10 : 8]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepDown  ? 4  : 2]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepUp    ? 16 : 14]);
-      sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepRight ? 22 : 20]);
-    }
-  }    
-
-
-  // ratings
-  
-  // clean expired ratings.  oldest ratings are at the front.
-  while (ratingDecals.size() > 0 && ratingDecals.front().animStartTime + ratingDecals.front().animDuration < songTime)
-  {
-    ratingDecals.erase(ratingDecals.begin());
-  }
-  
-  // clean okNg decals.  oldest ratings are at the front.
-  while (okNgDecals.size() > 0 && okNgDecals.front().animStartTime + okNgDecals.front().animDuration < songTime)
-  {
-    okNgDecals.erase(okNgDecals.begin());
-  }
-  
-  for (int i = 0; i < numPlayers; ++i)
-  {
-    Player& p = players[i];  
-
-    // energy
-    // for now text
-    
-    // cap.  very non OO hihi
-    if (p.energyFailTime > 0 || p.energyMeter < 0)
-    {
-      if (p.energyFailTime < 0)
-      {
-        p.energyFailTime = songTime;
-// Possibly this causes the slowdown:  :(  that would mean no assist tick         
-//        sound.PlaySample(Sound::CrowdOhh);
-      }
-      p.energyMeter = 0;
-    }
-    else if (p.energyMeter > 100)
-    {
-      p.energyMeter = 100;
-    }
-    int decalX = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth;
-    int decalY = constants.goalOffset - 80;
-    //#if (p.energyMeter == 0)
-    //#{
-      //#energy.text = "Awwwwwww...";
-      //#energy.colour = gfx.sdlRed;
-    //#}
-    //#energy.offsetMode = Element::HCenter | Element::VCenter;
-    //#gui.DrawLabel(energy);
-    if (p.energyMeter > 0)
-    {
-      char temp[100];
-      sprintf(temp, "%3.0f%%", p.energyMeter);
-      Label energy(temp, decalX, decalY, 0, 0);
-      energy.colour = gfx.sdlBlueWhite;
-      energy.offsetMode = Element::HCenter | Element::VCenter;
-      gui.DrawLabel(energy);
-    }
-
-
-    
-    // draw ratings from oldest to newest
-    // center in player's field and just below home arrows
-    // rating decals drift downward over the course of their animation
-    decalX = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth - gfx.ratingsFrames[0].w / 2;
-    decalY = constants.goalOffset + 130;
-    int decalAnimH = 32;
-    for (unsigned int j = 0; j < ratingDecals.size(); ++j)
-    {
-      Decal& d = ratingDecals[j];
-      if (d.player == i)
-      {
-        SDL_Rect* tempSrcRect = d.CurrentFrameRect(songTime);
-        if (tempSrcRect)
-        {
-          int tempY = decalY + (int)(decalAnimH * ((songTime - d.animStartTime) / (float)d.animDuration));
-          sys.vid.ApplySurface(decalX, tempY, d.surface, sys.vid.screen, tempSrcRect);
-        }
-      }
-    }
-
-    // draw ok ng decals
-    decalX = p.arrowFieldXOffset;
-    decalY = constants.goalOffset + gfx.arrowHeight + 20;
-    for (unsigned int j = 0; j < okNgDecals.size(); ++j)
-    {
-      Decal& o = okNgDecals[j];
-      if (o.player == i)
-      {
-        int tempY = decalY;
-        if (p.arrows[o.userInfo].freezeRating == Arrow::FREEZE_FAILED)
-        {
-          // move decal down to just under failed arrow
-          tempY += p.arrows[o.userInfo].length - 24;
-        }
-        SDL_Rect* tempSrcRect = o.CurrentFrameRect(songTime);
-        if (tempSrcRect)
-        {
-          int tempX = decalX + p.arrows[o.userInfo].direction * constants.playerArrowColumnWidth + constants.playerArrowColumnWidth / 2 - gfx.okNgFrames[0].w / 2;
-          sys.vid.ApplySurface(tempX, tempY, o.surface, sys.vid.screen, tempSrcRect);
-        }
-      }
-    }
-
-    // remove combo number for a player if his/her combo has been reset
-    unsigned int j = 0;
-    if (p.combo < 5)
-    {
-      while (j < comboDecals.size())
-      {
-        if (comboDecals[j].player == i)
-        {
-          comboDecals.erase(comboDecals.begin() + j);
-        }
-        else
-        {
-          ++j;
-        }
-      }
-    }
-    else
-    {
-      // keep only latest combo up.
-      long lastComboNumberTime = 0;
-      for (unsigned int k = 0; k < comboDecals.size(); ++k)
-      {
-        if (comboDecals[j].player == i)
-        {
-          lastComboNumberTime = comboDecals[k].animStartTime;
-        }
-      }
-      unsigned int k = 0;
-      while (k < comboDecals.size())
-      {
-        if (comboDecals[k].player == i
-         && comboDecals[k].animStartTime != lastComboNumberTime)
-        {
-          comboDecals.erase(comboDecals.begin() + k);
-        }
-        else
-        {
-          ++k;
-        }
-      }
-    }
-
-    
-
-    
-    // draw combo numbers.  numbers are composed of digits with the same time in the vector, last digit first
-    // center them in the player arrow field according to number of digits 
-    decalX = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth;
-    decalY = constants.goalOffset + 250;
-    decalAnimH = 10;
-    //TODO: hardcoded.  figure out a way to learn png size from resource
-    int comboLabelWidth = 96;
-    int comboLabelHeight = 32;
-    int playerComboNumbers = 0;
-    for (unsigned int j = 0; j < comboDecals.size(); ++j)
-    {
-      if (comboDecals[j].player == i)
-      {
-        ++playerComboNumbers;
-      }
-    }
-    if (playerComboNumbers > 0)
-    {
-      int tempX = decalX - comboLabelWidth / 2;
-      int tempY = decalY - comboLabelHeight - 4;
-      sys.vid.ApplySurface(tempX, tempY, gfx.images[Graphics::ComboLabel], sys.vid.screen, NULL);
-    }
-
-    long comboNumberTime = 0;
-    int numberDigits = 0;
-    unsigned int comboNumberStartIndex = 0;
-    unsigned int comboNumberEndIndex = 0;
-    j = 0;
-    int digitWidth = gfx.comboNumbersFrames[0].w;
-    while (j < comboDecals.size())
-    {
-      if (comboDecals[j].player == i)
-      {
-        comboNumberTime = comboDecals[j].animStartTime;
-        comboNumberStartIndex = j;
-        comboNumberEndIndex = comboNumberStartIndex;
-        while (comboNumberEndIndex+1 < comboDecals.size() 
-            && comboDecals[comboNumberEndIndex+1].player == i 
-            && comboDecals[comboNumberEndIndex+1].animStartTime == comboNumberTime)
-        {
-          ++comboNumberEndIndex;
-        }
-        numberDigits = comboNumberEndIndex - comboNumberStartIndex + 1;
-        
-        for (unsigned int k = comboNumberStartIndex; k <= comboNumberEndIndex; ++k)
-        {
-          Decal& c = comboDecals[k];
-          SDL_Rect* tempSrcRect = c.CurrentFrameRect(songTime);
-          if (tempSrcRect)
-          {
-            int tempY = decalY + PFunc::Parametric(PFunc::Linear, PFunc::ParamByVal(PFunc::Square, songTime, c.animStartTime, c.animStartTime + c.animDuration), 0, decalAnimH);
-            int tempX = decalX + numberDigits * digitWidth / 2 - (k-comboNumberStartIndex+1) * digitWidth;
-            sys.vid.ApplySurface(tempX, tempY, c.surface, sys.vid.screen, tempSrcRect);
-          }
-        }
-        j = comboNumberEndIndex+1;
-      }
-      else
-      {
-        ++j;
-      }
-    }
+    Player& p = players[i];
+    DrawDecals(p);
+    DrawHomeArrows(p);
+    DrawArrows(p);
+    DrawEnergyBar(p);
+    RateArrows(p);
   }
 
-  
-  // animate arrows
-  long offscreenHigh = viewportOffset + sys.vid.ScreenHeight() - constants.goalOffset;
-  long offscreenLow = viewportOffset - gfx.arrowHeight - constants.goalOffset;
-  for (int i = 0; i < numPlayers; ++i)
+  // pre start
+  if (state == PLAY_PREP2)
   {
-    Player&p = players[i];
-        
-    LOG(DEBUG_DETAIL, "begin animation player " << i << " arrows. base_arrow = " << p.baseArrow << endl)
-    
-    // update first and last visible arrows
-    while (p.nextOffscreenArrow != -1 && p.arrows[p.nextOffscreenArrow].yPos < offscreenHigh)
+    if (songTime > 0)
     {
-      p.lastVisibleArrow = p.nextOffscreenArrow;
-      if (p.firstVisibleArrow == -1)
-      {
-        p.firstVisibleArrow = p.lastVisibleArrow;
-      }
-      ++p.nextOffscreenArrow;
-      if (p.nextOffscreenArrow == p.numArrows)
-      {
-        p.nextOffscreenArrow = -1;
-      }
+      // start music
+      #ifndef WII
+      sound.PrepMusic(songs[currentSong].Path());
+      #endif
+      sound.StartMusic();
+      state = PLAY;
+      
+      // synchronise song start time since arrow ratings are based on that
+      // and the prep/start of music may take a variable amount of time
+      songStartTime = SDL_GetTicks() + constants.songStartOffset;
     }
-
-    // update first visible arrow   NOTE: hold arrow isn't offscreen until tail is!
-    if (p.firstVisibleArrow != -1)
-    {
-      while (p.arrows[p.firstVisibleArrow].yPos + p.arrows[p.firstVisibleArrow].length <= offscreenLow)
-      {
-        if (p.firstVisibleArrow == p.lastVisibleArrow)
-        {
-          LOG(DEBUG_DETAIL, "clearing last, first visible " << endl)
-          p.firstVisibleArrow = -1;
-          p.lastVisibleArrow = -1;
-          break;
-        }
-        else
-        {
-          ++p.firstVisibleArrow;
-        }
-      }
-    }
-
-    LOG(DEBUG_DETAIL, "entering draw: firstVisibleArrow: " << p.firstVisibleArrow << " lastVisibleArrow: = " << p.lastVisibleArrow << endl)
-    
-    // draw arrows from last to first, updating first if it is offscreen
-    if (p.firstVisibleArrow != -1)
-    {
-      for (int a = p.lastVisibleArrow; a >= p.firstVisibleArrow; a--)
-      {
-        Arrow& ar = p.arrows[a];
-        
-        //arrows become hidden if the player clears them
-        if (!ar.hidden)
-        {
-          int screenYPos = ar.yPos - viewportOffset + constants.goalOffset;
-          
-          int arrowsFramesIndex = -1;
-          int xpos = -1;
-          switch (ar.direction)
-          {
-            case 0: xpos = p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth; arrowsFramesIndex =  4+current16thTick; break;
-            case 1: xpos = p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth; arrowsFramesIndex =  0+current16thTick; break;
-            case 2: xpos = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth; arrowsFramesIndex =  8+current16thTick; break;
-            case 3: xpos = p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth; arrowsFramesIndex = 12+current16thTick; break;
-            default: break;
-          }
-          
-          LOG(DEBUG_DETAIL, "draw arrow index:" << a << " screenYPos:" << screenYPos << " direction:" << ar.direction  << " arrowsFramesIndex:" << arrowsFramesIndex  << endl)
-          
-          if (ar.type == Arrow::HOLD)
-          {
-            // freeze arrow has three states, unhit, held and missed
-            // the bitmaps are organised so that each state is in a separate
-            // block.  the frame index pointer begins at a base value that 
-            // points at the correct block for the correct state
-            int freeze_tail_frame_index = -1;
-            int freeze_body_frame_index = -1;
-            int freeze_head_frame_index = -1;
-            if (ar.freezeRating == Arrow::FREEZE_FAILED)
-            {
-              //dark index, failed state
-              freeze_tail_frame_index = 4;
-              freeze_body_frame_index = 4;
-              freeze_head_frame_index = 4;
-            }
-            else if (ar.rating == Arrow::RATING_NONE)
-            {
-              // normal unhit state
-              freeze_tail_frame_index = 0;
-              freeze_body_frame_index = 0;
-              freeze_head_frame_index = 0;
-            }
-            else
-            {
-              // being held
-              freeze_tail_frame_index = 8;
-              freeze_body_frame_index = 8;
-              // animate the head based on time since start
-              if ((songTime - ar.animStartTime) % 2)
-              {
-                freeze_head_frame_index = 8;
-              }
-              else
-              {
-                freeze_head_frame_index = 12;
-              }
-            }
-            
-            // draw tail from bottom up to head
-            int current_freeze_top = screenYPos + 32;  // freeze arrows start from the middle of the head
-            int current_freeze_bottom = screenYPos + 64 + ar.length; // bottom as in bottom of blit rect
-            int current_freeze_length = ar.length + 32; // part of the freeze tail is overlapped by the head
-            int blit_height = -1; // SDL_BlitSurface uses dest rect as output... just to be safe
-
-            // if player steps before arrow arrives at home arrow but it counts as success,
-            // grow arrow up to home arrow row while the arrow is held.
-            if ((ar.rating != Arrow::RATING_NONE) && (ar.freezeRating != Arrow::FREEZE_FAILED))
-            {
-              if (screenYPos > constants.goalOffset)
-              {
-                current_freeze_length += screenYPos - constants.goalOffset;
-                current_freeze_top += screenYPos - constants.goalOffset;
-              }
-              screenYPos = constants.goalOffset;
-            }
-
-
-            // all freeze bitmaps are indexed according to direction
-            freeze_tail_frame_index += ar.direction;
-            freeze_body_frame_index += ar.direction;
-            freeze_head_frame_index += ar.direction;
-            
-            // if being held, arrows only draw up to the home arrows
-            if ((ar.rating != Arrow::RATING_NONE) && (ar.freezeRating != Arrow::FREEZE_FAILED))
-            {
-              if (current_freeze_top < constants.goalOffset + 32)
-              {
-                current_freeze_length -= constants.goalOffset + 32 - current_freeze_top;
-                current_freeze_top = constants.goalOffset + 32;
-              }
-            }
-
-            
-            // clip to screen - body and tail may be hidden or partial
-            if (current_freeze_top < sys.vid.ScreenHeight())
-            {
-              SDL_Rect freeze_src_rect = gfx.freezeTailFrames[freeze_tail_frame_index];
-              SDL_Rect freeze_dest_rect;
-              freeze_dest_rect.x = xpos;
-              freeze_dest_rect.w = 64;
-
-              // tail
-              if (current_freeze_length >= 64)
-              {
-                blit_height = 64;
-                freeze_dest_rect.h = 64;
-                freeze_dest_rect.y = current_freeze_bottom - 64;
-              }
-              else
-              {
-                blit_height = current_freeze_length;
-                freeze_src_rect.h = current_freeze_length;
-                freeze_src_rect.y += 64 - current_freeze_length;
-                freeze_dest_rect.h = current_freeze_length;
-                freeze_dest_rect.y = current_freeze_bottom - current_freeze_length;
-              }
-
-              SDL_BlitSurface(gfx.images[Graphics::FreezeArrowsTail], &freeze_src_rect, sys.vid.screen, &freeze_dest_rect);
-              current_freeze_bottom -= blit_height;
-              current_freeze_length -= blit_height;
-              
-              // body
-              freeze_src_rect = gfx.freezeBodyFrames[freeze_body_frame_index];
-              while (current_freeze_length > 0)
-              {
-                // just in case freeze dest rect gets clipped by the blit func (shouldn't happen)
-                freeze_dest_rect.x = xpos;
-                freeze_dest_rect.w = 64;
-                
-                // align blit source so that colours in freeze body line up
-                if (current_freeze_length >= 128)
-                {
-                  blit_height = 128;
-                  freeze_dest_rect.h = 128;
-                  freeze_dest_rect.y = current_freeze_bottom - 128;
-                }
-                else
-                {
-                  // partial body.  source rect is bottom-up
-                  blit_height = current_freeze_length;
-                  freeze_src_rect.h = current_freeze_length;
-                  freeze_src_rect.y += 128 - current_freeze_length;
-                  freeze_dest_rect.h = current_freeze_length;
-                  freeze_dest_rect.y = current_freeze_bottom - current_freeze_length;
-                }
-                SDL_BlitSurface(gfx.images[Graphics::FreezeArrowsBody], &freeze_src_rect, sys.vid.screen, &freeze_dest_rect);
-                current_freeze_bottom -= blit_height;
-                current_freeze_length -= blit_height;
-              }
-            }
-            // head
-            sys.vid.ApplySurface(xpos, screenYPos, gfx.images[Graphics::FreezeArrowsHead], NULL, &gfx.freezeHeadFrames[freeze_head_frame_index]);
-          }
-          else
-          {
-            SDL_Surface* arrowBitmapSrc = NULL;
-            switch(ar.type)
-            {
-            case Arrow::QUARTER:
-              arrowBitmapSrc = gfx.images[Graphics::QuarterArrows];
-              break;
-            case Arrow::EIGHTH:
-              arrowBitmapSrc = gfx.images[Graphics::EighthArrows];
-              break;
-            case Arrow::QUARTER_TRIPLET:
-              arrowBitmapSrc = gfx.images[Graphics::QuarterTripletArrows];
-              break;
-            case Arrow::SIXTEENTH:
-              arrowBitmapSrc = gfx.images[Graphics::SixteenthArrows];
-              break;
-            case Arrow::EIGHTH_TRIPLET:
-              arrowBitmapSrc = gfx.images[Graphics::EighthTripletArrows];
-              break;
-            case Arrow::THIRTYSECOND:
-              arrowBitmapSrc = gfx.images[Graphics::ThirtysecondArrows];
-              break;
-            case Arrow::SIXTEENTH_TRIPLET:
-              arrowBitmapSrc = gfx.images[Graphics::SixteenthTripletArrows];
-              break;
-            case Arrow::SIXTYFOURTH:
-              arrowBitmapSrc = gfx.images[Graphics::SixtyfourthArrows];
-              break;
-            //NOTE: same graphics used for 96th and 192nd
-            case Arrow::THIRTYSECOND_TRIPLET:
-            case Arrow::SIXTYFOURTH_TRIPLET:
-              arrowBitmapSrc = gfx.images[Graphics::SixtyfourthTripletArrows];
-              break;
-
-            default:
-              LOG(DEBUG_BASIC, "fell to default arrow type.  type=" << ar.type << endl)
-              arrowBitmapSrc = gfx.images[Graphics::QuarterArrows];
-              break;
-            }
-            sys.vid.ApplySurface(xpos, screenYPos, arrowBitmapSrc, NULL, &gfx.arrowsFrames[arrowsFramesIndex]);
-          }            
-        }
-        else
-        {
-          // arrow is hidden.  does it have an animation?
-          if (ar.animStartTime != -1)
-          {
-            if (songTime - ar.animStartTime > constants.arrowsHitAnimMs)
-            {
-              ar.animStartTime = -1;
-            }
-            else
-            {
-              int screenYPos = constants.goalOffset;
-              
-              int arrowsHitIndex = -1;
-              int xpos = -1;
-              switch (ar.direction)
-              {
-                // set up xpos and arrow hit index row
-                case 0: xpos = p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth; arrowsHitIndex = 8; break;
-                case 1: xpos = p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth; arrowsHitIndex = 0; break;
-                case 2: xpos = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth; arrowsHitIndex = 16; break;
-                case 3: xpos = p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth; arrowsHitIndex = 24; break;
-                default: break;
-              }
-              SDL_Surface* animBitmapSrc = NULL;
-              if (ar.type == Arrow::HOLD && ar.length != 0)
-              {
-                animBitmapSrc = gfx.images[Graphics::ComboHit];
-                arrowsHitIndex = 0; // only one row of freeze hit anims
-              }
-              else
-              {
-                switch (ar.rating)
-                {
-                  case Arrow::MARVELLOUS: animBitmapSrc = gfx.images[Graphics::MarvellousHit]; break;
-                  case Arrow::PERFECT: animBitmapSrc = gfx.images[Graphics::PerfectHit]; break;
-                  case Arrow::GREAT: animBitmapSrc = gfx.images[Graphics::GreatHit]; break;
-                  case Arrow::GOOD: animBitmapSrc = gfx.images[Graphics::GoodHit]; break;
-                  case Arrow::BOO: animBitmapSrc = gfx.images[Graphics::GoodHit]; break;  //TODO: BooHit?
-                  default: break;
-                }
-              }
-              
-              // move arrow hit index along row to the right frame of animation
-              arrowsHitIndex += (int)(7 * ((songTime - ar.animStartTime) / constants.arrowsHitAnimMs) );
-              
-              if (animBitmapSrc)
-              {
-                sys.vid.ApplySurface(xpos, screenYPos, animBitmapSrc, NULL, &gfx.arrowsHitFrames[arrowsHitIndex]);
-              }
-            }
-          }
-        }
-        
-        LOG(DEBUG_DETAIL, "done" << endl)
-      }
-    }
-    
-    // update base arrow
-    for (int i = p.baseArrow; i < p.numArrows; i++)
-    {
-      if (p.arrows[i].hidden && p.arrows[i].animStartTime == -1)
-      {
-        p.baseArrow = i;
-      }
-      else
-      {
-        break;
-      }
-    }
-
-    if(p.combo > p.longestCombo)
-    {
-      p.longestCombo = p.combo;
-    }
+    sys.vid.ApplySurface(gfx.screenWidth/2 - 300/2, gfx.screenHeight/2 - 120/2, gfx.images[Graphics::GetReady], NULL, NULL);
   }
+  
 
-  if (sound.MusicFinished())
+  if (songTime > constants.songStartAllow)
   {
-    RunPlayCleanup();
-    state = SCORE;
+    // at least on Linux, testing music finished too soon caused playback not to start :(
+    if (sound.MusicFinished())
+    {
+      RunPlayCleanup();
+      state = SCORE;
+    }
   }
 
   if (CheckAbort())
@@ -2272,11 +1686,12 @@ void Game::InitialFrame()
   // first frame will calculate a negative current song time, allowing
   // actual song playback to be on sync if it starts a little later
   // than song start function call
-  songStartTime = SDL_GetTicks() + constants.songStartOffset;
+  songStartTime = SDL_GetTicks() + constants.preStartDelay;
+  LOG(DEBUG_MINOR, "Game::InitialFrame songStartTime: " << songStartTime << endl)
   
   // viewport offset starts increasingly negative as song offset goes up,
   // so that after offset time it is at 0.  this synchronises rating and drawing
-  viewportOffset = - ((constants.songStartOffset) * pixelsPerMsAtCurrentBpm);
+  viewportOffset = -constants.songStartOffset * pixelsPerMsAtCurrentBpm;
   
   // not taking into account partial pixels for initial offset. 
   // fractional pixels are only important over time
@@ -2289,11 +1704,12 @@ void Game::Frame()
   long oldSongTime = songTime;
   songTime = SDL_GetTicks() - songStartTime;
 
-  // due to constants.songStartOffset make songTime negative for the first few frames,
+  // due to constants.songStartOffset making songTime negative for the first few frames,
   // on the very first frame, oldSongTime is after songTime.  this bugs the viewport by a few pixels.
   if (oldSongTime > songTime)
   {
     oldSongTime = songTime - 1;
+  LOG(DEBUG_MINOR, "Game::Frame first frame songTime: " << songTime << endl)
   }
 
 
@@ -2338,14 +1754,6 @@ void Game::Frame()
   PartialFrame(partialFrameTimeBegin, frameTimeEnd);
 
   LOG(DEBUG_DETAIL, "frame end, currentBpmChange = " << currentBpmChange << endl)
-
-  //TEMP:
-  frameTime = songTime - oldSongTime;
-
-  for (int i = 0; i < numPlayers; ++i)
-  {
-    RateArrows(players[i]);
-  }
 }
 
 
@@ -2368,6 +1776,7 @@ void Game::PartialFrame(long begin, long end)
   // as of the last bpm change.
   long timeElapsedAtCurrentBPM = end - lastBeatTime - beatTimeElapsedAtPreviousBPMs;
   currentBeatFraction = partialBeatFraction + (timeElapsedAtCurrentBPM / Song::MsPerBeatFromBPM(songs[currentSong].bpmChanges[currentBpmChange].bpm) + beatFractionAtPreviousBPMs);
+//LOG(DEBUG_BASIC, "currentBeatFraction " << currentBeatFraction << endl)  
   if ((currentBeatFraction + 0.00001) > 1)
   {
     ++currentBeat;
@@ -2385,11 +1794,563 @@ void Game::PartialFrame(long begin, long end)
 }
 
 
+void Game::DrawHomeArrows(Player& p)
+{
+  int current16thTick = (int)(currentBeatFraction * 4) % 4;
+
+  bool stepLeft  = abs(songTime - p.directionDownTime[0]) < constants.homeArrowAnimDelay;
+  bool stepDown  = abs(songTime - p.directionDownTime[1]) < constants.homeArrowAnimDelay;
+  bool stepUp    = abs(songTime - p.directionDownTime[2]) < constants.homeArrowAnimDelay;
+  bool stepRight = abs(songTime - p.directionDownTime[3]) < constants.homeArrowAnimDelay;
+  if (current16thTick == 0)
+  {
+    // first 1/4 of beat, draw lit home arrow
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepLeft  ? 10 : 6]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepDown  ? 4  : 0]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepUp    ? 16 : 12]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepRight ? 22 : 18]);
+  }
+  else
+  {
+    // other 3/4ths of beat, draw normal home arrow
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepLeft  ? 10 : 8]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepDown  ? 4  : 2]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepUp    ? 16 : 14]);
+    sys.vid.ApplySurface(p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth, constants.goalOffset, gfx.images[Graphics::HomeArrows], NULL, &gfx.homeArrowsFrames[stepRight ? 22 : 20]);
+  }
+}
+
+
+void Game::DrawEnergyBar(Player& p)
+{
+  // for now text
+  
+  // cap.  very non OO hihi
+  if (p.energyFailTime > 0 || p.energyMeter < 0)
+  {
+    if (p.energyFailTime < 0)
+    {
+      p.energyFailTime = songTime;
+    }
+    p.energyMeter = 0;
+  }
+  else if (p.energyMeter > 100)
+  {
+    p.energyMeter = 100;
+  }
+  int decalX = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth;
+  int decalY = constants.goalOffset - 80;
+  //#if (p.energyMeter == 0)
+  //#{
+    //#energy.text = "Awwwwwww...";
+    //#energy.colour = gfx.sdlRed;
+  //#}
+  //#energy.offsetMode = Element::HCenter | Element::VCenter;
+  //#gui.DrawLabel(energy);
+  if (p.energyMeter > 0)
+  {
+    char temp[100];
+    sprintf(temp, "%3.0f%%", p.energyMeter);
+    Label energy(temp, decalX, decalY, 0, 0);
+    energy.colour = gfx.sdlBlueWhite;
+    energy.offsetMode = Element::HCenter | Element::VCenter;
+    gui.DrawLabel(energy);
+  }
+}
+
+
+void Game::DrawDecals(Player& p)
+{
+  // clean expired decals.  oldest are at the front.
+  while (ratingDecals.size() > 0 && ratingDecals.front().animStartTime + ratingDecals.front().animDuration < songTime)
+  {
+    ratingDecals.erase(ratingDecals.begin());
+  }
+  while (okNgDecals.size() > 0 && okNgDecals.front().animStartTime + okNgDecals.front().animDuration < songTime)
+  {
+    okNgDecals.erase(okNgDecals.begin());
+  }
+  
+  // draw ratings from oldest to newest
+  // center in player's field and just below home arrows
+  // rating decals drift downward over the course of their animation
+  int decalX = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth - gfx.ratingsFrames[0].w / 2;
+  int decalY = constants.goalOffset + 130;
+  int decalAnimH = 32;
+  for (unsigned int j = 0; j < ratingDecals.size(); ++j)
+  {
+    Decal& d = ratingDecals[j];
+    if (d.player == p.playerNumber-1)
+    {
+      SDL_Rect* tempSrcRect = d.CurrentFrameRect(songTime);
+      if (tempSrcRect)
+      {
+        int tempY = decalY + (int)(decalAnimH * ((songTime - d.animStartTime) / (float)d.animDuration));
+        sys.vid.ApplySurface(decalX, tempY, d.surface, sys.vid.screen, tempSrcRect);
+      }
+    }
+  }
+
+  // draw ok ng decals
+  decalX = p.arrowFieldXOffset;
+  decalY = constants.goalOffset + gfx.arrowHeight + 20;
+  for (unsigned int j = 0; j < okNgDecals.size(); ++j)
+  {
+    Decal& o = okNgDecals[j];
+    if (o.player == p.playerNumber-1)
+    {
+      int tempY = decalY;
+      if (p.arrows[o.userInfo].freezeRating == Arrow::FREEZE_FAILED)
+      {
+        // move decal down to just under failed arrow
+        tempY += p.arrows[o.userInfo].length - 24;
+      }
+      SDL_Rect* tempSrcRect = o.CurrentFrameRect(songTime);
+      if (tempSrcRect)
+      {
+        int tempX = decalX + p.arrows[o.userInfo].direction * constants.playerArrowColumnWidth + constants.playerArrowColumnWidth / 2 - gfx.okNgFrames[0].w / 2;
+        sys.vid.ApplySurface(tempX, tempY, o.surface, sys.vid.screen, tempSrcRect);
+      }
+    }
+  }
+
+  // remove combo number for a player if his/her combo has been reset
+  unsigned int j = 0;
+  if (p.combo < 5)
+  {
+    while (j < comboDecals.size())
+    {
+      if (comboDecals[j].player == p.Index())
+      {
+        comboDecals.erase(comboDecals.begin() + j);
+      }
+      else
+      {
+        ++j;
+      }
+    }
+  }
+  else
+  {
+    // keep only latest combo up.
+    long lastComboNumberTime = 0;
+    for (unsigned int k = 0; k < comboDecals.size(); ++k)
+    {
+      if (comboDecals[j].player == p.Index())
+      {
+        lastComboNumberTime = comboDecals[k].animStartTime;
+      }
+    }
+    unsigned int k = 0;
+    while (k < comboDecals.size())
+    {
+      if (comboDecals[k].player == p.Index()
+       && comboDecals[k].animStartTime != lastComboNumberTime)
+      {
+        comboDecals.erase(comboDecals.begin() + k);
+      }
+      else
+      {
+        ++k;
+      }
+    }
+  }
+  
+  // draw combo numbers.  numbers are composed of digits with the same time in the vector, last digit first
+  // center them in the player arrow field according to number of digits 
+  decalX = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth;
+  decalY = constants.goalOffset + 250;
+  decalAnimH = 10;
+  //TODO: hardcoded.  figure out a way to learn png size from resource
+  int comboLabelWidth = 96;
+  int comboLabelHeight = 32;
+  int playerComboNumbers = 0;
+  for (unsigned int j = 0; j < comboDecals.size(); ++j)
+  {
+    if (comboDecals[j].player == p.Index())
+    {
+      ++playerComboNumbers;
+    }
+  }
+  if (playerComboNumbers > 0)
+  {
+    int tempX = decalX - comboLabelWidth / 2;
+    int tempY = decalY - comboLabelHeight - 4;
+    sys.vid.ApplySurface(tempX, tempY, gfx.images[Graphics::ComboLabel], sys.vid.screen, NULL);
+  }
+
+  long comboNumberTime = 0;
+  int numberDigits = 0;
+  unsigned int comboNumberStartIndex = 0;
+  unsigned int comboNumberEndIndex = 0;
+  j = 0;
+  int digitWidth = gfx.comboNumbersFrames[0].w;
+  while (j < comboDecals.size())
+  {
+    if (comboDecals[j].player == p.Index())
+    {
+      comboNumberTime = comboDecals[j].animStartTime;
+      comboNumberStartIndex = j;
+      comboNumberEndIndex = comboNumberStartIndex;
+      while (comboNumberEndIndex+1 < comboDecals.size() 
+          && comboDecals[comboNumberEndIndex+1].player == p.Index() 
+          && comboDecals[comboNumberEndIndex+1].animStartTime == comboNumberTime)
+      {
+        ++comboNumberEndIndex;
+      }
+      numberDigits = comboNumberEndIndex - comboNumberStartIndex + 1;
+      
+      for (unsigned int k = comboNumberStartIndex; k <= comboNumberEndIndex; ++k)
+      {
+        Decal& c = comboDecals[k];
+        SDL_Rect* tempSrcRect = c.CurrentFrameRect(songTime);
+        if (tempSrcRect)
+        {
+          int tempY = decalY + PFunc::Parametric(PFunc::Linear, PFunc::ParamByVal(PFunc::Square, songTime, c.animStartTime, c.animStartTime + c.animDuration), 0, decalAnimH);
+          int tempX = decalX + numberDigits * digitWidth / 2 - (k-comboNumberStartIndex+1) * digitWidth;
+          sys.vid.ApplySurface(tempX, tempY, c.surface, sys.vid.screen, tempSrcRect);
+        }
+      }
+      j = comboNumberEndIndex+1;
+    }
+    else
+    {
+      ++j;
+    }
+  }
+}
+
+
+void Game::DrawArrows(Player& p)
+{
+  int current16thTick = (int)(currentBeatFraction * 4) % 4;
+  long offscreenHigh = viewportOffset + sys.vid.ScreenHeight() - constants.goalOffset;
+  long offscreenLow = viewportOffset - gfx.arrowHeight - constants.goalOffset;
+  LOG(DEBUG_DETAIL, "Game::DrawArrows() begin animation player " << p.Index() << " arrows. base_arrow = " << p.baseArrow << endl)
+  
+  // update first and last visible arrows
+  while (p.nextOffscreenArrow != -1 && p.arrows[p.nextOffscreenArrow].yPos < offscreenHigh)
+  {
+    p.lastVisibleArrow = p.nextOffscreenArrow;
+    if (p.firstVisibleArrow == -1)
+    {
+      p.firstVisibleArrow = p.lastVisibleArrow;
+    }
+    ++p.nextOffscreenArrow;
+    if (p.nextOffscreenArrow == p.numArrows)
+    {
+      p.nextOffscreenArrow = -1;
+    }
+  }
+
+  // update first visible arrow   NOTE: hold arrow isn't offscreen until tail is!
+  if (p.firstVisibleArrow != -1)
+  {
+    while (p.arrows[p.firstVisibleArrow].yPos + p.arrows[p.firstVisibleArrow].length <= offscreenLow)
+    {
+      if (p.firstVisibleArrow == p.lastVisibleArrow)
+      {
+        LOG(DEBUG_DETAIL, "clearing last, first visible " << endl)
+        p.firstVisibleArrow = -1;
+        p.lastVisibleArrow = -1;
+        break;
+      }
+      else
+      {
+        ++p.firstVisibleArrow;
+      }
+    }
+  }
+
+  LOG(DEBUG_DETAIL, "entering draw: firstVisibleArrow: " << p.firstVisibleArrow << " lastVisibleArrow: = " << p.lastVisibleArrow << endl)
+  
+  // draw arrows from last to first, updating first if it is offscreen
+  if (p.firstVisibleArrow != -1)
+  {
+    for (int a = p.lastVisibleArrow; a >= p.firstVisibleArrow; a--)
+    {
+      Arrow& ar = p.arrows[a];
+      
+      //arrows become hidden if the player clears them
+      if (!ar.hidden)
+      {
+        int screenYPos = ar.yPos - viewportOffset + constants.goalOffset;
+        
+        int arrowsFramesIndex = -1;
+        int xpos = -1;
+        switch (ar.direction)
+        {
+          case 0: xpos = p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth; arrowsFramesIndex =  4+current16thTick; break;
+          case 1: xpos = p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth; arrowsFramesIndex =  0+current16thTick; break;
+          case 2: xpos = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth; arrowsFramesIndex =  8+current16thTick; break;
+          case 3: xpos = p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth; arrowsFramesIndex = 12+current16thTick; break;
+          default: break;
+        }
+        
+        LOG(DEBUG_DETAIL, "draw arrow index:" << a << " screenYPos:" << screenYPos << " direction:" << ar.direction  << " arrowsFramesIndex:" << arrowsFramesIndex  << endl)
+        
+        if (ar.type == Arrow::HOLD)
+        {
+          // freeze arrow has three states, unhit, held and missed
+          // the bitmaps are organised so that each state is in a separate
+          // block.  the frame index pointer begins at a base value that 
+          // points at the correct block for the correct state
+          int freeze_tail_frame_index = -1;
+          int freeze_body_frame_index = -1;
+          int freeze_head_frame_index = -1;
+          if (ar.freezeRating == Arrow::FREEZE_FAILED)
+          {
+            //dark index, failed state
+            freeze_tail_frame_index = 4;
+            freeze_body_frame_index = 4;
+            freeze_head_frame_index = 4;
+          }
+          else if (ar.rating == Arrow::RATING_NONE)
+          {
+            // normal unhit state
+            freeze_tail_frame_index = 0;
+            freeze_body_frame_index = 0;
+            freeze_head_frame_index = 0;
+          }
+          else
+          {
+            // being held
+            freeze_tail_frame_index = 8;
+            freeze_body_frame_index = 8;
+            // animate the head based on time since start
+            if ((songTime - ar.animStartTime) % 2)
+            {
+              freeze_head_frame_index = 8;
+            }
+            else
+            {
+              freeze_head_frame_index = 12;
+            }
+          }
+          
+          // draw tail from bottom up to head
+          int current_freeze_top = screenYPos + 32;  // freeze arrows start from the middle of the head
+          int current_freeze_bottom = screenYPos + 64 + ar.length; // bottom as in bottom of blit rect
+          int current_freeze_length = ar.length + 32; // part of the freeze tail is overlapped by the head
+          int blit_height = -1; // SDL_BlitSurface uses dest rect as output... just to be safe
+
+          // if player steps before arrow arrives at home arrow but it counts as success,
+          // grow arrow up to home arrow row while the arrow is held.
+          if ((ar.rating != Arrow::RATING_NONE) && (ar.freezeRating != Arrow::FREEZE_FAILED))
+          {
+            if (screenYPos > constants.goalOffset)
+            {
+              current_freeze_length += screenYPos - constants.goalOffset;
+              current_freeze_top += screenYPos - constants.goalOffset;
+            }
+            screenYPos = constants.goalOffset;
+          }
+
+
+          // all freeze bitmaps are indexed according to direction
+          freeze_tail_frame_index += ar.direction;
+          freeze_body_frame_index += ar.direction;
+          freeze_head_frame_index += ar.direction;
+          
+          // if being held, arrows only draw up to the home arrows
+          if ((ar.rating != Arrow::RATING_NONE) && (ar.freezeRating != Arrow::FREEZE_FAILED))
+          {
+            if (current_freeze_top < constants.goalOffset + 32)
+            {
+              current_freeze_length -= constants.goalOffset + 32 - current_freeze_top;
+              current_freeze_top = constants.goalOffset + 32;
+            }
+          }
+
+          
+          // clip to screen - body and tail may be hidden or partial
+          if (current_freeze_top < sys.vid.ScreenHeight())
+          {
+            SDL_Rect freeze_src_rect = gfx.freezeTailFrames[freeze_tail_frame_index];
+            SDL_Rect freeze_dest_rect;
+            freeze_dest_rect.x = xpos;
+            freeze_dest_rect.w = 64;
+
+            // tail
+            if (current_freeze_length >= 64)
+            {
+              blit_height = 64;
+              freeze_dest_rect.h = 64;
+              freeze_dest_rect.y = current_freeze_bottom - 64;
+            }
+            else
+            {
+              blit_height = current_freeze_length;
+              freeze_src_rect.h = current_freeze_length;
+              freeze_src_rect.y += 64 - current_freeze_length;
+              freeze_dest_rect.h = current_freeze_length;
+              freeze_dest_rect.y = current_freeze_bottom - current_freeze_length;
+            }
+
+            SDL_BlitSurface(gfx.images[Graphics::FreezeArrowsTail], &freeze_src_rect, sys.vid.screen, &freeze_dest_rect);
+            current_freeze_bottom -= blit_height;
+            current_freeze_length -= blit_height;
+            
+            // body
+            freeze_src_rect = gfx.freezeBodyFrames[freeze_body_frame_index];
+            while (current_freeze_length > 0)
+            {
+              // just in case freeze dest rect gets clipped by the blit func (shouldn't happen)
+              freeze_dest_rect.x = xpos;
+              freeze_dest_rect.w = 64;
+              
+              // align blit source so that colours in freeze body line up
+              if (current_freeze_length >= 128)
+              {
+                blit_height = 128;
+                freeze_dest_rect.h = 128;
+                freeze_dest_rect.y = current_freeze_bottom - 128;
+              }
+              else
+              {
+                // partial body.  source rect is bottom-up
+                blit_height = current_freeze_length;
+                freeze_src_rect.h = current_freeze_length;
+                freeze_src_rect.y += 128 - current_freeze_length;
+                freeze_dest_rect.h = current_freeze_length;
+                freeze_dest_rect.y = current_freeze_bottom - current_freeze_length;
+              }
+              SDL_BlitSurface(gfx.images[Graphics::FreezeArrowsBody], &freeze_src_rect, sys.vid.screen, &freeze_dest_rect);
+              current_freeze_bottom -= blit_height;
+              current_freeze_length -= blit_height;
+            }
+          }
+          // head
+          sys.vid.ApplySurface(xpos, screenYPos, gfx.images[Graphics::FreezeArrowsHead], NULL, &gfx.freezeHeadFrames[freeze_head_frame_index]);
+        }
+        else
+        {
+          SDL_Surface* arrowBitmapSrc = NULL;
+          switch(ar.type)
+          {
+          case Arrow::QUARTER:
+            arrowBitmapSrc = gfx.images[Graphics::QuarterArrows];
+            break;
+          case Arrow::EIGHTH:
+            arrowBitmapSrc = gfx.images[Graphics::EighthArrows];
+            break;
+          case Arrow::QUARTER_TRIPLET:
+            arrowBitmapSrc = gfx.images[Graphics::QuarterTripletArrows];
+            break;
+          case Arrow::SIXTEENTH:
+            arrowBitmapSrc = gfx.images[Graphics::SixteenthArrows];
+            break;
+          case Arrow::EIGHTH_TRIPLET:
+            arrowBitmapSrc = gfx.images[Graphics::EighthTripletArrows];
+            break;
+          case Arrow::THIRTYSECOND:
+            arrowBitmapSrc = gfx.images[Graphics::ThirtysecondArrows];
+            break;
+          case Arrow::SIXTEENTH_TRIPLET:
+            arrowBitmapSrc = gfx.images[Graphics::SixteenthTripletArrows];
+            break;
+          case Arrow::SIXTYFOURTH:
+            arrowBitmapSrc = gfx.images[Graphics::SixtyfourthArrows];
+            break;
+          //NOTE: same graphics used for 96th and 192nd
+          case Arrow::THIRTYSECOND_TRIPLET:
+          case Arrow::SIXTYFOURTH_TRIPLET:
+            arrowBitmapSrc = gfx.images[Graphics::SixtyfourthTripletArrows];
+            break;
+
+          default:
+            LOG(DEBUG_BASIC, "fell to default arrow type.  type=" << ar.type << endl)
+            arrowBitmapSrc = gfx.images[Graphics::QuarterArrows];
+            break;
+          }
+          sys.vid.ApplySurface(xpos, screenYPos, arrowBitmapSrc, NULL, &gfx.arrowsFrames[arrowsFramesIndex]);
+        }            
+      }
+      else
+      {
+        // arrow is hidden.  does it have an animation?
+        if (ar.animStartTime != -1)
+        {
+          if (songTime - ar.animStartTime > constants.arrowsHitAnimMs)
+          {
+            ar.animStartTime = -1;
+          }
+          else
+          {
+            int screenYPos = constants.goalOffset;
+            
+            int arrowsHitIndex = -1;
+            int xpos = -1;
+            switch (ar.direction)
+            {
+              // set up xpos and arrow hit index row
+              case 0: xpos = p.arrowFieldXOffset + 0 * constants.playerArrowColumnWidth; arrowsHitIndex = 8; break;
+              case 1: xpos = p.arrowFieldXOffset + 1 * constants.playerArrowColumnWidth; arrowsHitIndex = 0; break;
+              case 2: xpos = p.arrowFieldXOffset + 2 * constants.playerArrowColumnWidth; arrowsHitIndex = 16; break;
+              case 3: xpos = p.arrowFieldXOffset + 3 * constants.playerArrowColumnWidth; arrowsHitIndex = 24; break;
+              default: break;
+            }
+            SDL_Surface* animBitmapSrc = NULL;
+            if (ar.type == Arrow::HOLD && ar.length != 0)
+            {
+              animBitmapSrc = gfx.images[Graphics::ComboHit];
+              arrowsHitIndex = 0; // only one row of freeze hit anims
+            }
+            else
+            {
+              switch (ar.rating)
+              {
+                case Arrow::MARVELLOUS: animBitmapSrc = gfx.images[Graphics::MarvellousHit]; break;
+                case Arrow::PERFECT: animBitmapSrc = gfx.images[Graphics::PerfectHit]; break;
+                case Arrow::GREAT: animBitmapSrc = gfx.images[Graphics::GreatHit]; break;
+                case Arrow::GOOD: animBitmapSrc = gfx.images[Graphics::GoodHit]; break;
+                case Arrow::BOO: animBitmapSrc = gfx.images[Graphics::GoodHit]; break;  //TODO: BooHit?
+                default: break;
+              }
+            }
+            
+            // move arrow hit index along row to the right frame of animation
+            arrowsHitIndex += (int)(7 * ((songTime - ar.animStartTime) / constants.arrowsHitAnimMs) );
+            
+            if (animBitmapSrc)
+            {
+              sys.vid.ApplySurface(xpos, screenYPos, animBitmapSrc, NULL, &gfx.arrowsHitFrames[arrowsHitIndex]);
+            }
+          }
+        }
+      }
+      
+      LOG(DEBUG_DETAIL, "done" << endl)
+    }
+  }
+  
+  // update base arrow
+  for (int i = p.baseArrow; i < p.numArrows; i++)
+  {
+    if (p.arrows[i].hidden && p.arrows[i].animStartTime == -1)
+    {
+      p.baseArrow = i;
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  if(p.combo > p.longestCombo)
+  {
+    p.longestCombo = p.combo;
+  }
+}
+
 
 void Game::RateArrows(Player& p)
 {
   LOG(DEBUG_GUTS, "RateArrows" << endl)
   LOG(DEBUG_GUTS, "f: " << p.firstVisibleArrow << " l: " << p.lastVisibleArrow << endl)
+
+  p.DoJumpProcessing(songTime);
+
   if (p.firstVisibleArrow == -1)
   {
     return;
@@ -2422,6 +2383,7 @@ void Game::RateArrows(Player& p)
   {
     if (p.inputs.directionDown[b])
     {
+//#LOG(DEBUG_BASIC, "IN PUTZ  " << endl)
       for(int a = p.firstVisibleArrow; a <= p.lastVisibleArrow; a++)
       {
         Arrow& ar = p.arrows[a];
@@ -2569,7 +2531,7 @@ void Game::RateArrows(Player& p)
           if (newRating != Arrow::RATING_NONE)
           {
             // create Decal for rating visuals
-            Decal d(p.playerNumber - 1, gfx.images[Graphics::Ratings], Decal::Static, songTime, 800);
+            Decal d(p.Index(), gfx.images[Graphics::Ratings], Decal::Static, songTime, 800);
             switch(newRating)
             {
             case Arrow::MARVELLOUS:
@@ -2612,7 +2574,7 @@ void Game::RateArrows(Player& p)
               while (temp > 0)
               {
                 int digit = temp % 10;
-                Decal comboDigit(p.playerNumber - 1, gfx.images[Graphics::ComboNumbers], Decal::Static, songTime, 800);
+                Decal comboDigit(p.Index(), gfx.images[Graphics::ComboNumbers], Decal::Static, songTime, 800);
                 comboDigit.frameRects.push_back(&gfx.comboNumbersFrames[digit]);
                 comboDecals.push_back(comboDigit);
                 temp /= 10;
@@ -2645,7 +2607,7 @@ void Game::RateArrows(Player& p)
               ar.freezeRating = Arrow::FREEZE_OK;
               
               // add OK decal
-              Decal ok(p.playerNumber - 1, gfx.images[Graphics::OkNg], Decal::Static, songTime, 600);
+              Decal ok(p.Index(), gfx.images[Graphics::OkNg], Decal::Static, songTime, 600);
               ok.frameRects.push_back(&gfx.okNgFrames[0]);
               // add arrow index to use in determining screen x position
               ok.userInfo = a;
@@ -2677,7 +2639,7 @@ void Game::RateArrows(Player& p)
             ar.length -= ar.yPos - oldYPos;
             
             // add NG decal
-            Decal ng(p.playerNumber - 1, gfx.images[Graphics::OkNg], Decal::Static, songTime, 600);
+            Decal ng(p.Index(), gfx.images[Graphics::OkNg], Decal::Static, songTime, 600);
             ng.frameRects.push_back(&gfx.okNgFrames[1]);
             // add arrow index to use in determining screen x position
             ng.userInfo = a;
@@ -2700,7 +2662,7 @@ void Game::RateArrows(Player& p)
                 
                 // add OK decal.. again :(
                 // this duplication is a sign of not enough OO in the design
-                Decal ok(p.playerNumber - 1, gfx.images[Graphics::OkNg], Decal::Static, songTime, 600);
+                Decal ok(p.Index(), gfx.images[Graphics::OkNg], Decal::Static, songTime, 600);
                 ok.frameRects.push_back(&gfx.okNgFrames[0]);
                 // add arrow index to use in determining screen x position
                 ok.userInfo = a;

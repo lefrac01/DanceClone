@@ -1,5 +1,9 @@
 changelog
 --
+v0.67
+-improve song pre-delay so arrows start off-screen
+-fix gameplay slowdown on Wii
+
 v0.66
 -better animation of home arrows when player steps
 -add rating of freeze arrows when held / failed

@@ -65,6 +65,7 @@ public:
   void Init(int n);
   void Prepare();
   void DoJumpProcessing(long songTime);
+  int Index();
 };
 
 }

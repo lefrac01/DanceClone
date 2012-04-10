@@ -31,6 +31,10 @@ using Platform::InputChannel;
 #include "Container.h"
 #include "Element.h"
 
+#ifdef WII  // :(  game specific stuff
+#include <gccore.h>
+#endif
+
 
 namespace Gooey
 {

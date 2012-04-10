@@ -122,4 +122,9 @@ void Player::DoJumpProcessing(long songTime)
   }
 }
 
+int Player::Index()
+{
+  return playerNumber - 1;
+}
+
 }

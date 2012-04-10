@@ -154,6 +154,13 @@ void GUI::Render(Container &c)
     LOG(DEBUG_GUTS, "GUI::Render() element is container " << endl)
     Render(innerc);
   }
+
+  // urk.  putting this in input loop causes slowdown during game run
+  // without it, dance mats are reported as active/inactive in a flickering fashion
+  // and inputs count twice.
+  #ifdef WII
+  VIDEO_WaitVSync();
+  #endif
 }
 
 void GUI::Cleanup()

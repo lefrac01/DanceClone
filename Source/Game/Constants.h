@@ -51,6 +51,7 @@ public:
   int playerArrowFieldMargin;
   
   int preStartDelay;
+  int songStartAllow;
   int songAbortDelay;
   int jumpAllowDelay;
   int booDelay;

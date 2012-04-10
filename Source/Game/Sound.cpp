@@ -117,7 +117,7 @@ void Sound::Cleanup()
 
 void Sound::PrepMusic(string path)
 {
-  LOG(DEBUG_MINOR, "Sound::PrepMusic()" << endl)
+  LOG(DEBUG_MINOR, "Sound::PrepMusic(" << path << ")" << endl)
   #ifdef LINUX
     music = Mix_LoadMUS(path.c_str());
     ready = music != NULL;
@@ -158,7 +158,7 @@ void Sound::StartMusic()
   if (initialised && ready)
   {
     #ifdef LINUX
-      Mix_PlayMusic(music,0);
+        Mix_PlayMusic(music, 0);
     #endif
     #ifdef WII
       MP3Player_PlayBuffer(mp3Buffer, mp3LSize, NULL);
@@ -191,6 +191,7 @@ bool Sound::MusicFinished()
   #ifdef LINUX
   if(!Mix_PlayingMusic())
   {
+    LOG(DEBUG_MINOR, "Sound::MusicFinished() (Linux) detected !Mix_PlayingMusic()" << endl)
     if (music)
     {
       Mix_FreeMusic(music);

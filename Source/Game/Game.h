@@ -18,8 +18,8 @@
 //      MA 02110-1301, USA.
 
 #define GAMESTRING "DanceClone"
-#define GAMEVERSION "v0.66"
-#define GAMEVERSIONSTRING "DanceClone v0.66"
+#define GAMEVERSION "v0.67"
+#define GAMEVERSIONSTRING "DanceClone v0.67"
 
 
 #include <string>
@@ -100,8 +100,7 @@ private:
   map<string, Song> songs;
   string currentSong; // map key
   vector<SongMenuItem> songMenuItems;
-  
-  long preStartTime;
+
   int currentBpmChange;
   int numBpmChanges;
   long currentMeasure;
@@ -143,12 +142,15 @@ public:
   void RunPlayPrep();
   void RunPlay();
   void RunPlayCleanup();
-  bool PreStartDelayFinished();
   void RunScoreScreen();
   bool CheckAbort();
   void InitialFrame();
   void Frame();
   void PartialFrame(long begin, long end);
+  void DrawHomeArrows(Player& p);
+  void DrawEnergyBar(Player& p);
+  void DrawDecals(Player& p);
+  void DrawArrows(Player& p);
   void RateArrows(Player& p);
   bool CanInterrupt();
 };

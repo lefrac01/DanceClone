@@ -115,6 +115,8 @@ all:
 clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
+	@rm debug
+	@rm dance_night
 
 #---------------------------------------------------------------------------------
 run:

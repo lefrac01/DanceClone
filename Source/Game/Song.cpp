@@ -790,12 +790,11 @@ bool Song::Prepare()
   long lastArrowTime = 0;
   for (int d = 0; d < constants.numDifficulties; ++d)
   {
-    long currentMs = beat0Offset;
+    long currentMs = beat0Offset - constants.preStartDelay;
     map<float, vector<int> > holdArrowsToFill;
     int currentBpmChange = 0;
     float pixelsPerMsAtCurrentBpm = constants.pixelsPerMsAt1Bpm * bpmChanges[0].bpm;
     long viewportOffset = beat0Offset * pixelsPerMsAtCurrentBpm;
-    //long viewportOffset = - ((constants.songStartOffset) * pixelsPerMsAtCurrentBpm);
     LOG(DEBUG_DETAIL, "song prerender phase, song " << filename << " init vp to " << viewportOffset << endl)  
     
     float pixelsLeftToScroll = 0.0;
