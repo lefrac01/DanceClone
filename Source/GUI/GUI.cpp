@@ -45,8 +45,8 @@ bool GUI::Init()
     return false;
   }
   
-  cursorRenderXOffset = - gfx.cursorFrames[0].w;
-  cursorRenderYOffset = - gfx.cursorFrames[0].h;
+  cursorRenderXOffset = - gfx.cursorFrames[0].w/2;
+  cursorRenderYOffset = - gfx.cursorFrames[0].h/2;
   cursorRenderZoom = sys.vid.ScreenWidth() / (float)(sys.vid.ScreenWidth() + cursorRenderXOffset);
 
   fonts[Element::DefaultFont]  = "Media/Gui/Hall Fetica.ttf";
@@ -155,12 +155,12 @@ void GUI::Render(Container &c)
     Render(innerc);
   }
 
-  // urk.  putting this in input loop causes slowdown during game run
-  // without it, dance mats are reported as active/inactive in a flickering fashion
-  // and inputs count twice.
-  #ifdef WII
-  VIDEO_WaitVSync();
-  #endif
+  //#// urk.  putting this in input loop causes slowdown during game run
+  //#// without it, dance mats are reported as active/inactive in a flickering fashion
+  //#// and inputs count twice.
+  //##ifdef WII
+  //#VIDEO_WaitVSync();
+  //##endif
 }
 
 void GUI::Cleanup()

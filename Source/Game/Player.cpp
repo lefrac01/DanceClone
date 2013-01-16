@@ -32,13 +32,18 @@ inputs(ic)
 Player& Player::operator= (const Player& b)
 {
   playerNumber = b.playerNumber;
+  inputs = b.inputs;
   active = b.active;
   ready = b.ready;
-  inputs = b.inputs;
+  directionDownTime = b.directionDownTime;
+  directionJumpActive = b.directionJumpActive;
   difficulty = b.difficulty;
   recordFileNumber = b.recordFileNumber;
   arrows = b.arrows;
+  baseArrow = b.baseArrow;
+  baseAssistTickArrow = b.baseAssistTickArrow;
   numArrows = b.numArrows;
+  nextOffscreenArrow = b.nextOffscreenArrow;
   longestCombo = b.longestCombo;
   combo = b.combo;
   firstVisibleArrow = b.firstVisibleArrow;
@@ -49,7 +54,8 @@ Player& Player::operator= (const Player& b)
   energyFailTime = b.energyFailTime;
   return *this;
 }
-  
+
+
 void Player::Init(int n)
 {
   LOG(DEBUG_MINOR, "DanceClone::Player::Init()" << endl)
@@ -59,7 +65,8 @@ void Player::Init(int n)
   difficulty = -1;
   recordFileNumber = -1;
   arrowFieldXOffset = -1;
-  energyDifficultyFactor = 1.0;
+  energyDifficultyFactor = 0.05;  // TEMP FOR TESTING
+  //#energyDifficultyFactor = 1.0;
 }
 
 void Player::Prepare()
@@ -67,6 +74,7 @@ void Player::Prepare()
   arrows.clear();
   numArrows = 0;
   baseArrow = 0;
+  baseAssistTickArrow = 0;
   longestCombo = 0;
   combo = 0;
   nextOffscreenArrow = -1;

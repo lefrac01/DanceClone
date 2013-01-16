@@ -1,5 +1,15 @@
 changelog
 --
+v0.68
+-fix combo decals flickering in multiplayer
+-fix cursor not rendering exactly at hardware cursor location
+-attempt to fine-tune song synchronisation (not quite perfect)
+-attempt assist tick but give up due to sync problems.
+-attempt anti-aliasing of vertical scroll, no visible result
+-fix more than one arrow being rated with one step
+-fix support beat changes on a non-integral beat.  
+-change graphic resources now use colorkey instead of alpha channel
+
 v0.67
 -improve song pre-delay so arrows start off-screen
 -fix gameplay slowdown on Wii

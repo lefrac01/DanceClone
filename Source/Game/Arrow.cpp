@@ -33,7 +33,7 @@ Arrow::Arrow(int d, float b, int ty) :
   rating(RATING_NONE),
   freezeRating(FREEZE_NONE),
   hidden(false),
-  animStartTime(-1)
+  animStartTime(0)
 {
   LOG(DEBUG_GUTS, "DanceClone::Arrow dear god you made me with a float beat! : " << beat << endl)
 }

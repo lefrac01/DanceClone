@@ -55,6 +55,7 @@ public:
     DifficultyCursor,
     HomeArrows,
     QuarterArrows,
+    //QuarterArrows_0_5,
     EighthArrows,
     QuarterTripletArrows,
     SixteenthArrows,
@@ -77,7 +78,8 @@ public:
 private:
 
   OS& sys;
-  void ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* dest_frames, int src_cols);
+  void ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* dest_frames, int src_cols, bool colourKeyAlpha);
+  //SDL_Surface* SetupAntialiasedArrows(SDL_Surface* src);
   void SetArrowFrame(SDL_Rect* dest, int index, int x, int y, int w, int h);
   Graphics();
   

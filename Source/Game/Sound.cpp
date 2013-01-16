@@ -42,7 +42,7 @@ bool Sound::Init()
   
   #ifdef LINUX
   music = NULL;
-  Mix_OpenAudio(0,0,0,0);
+  Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 2048);
   #endif
   #ifdef WII
   mp3Buffer = NULL;
@@ -118,6 +118,7 @@ void Sound::Cleanup()
 void Sound::PrepMusic(string path)
 {
   LOG(DEBUG_MINOR, "Sound::PrepMusic(" << path << ")" << endl)
+unsigned long stick = SDL_GetTicks();      
   #ifdef LINUX
     music = Mix_LoadMUS(path.c_str());
     ready = music != NULL;
@@ -150,6 +151,8 @@ void Sound::PrepMusic(string path)
     music = Mix_LoadMUS(path.c_str());
     ready = music != NULL;
   #endif
+LOG(DEBUG_BASIC, "PrepMusic() took " << SDL_GetTicks()-stick << endl)
+ 
 }
 
 void Sound::StartMusic()
@@ -157,17 +160,21 @@ void Sound::StartMusic()
   LOG(DEBUG_MINOR, "Sound::StartMusic()" << endl)
   if (initialised && ready)
   {
+unsigned long stick = SDL_GetTicks();      
     #ifdef LINUX
         Mix_PlayMusic(music, 0);
+while (!Mix_PlayingMusic()); // wait for music to start
     #endif
     #ifdef WII
       MP3Player_PlayBuffer(mp3Buffer, mp3LSize, NULL);
+while (!MP3Player_IsPlaying()); // wait for music to start
       free(mp3Buffer);
       mp3Buffer = NULL;
     #endif
     #ifdef WIN
       Mix_PlayMusic(music,0);
     #endif
+LOG(DEBUG_BASIC, "StartMusic() took " << SDL_GetTicks()-stick << endl)
   }
 }
 

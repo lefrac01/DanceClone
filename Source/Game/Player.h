@@ -50,6 +50,7 @@ public:
   int recordFileNumber;
   vector<Arrow> arrows;
   int baseArrow;
+  int baseAssistTickArrow;
   int numArrows;
   int nextOffscreenArrow; 
   int longestCombo;

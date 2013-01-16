@@ -3,11 +3,24 @@
 #---------------------------------------------------------------------------------
 .SUFFIXES:
 #---------------------------------------------------------------------------------
-ifeq ($(strip $(DEVKITPPC)),)
-$(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPPC")
-endif
+#ifeq ($(strip $(DEVKITPPC)),)
+#$(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPPC")
+#endif
 
-include $(DEVKITPPC)/wii_rules
+
+export CC	:=	gcc
+export CXX	:=	g++
+
+#---------------------------------------------------------------------------------
+%.o: %.cpp
+	@echo $(notdir $<)
+	@$(CXX) -MMD -MP -MF $(DEPSDIR)/$*.d $(CXXFLAGS) -c $< -o $@ $(ERROR_FILTER)
+	
+#---------------------------------------------------------------------------------
+%.o: %.c
+	@echo $(notdir $<)
+	@$(CC) -MMD -MP -MF $(DEPSDIR)/$*.d $(CFLAGS) -c $< -o $@ $(ERROR_FILTER)
+
 
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
@@ -15,9 +28,9 @@ include $(DEVKITPPC)/wii_rules
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-TARGET		:=	boot
+TARGET		:=	dance_night
 BUILD		:=	build
-SOURCES		:=	Source Source/Game Source/Platform Source/GUI Source/Dash Source/Platform/Wii
+SOURCES		:=	Source Source/Game Source/Platform Source/GUI Source/Dash Source/Platform/Linux
 DATA		:=	data  
 INCLUDES	:=	
 
@@ -26,18 +39,25 @@ INCLUDES	:=
 #---------------------------------------------------------------------------------
 
 # -mepsilon should go here, but is giving an error ???  (floating point comparison)
-CFLAGS	= -g -O3 -Wall $(MACHDEP) $(INCLUDE)		
-#CFLAGS	= -g -Wall $(MACHDEP) $(INCLUDE)	#disable opts when addr2line is needed
+#RELEASE
+#CFLAGS	= -O2 -Wall $(INCLUDE)
+
+#debug
+CFLAGS	= -g -O1 -Wall $(INCLUDE)
 CXXFLAGS	=	$(CFLAGS)
 
-LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
+LDFLAGS	=	-g -Wl,-Map,$(notdir $@).map
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
+#LIBS	:=	-lSDL_net -lSDL_ttf -lSDL_gfx -lSDL_mixer -lSDL_image -lSDL \
+#                -ljpeg -lpng -lfreetype -lvorbisidec \
+#                -lz -lasnd -lm -lmad -lfat -lwiiuse -lbte -logc -lm -lwiikeyboard
+
 LIBS	:=	-lSDL_net -lSDL_ttf -lSDL_gfx -lSDL_mixer -lSDL_image -lSDL \
-                -ljpeg -lpng -lfreetype -lvorbisidec \
-                -lz -lasnd -lm -lmad -lfat -lwiiuse -lbte -logc -lm -lwiikeyboard
+                -ljpeg -lpng -lfreetype \
+                -lz -lm 
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -84,27 +104,31 @@ export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
 #---------------------------------------------------------------------------------
 # build a list of include paths
 #---------------------------------------------------------------------------------
+#export INCLUDE	:=	$(foreach dir,$(INCLUDES), -iquote $(CURDIR)/$(dir)) \
+#					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+#					-I$(CURDIR)/$(BUILD) \
+#					-I$(BOOST_INC)
 export INCLUDE	:=	$(foreach dir,$(INCLUDES), $(CURDIR)/$(dir)) \
 					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 					-I$(CURDIR)/$(BUILD) \
-					-I$(LIBOGC_INC) \
-					-I$(LIBOGC_INC)/SDL \
-					-I /usr/local/boost_1_49_0 \
-					-I ../SDL_svn/SDL/include/ 
+					-I$(BOOST_INC) \
+					-I$(SDL_INC)
+
 					
 #---------------------------------------------------------------------------------
 # build a list of library paths
 #---------------------------------------------------------------------------------
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
-					-L$(LIBOGC_LIB)
+				-L/usr/lib/
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 .PHONY: $(BUILD) clean
 
 #---------------------------------------------------------------------------------
 $(BUILD):
-#	@echo CPPFILES: $(CPPFILES) found in source dirs: $(SOURCES)
-#	@echo INCLUDE: $(INCLUDE)
+	@echo CPPFILES: $(CPPFILES) found in source dirs: $(SOURCES)
+	@echo INCLUDES: $(INCLUDE)
+	@echo OFILES: $(OFILES)
 	@[ -d $@ ] || mkdir -p $@
 	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
@@ -114,13 +138,8 @@ all:
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
+	@rm -fr $(BUILD) $(OUTPUT)
 	@rm debug
-	@rm dance_night
-
-#---------------------------------------------------------------------------------
-run:
-	wiiload $(TARGET).dol
 
 
 #---------------------------------------------------------------------------------
@@ -131,16 +150,17 @@ DEPENDS	:=	$(OFILES:.o=.d)
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-$(OUTPUT).dol: $(OUTPUT).elf
-$(OUTPUT).elf: $(OFILES)
+#$(OUTPUT): main.o
+#main.o: main.cpp
 
-#---------------------------------------------------------------------------------
-# This rule links in binary data with the .jpg extension
-#---------------------------------------------------------------------------------
-%.jpg.o	:	%.jpg
-#---------------------------------------------------------------------------------
-	@echo $(notdir $<)
-	$(bin2o)
+$(OUTPUT): $(OFILES)
+	@echo linking ... $(notdir $@)
+	@echo LDFLAGS: $(LDFLAGS)
+	@echo LIBPATHS: $(LIBPATHS)
+	@echo LIBS: $(LIBS)
+	@echo LD_LIBRARY_PATH: $(LD_LIBRARY_PATH)
+	@echo ld targets: $^
+	@$(LD)  $^ $(LDFLAGS) $(LIBPATHS) $(LIBS) -o $@
 
 -include $(DEPENDS)
 

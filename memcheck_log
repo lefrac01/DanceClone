@@ -1,0 +1,147 @@
+==12732== Memcheck, a memory error detector
+==12732== Copyright (C) 2002-2011, and GNU GPL'd, by Julian Seward et al.
+==12732== Using Valgrind-3.7.0 and LibVEX; rerun with -h for copyright info
+==12732== Command: ./dance_night
+==12732== 
+==12732== 
+==12732== HEAP SUMMARY:
+==12732==     in use at exit: 56,156 bytes in 551 blocks
+==12732==   total heap usage: 150,886 allocs, 150,335 frees, 609,151,515 bytes allocated
+==12732== 
+==12732== 1 bytes in 1 blocks are definitely lost in loss record 1 of 152
+==12732==    at 0x4C27B8A: malloc (vg_replace_malloc.c:263)
+==12732==    by 0x90847AB: _XlcDefaultMapModifiers (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x9084817: XSetLocaleModifiers (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x5908783: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x59093D3: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58FAC28: SDL_VideoInit (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D17EA: SDL_InitSubSystem (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D182E: SDL_Init (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58FA251: SDL_SetVideoMode (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x42F636: Platform::LinuxVideo::Init() (LinuxVideo.cpp:37)
+==12732==    by 0x423221: Platform::OS::Init() (OS.cpp:44)
+==12732==    by 0x42EE34: Platform::LinuxOS::Init() (LinuxOS.cpp:39)
+==12732== 
+==12732== 24 bytes in 2 blocks are definitely lost in loss record 16 of 152
+==12732==    at 0x4C27B8A: malloc (vg_replace_malloc.c:263)
+==12732==    by 0x908B60B: ??? (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x908B8D2: _XimSetICValueData (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x9094EB6: _XimLocalCreateIC (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x9074112: XCreateIC (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x5908453: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x59093D3: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58FAC28: SDL_VideoInit (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D17EA: SDL_InitSubSystem (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D182E: SDL_Init (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58FA251: SDL_SetVideoMode (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x42F636: Platform::LinuxVideo::Init() (LinuxVideo.cpp:37)
+==12732== 
+==12732== 124 bytes in 1 blocks are definitely lost in loss record 113 of 152
+==12732==    at 0x4C27B8A: malloc (vg_replace_malloc.c:263)
+==12732==    by 0xA043809: ??? (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0xA0438D5: ??? (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0xA0432BD: xcb_connect_to_display_with_auth_info (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0x9065CA9: _XConnectXCB (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x9055A7A: XOpenDisplay (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x59091EB: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58FAC28: SDL_VideoInit (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D17EA: SDL_InitSubSystem (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D182E: SDL_Init (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58FA251: SDL_SetVideoMode (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x42F636: Platform::LinuxVideo::Init() (LinuxVideo.cpp:37)
+==12732== 
+==12732== 124 bytes in 1 blocks are definitely lost in loss record 114 of 152
+==12732==    at 0x4C27B8A: malloc (vg_replace_malloc.c:263)
+==12732==    by 0xA043809: ??? (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0xA0438D5: ??? (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0xA0432BD: xcb_connect_to_display_with_auth_info (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0x9065CA9: _XConnectXCB (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x9055A7A: XOpenDisplay (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x5907F46: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58FACEB: SDL_VideoInit (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D17EA: SDL_InitSubSystem (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D182E: SDL_Init (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58FA251: SDL_SetVideoMode (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x42F636: Platform::LinuxVideo::Init() (LinuxVideo.cpp:37)
+==12732== 
+==12732== 124 bytes in 1 blocks are definitely lost in loss record 115 of 152
+==12732==    at 0x4C27B8A: malloc (vg_replace_malloc.c:263)
+==12732==    by 0xA043809: ??? (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0xA0438D5: ??? (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0xA0432BD: xcb_connect_to_display_with_auth_info (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0x9065CA9: _XConnectXCB (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x9055A7A: XOpenDisplay (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x59091CE: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58FAC28: SDL_VideoInit (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D17EA: SDL_InitSubSystem (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D182E: SDL_Init (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58FA251: SDL_SetVideoMode (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x42F636: Platform::LinuxVideo::Init() (LinuxVideo.cpp:37)
+==12732== 
+==12732== 124 bytes in 1 blocks are definitely lost in loss record 116 of 152
+==12732==    at 0x4C27B8A: malloc (vg_replace_malloc.c:263)
+==12732==    by 0xA043809: ??? (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0xA0438D5: ??? (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0xA0432BD: xcb_connect_to_display_with_auth_info (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0x9065CA9: _XConnectXCB (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x9055A7A: XOpenDisplay (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x7EE6DA7: ??? (in /usr/lib/libpulse.so.0.12.2)
+==12732==    by 0x7EC3690: pa_context_new_with_proplist (in /usr/lib/libpulse.so.0.12.2)
+==12732==    by 0x7CB259F: pa_simple_new (in /usr/lib/libpulse-simple.so.0.0.3)
+==12732==    by 0x58FF223: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D2843: SDL_AudioInit (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D176C: SDL_InitSubSystem (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732== 
+==12732== 124 bytes in 1 blocks are definitely lost in loss record 117 of 152
+==12732==    at 0x4C27B8A: malloc (vg_replace_malloc.c:263)
+==12732==    by 0xA043809: ??? (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0xA0438D5: ??? (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0xA0432BD: xcb_connect_to_display_with_auth_info (in /usr/lib/libxcb.so.1.1.0)
+==12732==    by 0x9065CA9: _XConnectXCB (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x9055A7A: XOpenDisplay (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x7EE6DA7: ??? (in /usr/lib/libpulse.so.0.12.2)
+==12732==    by 0x7EC3690: pa_context_new_with_proplist (in /usr/lib/libpulse.so.0.12.2)
+==12732==    by 0x58FEF50: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58D2303: SDL_OpenAudio (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x545CCBE: Mix_OpenAudio (in /usr/lib/libSDL_mixer-1.2.so.0.2.6)
+==12732==    by 0x4225DE: DanceClone::Sound::Init() (Sound.cpp:45)
+==12732== 
+==12732== 192 (16 direct, 176 indirect) bytes in 1 blocks are definitely lost in loss record 125 of 152
+==12732==    at 0x4C27C82: realloc (vg_replace_malloc.c:632)
+==12732==    by 0x9079E62: ??? (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x907A819: ??? (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x907BB22: ??? (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x907C265: _XlcCreateLC (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x909B12F: _XlcDefaultLoader (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x9084142: _XOpenLC (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x9084227: _XlcCurrentLC (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x90847ED: XSetLocaleModifiers (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x5908733: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x59093D3: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58FAC28: SDL_VideoInit (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732== 
+==12732== 1,688 (136 direct, 1,552 indirect) bytes in 1 blocks are definitely lost in loss record 144 of 152
+==12732==    at 0x4C27C82: realloc (vg_replace_malloc.c:632)
+==12732==    by 0x9079E62: ??? (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x907A819: ??? (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x907BB22: ??? (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x907C265: _XlcCreateLC (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x909F2DF: _XlcUtf8Loader (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x9084142: _XOpenLC (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x9084227: _XlcCurrentLC (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x90847ED: XSetLocaleModifiers (in /usr/lib/libX11.so.6.3.0)
+==12732==    by 0x5908783: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x59093D3: ??? (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732==    by 0x58FAC28: SDL_VideoInit (in /usr/lib/libSDL-1.2.so.0.11.3)
+==12732== 
+==12732== LEAK SUMMARY:
+==12732==    definitely lost: 797 bytes in 10 blocks
+==12732==    indirectly lost: 1,728 bytes in 38 blocks
+==12732==      possibly lost: 0 bytes in 0 blocks
+==12732==    still reachable: 53,631 bytes in 503 blocks
+==12732==         suppressed: 0 bytes in 0 blocks
+==12732== Reachable blocks (those to which a pointer was found) are not shown.
+==12732== To see them, rerun with: --leak-check=full --show-reachable=yes
+==12732== 
+==12732== For counts of detected and suppressed errors, rerun with: -v
+==12732== ERROR SUMMARY: 9 errors from 9 contexts (suppressed: 20 from 4)

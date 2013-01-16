@@ -72,7 +72,7 @@ public:
   long time;
   long yPos;
   float beatLength;
-  long length;
+  int length;
   int type; // for drawing based on note value
   Rating rating;
   FreezeRating freezeRating;

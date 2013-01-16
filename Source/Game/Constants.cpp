@@ -32,7 +32,18 @@ void Constants::Init(string ConfigFilePath)
   LOG(DEBUG_MINOR, "DanceClone::Constants::Init()" << endl)
   arrowsHitAnimMs = 300.0;
   numDifficulties = 5;
-  songStartOffset = 105;
+  #ifdef WII
+  //internalMp3BufferDelay = (int)(32768.0 / 4.0 / 48000.0 * 1000.0);  // 170.666666667
+  //                       msdelay   =   buf size / 192
+  internalMp3BufferDelay = 109;     // experimentally obtained
+  internalWavBufferDelay = (int)(32768.0 / 4.0 / 48000.0 * 1000.0);  // 170.666666667
+  internalWavBufferDelay = 109;     // experimentally obtained
+  #endif
+  #ifdef LINUX
+  //internalMp3BufferDelay = (int)(32768.0 / 4.0 / 44100.0 * 1000.0);
+  internalMp3BufferDelay = 200;     // experimentally obtained
+  internalWavBufferDelay = 200;
+  #endif
   homeArrowAnimDelay = 160;
   
   goalOffset = 0;
@@ -41,7 +52,7 @@ void Constants::Init(string ConfigFilePath)
   playerArrowFieldMargin = 20;
   
   preStartDelay = 3000;
-  songStartAllow = 5; // a small delay to allow music subsystem time to start before checking for end of playback
+  songStartAllow = 20; // a small delay to allow music subsystem time to start before checking for end of playback
   songAbortDelay = 2000;
   jumpAllowDelay = 80;
   booDelay = 250;

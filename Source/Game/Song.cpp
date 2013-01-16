@@ -368,7 +368,7 @@ bool Song::ReadBaseData()
   string bannerTag = "#BANNER:";
   string backgoundTag = "#BACKGROUND:";
   string bpmTag = "#BPMS:";
-  long bpmLine = -1;
+  int bpmLine = -1;
   bool bpmsOk = false;
   string offsetTag = "#OFFSET:";
   bool foundOffset = false;
@@ -574,7 +574,7 @@ bool Song::Prepare()
         
         noteLineIndex = currentLine + 1;
         
-        long currentMeasure = 0;
+        int currentMeasure = 0;
         difficultyAvailable[currentDifficulty] = true;
         
         // find first line of note data
@@ -613,7 +613,7 @@ bool Song::Prepare()
             
             // process each line of measure data, adding arrows to
             // song data at current difficulty
-            long currentBeat = 0;
+            int currentBeat = 0;
             float currentBeatFraction = 0.0;
             measureLineIndex = noteLineIndex;
             while (measureLineIndex < stepFileLines.size() && stepFileLines[measureLineIndex].find_first_of(";,") == string::npos)
@@ -784,27 +784,27 @@ bool Song::Prepare()
   }
   
   // pre-render song using the same calculations as those used during actual
-  // render.  increment a millisecond counter since during render the precision
-  // is at best to the millisecond.  calculate current time and y position of
-  // each arrow as the current beat reaches it
-  long lastArrowTime = 0;
+  // render.  increment a millisecond counter to simulate time passing since
+  // during render the precision is at best to the millisecond.  calculate
+  // current time and y position of each arrow as the current beat reaches it
+  unsigned long lastArrowTime = 0;
   for (int d = 0; d < constants.numDifficulties; ++d)
   {
-    long currentMs = beat0Offset - constants.preStartDelay;
+    unsigned long currentMs = beat0Offset;
     map<float, vector<int> > holdArrowsToFill;
     int currentBpmChange = 0;
     float pixelsPerMsAtCurrentBpm = constants.pixelsPerMsAt1Bpm * bpmChanges[0].bpm;
     long viewportOffset = beat0Offset * pixelsPerMsAtCurrentBpm;
+LOG(DEBUG_BASIC, "Song prerender: viewport starts at" << viewportOffset << endl)    
     LOG(DEBUG_DETAIL, "song prerender phase, song " << filename << " init vp to " << viewportOffset << endl)  
     
     float pixelsLeftToScroll = 0.0;
     unsigned int baseArrow = 0;
-    long currentMeasure = 0;
+    int currentMeasure = 0;
     int currentBeat = 0;
     float currentBeatFraction = 0.0;
-    float partialBeatFraction = 0.0;
-    long lastBeatTime = beat0Offset;
-    long beatTimeElapsedAtPreviousBPMs = 0;
+    float lastBeatTime = beat0Offset;
+    float beatTimeElapsedAtPreviousBPMs = 0;
     float beatFractionAtPreviousBPMs = 0.0;
 
     LOG(DEBUG_DETAIL, "SONG::looping through " << arrows[d].size() << " arrows " << endl)
@@ -813,8 +813,8 @@ bool Song::Prepare()
     LOG(DEBUG_DETAIL, "starting iter at currentMs = " << currentMs << " with pixels per = " << pixelsPerMsAtCurrentBpm << endl)  
     while (baseArrow < arrows[d].size() || holdArrowsToFill.size() > 0)
     {
-      long partialFrameTimeBegin = currentMs - 1;
-      long frameTimeEnd = currentMs;
+      float partialFrameTimeBegin = currentMs - 1;
+      unsigned long frameTimeEnd = currentMs;
       int frameEndBpmChange = currentBpmChange;
       while ( frameEndBpmChange+1 < (int)bpmChanges.size() 
         && bpmChanges[frameEndBpmChange+1].timestamp <= frameTimeEnd)
@@ -823,26 +823,26 @@ bool Song::Prepare()
 
         ++frameEndBpmChange;
 
-        long partialFrameTimeEnd = bpmChanges[frameEndBpmChange].timestamp;
+        float partialFrameTimeEnd = bpmChanges[frameEndBpmChange].timestamp;
         
         // process viewport scroll
         float pixelsToScroll = (partialFrameTimeEnd - partialFrameTimeBegin) * pixelsPerMsAtCurrentBpm;
         pixelsToScroll += pixelsLeftToScroll;  
-        long wholePixelsToScroll = (long)pixelsToScroll;
+        int wholePixelsToScroll = (int)pixelsToScroll;
         pixelsLeftToScroll = pixelsToScroll - wholePixelsToScroll;
         viewportOffset += wholePixelsToScroll;
         LOG(DEBUG_GUTS, "bpm change vp offset += " << wholePixelsToScroll << "because pfte (" << partialFrameTimeEnd << ") - pftb(" << partialFrameTimeBegin<<") " << endl)  
         
-        long timeElapsedAtCurrentBPM = partialFrameTimeEnd - lastBeatTime - beatTimeElapsedAtPreviousBPMs;
-        currentBeatFraction = partialBeatFraction + (timeElapsedAtCurrentBPM / Song::MsPerBeatFromBPM(bpmChanges[currentBpmChange].bpm) + beatFractionAtPreviousBPMs);
+        float timeElapsedAtCurrentBPM = partialFrameTimeEnd - lastBeatTime - beatTimeElapsedAtPreviousBPMs;
+        currentBeatFraction =  beatFractionAtPreviousBPMs + (timeElapsedAtCurrentBPM / Song::MsPerBeatFromBPM(bpmChanges[currentBpmChange].bpm));
         LOG(DEBUG_DETAIL, "SONG oh 1  at time " << currentMs << " currentBeatFraction:" << currentBeatFraction << " timeElapsedAtCurrentBPM: " << timeElapsedAtCurrentBPM << endl)
-        if ((currentBeatFraction + 0.00001) > 1)
+        if (currentBeatFraction >= 1.0)
         {
           LOG(DEBUG_DETAIL, "SONG::beat fraction wrap during partial frame" << endl)
           ++currentBeat;
-          partialBeatFraction = currentBeatFraction - 1.0;
           currentBeatFraction -= 1.0;
-          lastBeatTime = partialFrameTimeEnd;
+          lastBeatTime = partialFrameTimeEnd - (currentBeatFraction * MsPerBeatFromBPM(bpmChanges[currentBpmChange].bpm));
+          
           beatTimeElapsedAtPreviousBPMs = 0;
           beatFractionAtPreviousBPMs = 0.0;
           if (currentBeat >= 4)
@@ -852,7 +852,7 @@ bool Song::Prepare()
           }
         }
 
-        beatTimeElapsedAtPreviousBPMs += partialFrameTimeEnd - lastBeatTime - beatTimeElapsedAtPreviousBPMs;
+        beatTimeElapsedAtPreviousBPMs += bpmChanges[frameEndBpmChange].timestamp - lastBeatTime - beatTimeElapsedAtPreviousBPMs;
         beatFractionAtPreviousBPMs = currentBeatFraction;
 
         // update variables needed to calculate next partial
@@ -873,20 +873,20 @@ bool Song::Prepare()
       float pixelsToScroll = (frameTimeEnd - partialFrameTimeBegin) * pixelsPerMsAtCurrentBpm;
       // add partial pixels left from last scroll's truncation
       pixelsToScroll += pixelsLeftToScroll;  
-      long wholePixelsToScroll = (long)pixelsToScroll;
+      int wholePixelsToScroll = (int)pixelsToScroll;
       pixelsLeftToScroll = pixelsToScroll - wholePixelsToScroll;
       viewportOffset += wholePixelsToScroll;
       LOG(DEBUG_GUTS, "reg vp offset += " << wholePixelsToScroll << "because fte (" << frameTimeEnd << ") - pftb(" << partialFrameTimeBegin<<") " << endl)  
       
-      long timeElapsedAtCurrentBPM = frameTimeEnd - lastBeatTime - beatTimeElapsedAtPreviousBPMs;
-      currentBeatFraction = partialBeatFraction + (timeElapsedAtCurrentBPM / Song::MsPerBeatFromBPM(bpmChanges[currentBpmChange].bpm) + beatFractionAtPreviousBPMs);
-      if ((currentBeatFraction + 0.00001) > 1)
+      float timeElapsedAtCurrentBPM = frameTimeEnd - lastBeatTime - beatTimeElapsedAtPreviousBPMs;
+      currentBeatFraction = beatFractionAtPreviousBPMs + (timeElapsedAtCurrentBPM / Song::MsPerBeatFromBPM(bpmChanges[currentBpmChange].bpm));
+      if (currentBeatFraction >= 1.0)
       {
         LOG(DEBUG_DETAIL, "SONG::beat fraction wrap during full frame" << endl)
         ++currentBeat;
-        partialBeatFraction = currentBeatFraction - 1.0;
         currentBeatFraction -= 1.0;
-        lastBeatTime = frameTimeEnd;
+        lastBeatTime = frameTimeEnd - (currentBeatFraction * MsPerBeatFromBPM(bpmChanges[currentBpmChange].bpm));
+
         beatTimeElapsedAtPreviousBPMs = 0;
         beatFractionAtPreviousBPMs = 0.0;
         if (currentBeat >= 4)
@@ -938,7 +938,7 @@ bool Song::Prepare()
     }
   }
   
-  //NOTE: this is not the real length!  only from beat0 to the start of the last arrow,
+  //NOTE: this is not the real length!  only from beat0-preStartDelay to the start of the last arrow,
   // but good enough for the groove radar calculations.  any calculations depending on
   // a real value should get a better value than this.
   length = (lastArrowTime - beat0Offset) / 1000.0;
@@ -966,9 +966,9 @@ bool Song::Prepare()
       radarValues[d][Stream] = arrows[d].size() / (float)length / 7.0;
       LOG(DEBUG_DETAIL, "radarValues[" << d << "][Stream] = " << radarValues[d][Stream] << " from formula arrows[d].size(): " << arrows[d].size() << " / length: " << length << " / 7.0 " << endl)
     
-      long numJumps = 0;
-      long numHolds = 0;
-      long numChaotic = 0;
+      int numJumps = 0;
+      int numHolds = 0;
+      int numChaotic = 0;
       long lastArrowTime = -1;
       bool inJump = false;
       for (unsigned int j = 0; j < arrows[d].size(); ++j)

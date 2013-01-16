@@ -79,6 +79,14 @@ bool Graphics::Init(string configFilePath)
   //TODO: fix hard-coded constants
   images[DefaultBg] = sys.vid.LoadOptimize(backgroundImagePath.c_str());
   if (!images[DefaultBg]) LOG(DEBUG_BASIC, "failed to load \"" << backgroundImagePath << "\"" << endl)
+if(images[DefaultBg] && (images[DefaultBg]->flags & SDL_HWSURFACE) == SDL_HWSURFACE)
+{
+  LOG(DEBUG_BASIC, "created images[DefaultBg] from " << backgroundImagePath << ".  it is a HW surface" << endl)
+}
+else
+{
+  LOG(DEBUG_BASIC, "created images[DefaultBg] from " << backgroundImagePath << ".  it is a sw surface" << endl)
+}
 
   images[SongSelectBg] = sys.vid.LoadOptimize(songSelectBackgroundImagePath.c_str());
   if (!images[SongSelectBg]) LOG(DEBUG_BASIC, "failed to load \"" << songSelectBackgroundImagePath << "\"" << endl)
@@ -147,55 +155,63 @@ bool Graphics::Init(string configFilePath)
     }
   }
 
-  
-  // expand source PNGs creating other arrow directions
-  //optimistically using SDL_HWSURFACE but not all these can fit into the hardware memory ;)
-  //http://en.wikipedia.org/wiki/Wii states 3MB framebuffer of which 1.2 is used per screen + dbl buffering... not leaving much
-  images[HomeArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 384, 384, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/home_arrows.png", images[HomeArrows], homeArrowsFrames, 6);
-
-  images[QuarterArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/04thnote.png", images[QuarterArrows], arrowsFrames, 4);
-
-  images[EighthArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/08thnote.png", images[EighthArrows], arrowsFrames, 4);
-
-  images[QuarterTripletArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/12thnote.png", images[QuarterTripletArrows], arrowsFrames, 4);
-
-  images[SixteenthArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/16thnote.png", images[SixteenthArrows], arrowsFrames, 4);
-
-  images[EighthTripletArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/24thnote.png", images[EighthTripletArrows], arrowsFrames, 4);
-
-  images[ThirtysecondArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/32ndnote.png", images[ThirtysecondArrows], arrowsFrames, 4);
-
-  images[SixteenthTripletArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/48thnote.png", images[SixteenthTripletArrows], arrowsFrames, 4);
-
-  images[SixtyfourthArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/64thnote.png", images[SixtyfourthArrows], arrowsFrames, 4);
-
-  //NOTE: same graphic used for 96th and 192nd notes
-  images[SixtyfourthTripletArrows] = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/192ndnote.png", images[SixtyfourthTripletArrows], arrowsFrames, 4);
+  try
+  {
+    // expand source PNGs creating other arrow directions
+    //optimistically using SDL_HWSURFACE but not all these can fit into the hardware memory ;)
+    //http://en.wikipedia.org/wiki/Wii states 3MB framebuffer of which 1.2 is used per screen + dbl buffering... not leaving much
+    images[HomeArrows] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 384, 384, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/home_arrows.png", images[HomeArrows], homeArrowsFrames, 6, false);
 
 
-  // hit animations, 1 row 8 col source to 8 row 8 col dest
-  images[MarvellousHit] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/marvelloushit.png", images[MarvellousHit], arrowsHitFrames, 8);
+    images[QuarterArrows] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCCOLORKEY, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/04thnote.png", images[QuarterArrows], arrowsFrames, 4, true);
 
-  images[PerfectHit] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/perfecthit.png", images[PerfectHit], arrowsHitFrames, 8);
+//    images[QuarterArrows_0_5] = SetupAntialiasedArrows(images[QuarterArrows]);
 
-  images[GreatHit] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/greathit.png", images[GreatHit], arrowsHitFrames, 8);
+    images[EighthArrows] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCCOLORKEY, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/08thnote.png", images[EighthArrows], arrowsFrames, 4, true);
 
-  images[GoodHit] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
-  ExpandArrows("Media/Game/goodhit.png", images[GoodHit], arrowsHitFrames, 8);
+    images[QuarterTripletArrows] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCCOLORKEY, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/12thnote.png", images[QuarterTripletArrows], arrowsFrames, 4, true);
 
+    images[SixteenthArrows] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCCOLORKEY, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/16thnote.png", images[SixteenthArrows], arrowsFrames, 4, true);
+
+    images[EighthTripletArrows] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCCOLORKEY, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/24thnote.png", images[EighthTripletArrows], arrowsFrames, 4, true);
+
+    images[ThirtysecondArrows] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCCOLORKEY, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/32ndnote.png", images[ThirtysecondArrows], arrowsFrames, 4, true);
+
+    images[SixteenthTripletArrows] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCCOLORKEY, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/48thnote.png", images[SixteenthTripletArrows], arrowsFrames, 4, true);
+
+    images[SixtyfourthArrows] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCCOLORKEY, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/64thnote.png", images[SixtyfourthArrows], arrowsFrames, 4, true);
+
+    //NOTE: same graphic used for 96th and 192nd notes
+    images[SixtyfourthTripletArrows] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCCOLORKEY, 256, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/192ndnote.png", images[SixtyfourthTripletArrows], arrowsFrames, 4, true);
+
+
+    // hit animations, 1 row 8 col source to 8 row 8 col dest
+    images[MarvellousHit] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/marvelloushit.png", images[MarvellousHit], arrowsHitFrames, 8, false);
+
+    images[PerfectHit] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/perfecthit.png", images[PerfectHit], arrowsHitFrames, 8, false);
+
+    images[GreatHit] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/greathit.png", images[GreatHit], arrowsHitFrames, 8, false);
+
+    images[GoodHit] = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCALPHA, 512, 256, 32, 0xff000000, 0x00ff0000, 0x0000ff00, SDL_ALPHA_OPAQUE);
+    ExpandArrows("Media/Game/goodhit.png", images[GoodHit], arrowsHitFrames, 8, false);
+  }
+  catch(string e)
+  {
+    LOG(DEBUG_BASIC, e << endl)
+  }
 
   // freeze arrow graphics do not use the same source layout nor are they animated
   string comboHitImagePath = "Media/Game/freezehit.png";
@@ -245,6 +261,7 @@ bool Graphics::Init(string configFilePath)
       break;
     }
   }
+  
   return !imageNull;
 }
 
@@ -262,7 +279,7 @@ void Graphics::SetArrowFrame(SDL_Rect* dest, int index, int x, int y, int w, int
 // 4 arrows pointing down,  64x64x32bit png each,
 // arranged horizontally in 256w x 64h rectangle, with each column
 // being an animation frame for one tick.  tick x = column x
-void Graphics::ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* dest_frames, int src_cols)
+void Graphics::ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* dest_frames, int src_cols, bool colourkeyAlpha)
 {
   int aw = arrowWidth;
   int ah = arrowHeight;
@@ -282,7 +299,7 @@ void Graphics::ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* des
     string exceptionDetail = "ExpandArrows() failed to load file \"";
     exceptionDetail += source_file;
     exceptionDetail += "\"";
-    throw exceptionDetail.c_str();
+    throw exceptionDetail;
   }
   // disable use of alpha channel in source surface since an ordinary opaque blit is wanted
   SDL_SetAlpha(temp_src, 0, SDL_ALPHA_OPAQUE);
@@ -335,7 +352,118 @@ void Graphics::ExpandArrows(string source_file, SDL_Surface* dest, SDL_Rect* des
   
   SDL_FreeSurface(temp_surface);
   SDL_FreeSurface(temp_src);
+
+  //#SDL_Surface* temp = dest;
+  //#dest = SDL_DisplayFormat(dest);
+  //#SDL_FreeSurface(temp);
+  if (colourkeyAlpha)
+  {
+    Uint32 colourkey = SDL_MapRGB(dest->format, 0xFF, 0x00, 0xFF);
+    SDL_SetColorKey(dest, SDL_SRCCOLORKEY, colourkey);
+    SDL_SetAlpha(dest, SDL_RLEACCEL, SDL_ALPHA_OPAQUE);
+  }
 }
+
+/*
+functions correctly but does not create a noticeable difference!
+
+SDL_Surface* Graphics::SetupAntialiasedArrows(SDL_Surface* src)
+{
+  // create a new surface whose contents are a copy of the 
+  // source surface shifted down a half-pixel.
+  
+  // 1)
+  // create a copy of the source surface using the display's format.
+  
+  // 2)
+  // iterate over each row of the copy starting at the bottom row.  for each
+  // pixel, replace it with a blend of the current value and the value in 
+  // the row above.  at each step, consider three cases of blending.  if no pixel has
+  // the colourkey colour, blend both pixels, if both have colourkey colour,
+  // write colourkey colour, if one has colourkey colour, blend the other
+  // with grey.
+  
+  // 3)
+  // fill top line of pixels in dest with colorkey colour.
+  
+  // 1)
+  SDL_Surface* temp = SDL_DisplayFormat(src);
+  
+  // 2)
+  Uint16* pBase = (Uint16*)temp->pixels;
+  Uint16* pCurr;
+  Uint16* pAbove;
+  Uint8 r;
+  Uint8 g;
+  Uint8 b;
+  Uint8 rAbove;
+  Uint8 gAbove;
+  Uint8 bAbove;
+  Uint32 colourkey = SDL_MapRGB(temp->format, 255, 0, 255);
+  bool isColourkey;
+  bool aboveIsColourkey;
+  
+  int h = temp->h;
+  int w = temp->w;
+  for (int y = h - 1; y > 0; --y)
+  {
+    pCurr = pBase + y*w;
+    pAbove = pBase + (y-1)*w;
+    for (int x = 0; x < w; ++x)
+    {
+      Uint32 color = *pCurr;
+      isColourkey = color == colourkey;
+      SDL_GetRGB(color, temp->format, &r, &g, &b);
+
+      Uint32 colorAbove = *pAbove;
+      aboveIsColourkey = colorAbove == colourkey;
+      SDL_GetRGB(colorAbove, temp->format, &rAbove, &gAbove, &bAbove);
+      
+      
+      if (isColourkey && aboveIsColourkey)
+      ;  // since it is already colourkey, leave it
+      else if (isColourkey && !aboveIsColourkey)
+      {
+        // result = above + grey
+        *pCurr = SDL_MapRGB(temp->format, (rAbove+128)/2, 
+                                          (gAbove+128)/2, 
+                                          (bAbove+128)/2);
+      }
+      else if (!isColourkey && aboveIsColourkey)
+      {
+        // result = current + grey
+        *pCurr = SDL_MapRGB(temp->format, (r+128)/2, 
+                                          (g+128)/2, 
+                                          (b+128)/2);
+      }
+      else
+      {
+        // result = current + above
+        *pCurr = SDL_MapRGB(temp->format, (rAbove+r)/2, 
+                                          (gAbove+g)/2, 
+                                          (bAbove+b)/2);
+      }
+      
+      // advance to next pixel
+      ++pCurr;
+      ++pAbove;
+    }
+  }
+ 
+  // 3)
+  // do top row
+  pCurr = pBase;
+  for (int x = 0; x < w; ++x)
+  {
+    *pCurr =  (255 >> 3 << 11) |
+              (0   >> 2 << 5 ) |
+              (255 >> 3 << 0 );
+    ++pCurr;
+  }
+
+  return temp;
+}
+*/
 
 void Graphics::Cleanup()
 {

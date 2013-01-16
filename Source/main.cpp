@@ -44,7 +44,14 @@ int main(int argc, char* argv[])
   LOG(DEBUG_BASIC, GAMEVERSIONSTRING << " startup" << endl)
   FLUSH_LOG
 
-
+if((sys.vid.screen->flags & SDL_HWSURFACE) == SDL_HWSURFACE)
+{
+  LOG(DEBUG_BASIC, "screen initialised.  it is a HW surface" << endl)
+}
+else
+{
+  LOG(DEBUG_BASIC, "screen initialised.  it is a sw surface" << endl)
+}
   Constants constants;
   constants.Init(); // may eventually use a config file 
 
@@ -108,6 +115,11 @@ int main(int argc, char* argv[])
         done = true;
       }
     }
+
+    //TODO would be cleaner to have a sys.MainLoopBegin() and sys.MainLoopEnd() instead of just Pump.  this call would be in wii-specific sys object
+    #ifdef WII
+    VIDEO_WaitVSync();
+    #endif      
   }
   
   game.Cleanup();

@@ -43,23 +43,33 @@ public:
   int homeArrowAnimDelay;
   int numDifficulties;
   static const char* difficultyText[];
-  long songStartOffset;
+  int internalMp3BufferDelay;
+  int internalWavBufferDelay;
+    // once a function is called to play sound,
+    // a silence-filled buffer is the initial input source.  user data
+    // begins to play once this silence has been consumed by the playback
+    // process, so to get precise synchronisation, call all sound
+    // functions this many milliseconds before the sound should be heard.
+    // note this is a system-dependant value that can be calculated based
+    // on buffer size.  all audio is 16 bit stereo at 48000 Hz so 
+    // buffer size / 4 / 48000 * 1000 gives the number of ms delay.
+    
   
-  long goalOffset;
+  int goalOffset;
   int maxPlayers;
   int playerArrowColumnWidth;
   int playerArrowFieldMargin;
   
   int preStartDelay;
   int songStartAllow;
-  int songAbortDelay;
+  unsigned int songAbortDelay;
   int jumpAllowDelay;
   int booDelay;
-  int goodDelay;
-  int greatDelay;
-  int perfectDelay;
-  int marvellousDelay;
-  int freezeFailDelay;
+  unsigned int goodDelay;
+  unsigned int greatDelay;
+  unsigned int perfectDelay;
+  unsigned int marvellousDelay;
+  unsigned int freezeFailDelay;
   int freezeLengthAllow;
   float marvellousEnergy;
   float perfectEnergy;

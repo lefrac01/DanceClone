@@ -28,8 +28,8 @@ using std::string;
 
 #ifdef WII
 #include "SDL_mixer.h"
-#include <mp3player.h>
 #include <asndlib.h>
+#include <mp3player.h>
 #else
 typedef unsigned char u8;
 typedef unsigned int u16;

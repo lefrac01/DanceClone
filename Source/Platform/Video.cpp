@@ -48,13 +48,28 @@ SDL_Surface* Video::LoadOptimize(string filename)
   LOG(DEBUG_MINOR, "Video::LoadOptimize(" << filename << ")" << endl)
   SDL_Surface* loadedImage = NULL;
   SDL_Surface* optimizedImage = NULL;
+  SDL_Surface* temp = NULL;
   loadedImage = IMG_Load(filename.c_str()); 
   if (loadedImage != NULL)
   {
-    optimizedImage = SDL_DisplayFormat(loadedImage);
-    Uint32 colorkey = SDL_MapRGB(optimizedImage->format, 0, 0xFF, 0xFF);
-    SDL_SetColorKey(optimizedImage, SDL_SRCCOLORKEY, colorkey);
+    temp = SDL_DisplayFormat(loadedImage);
     SDL_FreeSurface(loadedImage);
+    
+    optimizedImage = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_SRCCOLORKEY, temp->w, temp->h, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
+if(optimizedImage && (optimizedImage->flags & SDL_HWSURFACE) == SDL_HWSURFACE)
+{
+  LOG(DEBUG_BASIC, "created optimizedImage from " << filename << ".  it is a HW surface" << endl)
+}
+else
+{
+  LOG(DEBUG_BASIC, "created optimizedImage from " << filename << ".  it is a sw surface" << endl)
+}
+    
+    SDL_BlitSurface(temp, NULL, optimizedImage, NULL);
+    
+    Uint32 colorkey = SDL_MapRGB(optimizedImage->format, 0xFF, 0, 0xFF);
+    SDL_SetColorKey(optimizedImage, SDL_SRCCOLORKEY, colorkey);
+    
   }
   return optimizedImage;
 }

@@ -18,8 +18,8 @@
 //      MA 02110-1301, USA.
 
 #define GAMESTRING "DanceClone"
-#define GAMEVERSION "v0.67"
-#define GAMEVERSIONSTRING "DanceClone v0.67"
+#define GAMEVERSION "v0.68"
+#define GAMEVERSIONSTRING "DanceClone v0.68"
 
 
 #include <string>
@@ -103,25 +103,31 @@ private:
 
   int currentBpmChange;
   int numBpmChanges;
-  long currentMeasure;
-  long currentBeat;
+  int currentMeasure;
+  int currentBeat;
+  int lastAssistBeat; 
   float currentBeatFraction;
-  float partialBeatFraction;
-  long lastBeatTime;
-  long beatTimeElapsedAtPreviousBPMs;
+  float lastBeatTime;
+  float beatTimeElapsedAtPreviousBPMs;
   float beatFractionAtPreviousBPMs;
-  long songStartTime;
+  unsigned long songStartTime;
   long songTime;
-  long songAbortStartTime;
-  long frameTime;
+  unsigned long songAbortStartTime;
+  unsigned long frameTime;
   long viewportOffset;
   float pixelsPerMsAtCurrentBpm;
   float pixelsLeftToScroll;
   SDL_Surface* songBg;
+  //TODO: this is a buggy way to do it, each player object must maintain its own decals.
+  // there was a reason why it wasn't implemented that way, but the bullet must be bitten...
   vector<Decal> ratingDecals;
   vector<Decal> comboDecals;
   vector<Decal> okNgDecals;
   
+  vector<long> putzes;
+  vector<long> wbs;
+  vector<long> claps;
+  unsigned long frame;
 public:
 
   Game(OS& os, GUI& g);
@@ -146,12 +152,13 @@ public:
   bool CheckAbort();
   void InitialFrame();
   void Frame();
-  void PartialFrame(long begin, long end);
+  void PartialFrame(float begin, float end);
   void DrawHomeArrows(Player& p);
   void DrawEnergyBar(Player& p);
   void DrawDecals(Player& p);
   void DrawArrows(Player& p);
   void RateArrows(Player& p);
+  void DoAssistTick(Player& p);
   bool CanInterrupt();
 };
 

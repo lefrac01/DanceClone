@@ -7,9 +7,6 @@
 #$(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPPC")
 #endif
 
-#include $(DEVKITPPC)/wii_rules
-export SDL_INC		:=	/usr/include/SDL/
-export BOOST_INC	:=	/usr/local/boost_1_49_0/
 
 
 export CC	:=	gcc

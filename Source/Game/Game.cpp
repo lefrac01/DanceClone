@@ -348,9 +348,14 @@ void Game::RunLoadingSong()
 void Game::RunDebugScreen()
 {
   const int backButtonTag = 5;
+  static unsigned long t = 0;
+  unsigned long delay = 1000;
+  static bool flip = true;
   
   if (gameStateChanged)
   {
+    t = SDL_GetTicks();
+    
     LOG(DEBUG_MINOR, "Game::RunDebugScreen setting up" << endl)
     Container debug;
 
@@ -362,8 +367,8 @@ void Game::RunDebugScreen()
     Label title("debug", 25, y);
     debug.Add(title);
 
-    Image holmes(gfx.images[Graphics::HomeArrows], 200, 120, 0, 0);
-    debug.Add(holmes);
+    //#Image holmes(gfx.images[Graphics::HomeArrows], 200, 120, 0, 0);
+    //#debug.Add(holmes);
 
 
     Image freezeHit(gfx.images[Graphics::ComboHit], 30, 70, 0, 0);
@@ -404,6 +409,22 @@ void Game::RunDebugScreen()
     //#}
     //#
   }
+
+  if (SDL_GetTicks() - t > delay)
+  {
+    t = SDL_GetTicks();
+    flip = !flip;
+  }
+
+  if (flip)
+  {
+    sys.vid.ApplySurface(200, 120, gfx.images[Graphics::QuarterArrows], NULL, NULL);
+  }
+  else
+  {
+    //sys.vid.ApplySurface(200, 120, gfx.images[Graphics::QuarterArrows_0_5], NULL, NULL);
+  }
+
 
   int y = 120;
   for (int i = 0; i < Element::NUM_FONTS; ++i)
@@ -639,9 +660,9 @@ void Game::RunSelectSong()
   static int menuIndex = -1;
   static int oldMenuIndex = -1;
   static bool setupAnim = false;
-  static long animStartTime = -1;
-  static long animEndTime = -1;
-  static long animLength = 200;
+  static unsigned long animStartTime = 0;
+  static unsigned long animEndTime = 0;
+  static int animLength = 200;
   int elementPadding = constants.bannerSize * constants.bannerMiniZoomFactor / 3.0;
   static float elementIndexDistance = 0.0;
   static vector<float> elementAnimParameters;
@@ -654,7 +675,7 @@ void Game::RunSelectSong()
   static bool animToLeft = true;
   static SDL_Surface* newFocusZoomSurface = NULL;
   static SDL_Surface* oldFocusZoomSurface = NULL;
-  long animTime = SDL_GetTicks();
+  unsigned long animTime = SDL_GetTicks();
   
   if (gameStateChanged)
   {
@@ -680,7 +701,7 @@ void Game::RunSelectSong()
     {
       preload = 0;
       
-      animStartTime = -1;
+      animStartTime = 0;
 
       if (menuIndex == -1)
       {
@@ -771,12 +792,12 @@ void Game::RunSelectSong()
       elementAnimParameters[i] = PFunc::ParamByVal(PFunc::Linear, i, 0, numElements-1);
     }
   }
-  if (animStartTime != -1)
+  if (animStartTime != 0)
   {
     
     if (animTime >= animEndTime)
     {
-      animStartTime = -1;
+      animStartTime = 0;
     }
 
     // generate images based on menu index and place them 
@@ -867,7 +888,7 @@ void Game::RunSelectSong()
           }
 
           // if we are at the last step of drawing, use the preloaded image
-          if (animStartTime == -1)
+          if (animStartTime == 0)
           {
             final = banner;
           }
@@ -897,7 +918,7 @@ void Game::RunSelectSong()
           }
 
           // if we are at the last step of drawing, use the preloaded image
-          if (animStartTime == -1)
+          if (animStartTime == 0)
           {
             final = songMenuItems[elementMenuIndex].bannerMini ? songMenuItems[elementMenuIndex].bannerMini : gfx.images[Graphics::DefaultBannerMini];
           }
@@ -932,7 +953,7 @@ void Game::RunSelectSong()
       }
     }
     
-    if (animStartTime == -1)
+    if (animStartTime == 0)
     {
       // add information about current selection
       // title, bpm(min and max),
@@ -1279,6 +1300,14 @@ void Game::RunPlayPrep()
   if (songs[currentSong].backgroundImageFilename.size() > 0)
   {
     songBg = sys.vid.LoadOptimize(songs[currentSong].BackgroundImagePath());
+if(songBg && (songBg->flags & SDL_HWSURFACE) == SDL_HWSURFACE)
+{
+  LOG(DEBUG_BASIC, "created songBg from " << songs[currentSong].BackgroundImagePath() << ".  it is a HW surface" << endl)
+}
+else
+{
+  LOG(DEBUG_BASIC, "created songBg from " << songs[currentSong].BackgroundImagePath() << ".  it is a sw surface" << endl)
+}
   }
   
   switch(numPlayers)
@@ -1296,14 +1325,14 @@ void Game::RunPlayPrep()
   LOG(DEBUG_MINOR, "preparing for PLAY state" << endl)
   currentMeasure = 0;
   currentBeat = 0;
+  lastAssistBeat = 4;
   currentBeatFraction = 0.0;
-  partialBeatFraction = 0.0;
-  lastBeatTime = constants.songStartOffset;
+  lastBeatTime = songs[currentSong].beat0Offset;
   beatTimeElapsedAtPreviousBPMs = 0;
   beatFractionAtPreviousBPMs = 0.0;
-  songStartTime = SDL_GetTicks();
+  songStartTime = 0;  // set in initial frame
   songTime = 0;
-  songAbortStartTime = -1;
+  songAbortStartTime = 0;
   
   #ifdef WII
   sound.PrepMusic(songs[currentSong].Path());
@@ -1342,6 +1371,7 @@ void Game::RunPlayPrep()
       lastBeatTime -= Song::MsPerBeatFromBPM(songs[currentSong].bpmChanges[currentBpmChange].bpm);
     }
     LOG(DEBUG_MINOR, "RunPlayPrep() initial lastBeatTime: " << lastBeatTime << " using ms per beat " << Song::MsPerBeatFromBPM(songs[currentSong].bpmChanges[currentBpmChange].bpm) << endl)
+//LOG(DEBUG_BASIC, "prep lastBeatTime: " << lastBeatTime << " made previous to prestart delay: " << -constants.preStartDelay << "using BPM " << songs[currentSong].bpmChanges[currentBpmChange].bpm << " which gives ms per beat " << Song::MsPerBeatFromBPM(songs[currentSong].bpmChanges[currentBpmChange].bpm) << endl)
     
     
     // switch to pre start
@@ -1438,11 +1468,11 @@ void Game::RunScoreScreen()
       int scoreOutHeight = 20;
       
       // MAX system
-      //#float maxDancePoints = numArrows*2 + numOK*6 + numMissed*6;
-      //#float playerDancePoints = numMarvellous*2 + numPerfect*2 + numGreat + numOK*6 - numGood*4 - numMissed*8;
+      float maxDancePoints = numArrows*2 + numOK*6 + numMissed*6;
+      float playerDancePoints = numMarvellous*2 + numPerfect*2 + numGreat + numOK*6 - numGood*4 - numMissed*8;
       // MIGS system
-      float maxDancePoints = numArrows*3 + numOK*6 + numMissed*6;
-      float playerDancePoints = numMarvellous*3 + numPerfect*2 + numGreat + numOK*6 - numGood*4 - numMissed*8;
+      //#float maxDancePoints = numArrows*3 + numOK*6 + numMissed*6;
+      //#float playerDancePoints = numMarvellous*3 + numPerfect*2 + numGreat + numOK*6 - numGood*4 - numMissed*8;
 
       float scorePct = maxDancePoints == 0 ? 0 : playerDancePoints / maxDancePoints * 100.0;
       //NOTE: very easy to get negative scoring.  at least because my test songs are very short, the penalties allow
@@ -1573,15 +1603,28 @@ void Game::RunPlay()
 {
   LOG(DEBUG_GUTS, "Game::RunPlay" << endl)
 
+  // possible opt, not blit entire bg but only erase old info
+  // before song time update. would reduce ms per frame from
+  // ~8.27 to ~6.29
+  //#for (int i = 0; i < numPlayers; ++i)
+  //#{
+    //#Player& p = players[i];
+    //#ClearDecals(p);
+    //#ClearHomeArrows(p);
+    //#ClearArrows(p);
+    //#ClearEnergyBar(p);
+  //#}
+
   // update song time and viewport
   Frame();
-  
+  ++frame;
   // bg
   sys.vid.ApplySurface(0, 0, songBg ? songBg : gfx.images[Graphics::DefaultBg], sys.vid.screen, NULL);
 
   for (int i = 0; i < numPlayers; ++i)
   {
     Player& p = players[i];
+    DoAssistTick(p);
     DrawDecals(p);
     DrawHomeArrows(p);
     DrawArrows(p);
@@ -1592,8 +1635,11 @@ void Game::RunPlay()
   // pre start
   if (state == PLAY_PREP2)
   {
-    if (songTime > 0)
+    sys.vid.ApplySurface(gfx.screenWidth/2 - 300/2, gfx.screenHeight/2 - 120/2, gfx.images[Graphics::GetReady], NULL, NULL);
+    if (songTime > -constants.internalMp3BufferDelay)
     {
+      //TODO:  clear GetReady
+      
       // start music
       #ifndef WII
       sound.PrepMusic(songs[currentSong].Path());
@@ -1603,9 +1649,13 @@ void Game::RunPlay()
       
       // synchronise song start time since arrow ratings are based on that
       // and the prep/start of music may take a variable amount of time
-      songStartTime = SDL_GetTicks() + constants.songStartOffset;
+//LOG(DEBUG_BASIC, "song time switching to positive.  at this point, songStartTime=" << songStartTime << ", songTime = " << songTime << " currentBeatFraction < " << currentBeatFraction << endl)
+//LOG(DEBUG_BASIC, "Song time reaches " << -constants.internalBufferDelay << " time to start music.  viewport is at " << viewportOffset << endl)    
+      
+      //songStartTime = SDL_GetTicks();
+//LOG(DEBUG_BASIC, "new songStartTime=" << songStartTime << endl)
+
     }
-    sys.vid.ApplySurface(gfx.screenWidth/2 - 300/2, gfx.screenHeight/2 - 120/2, gfx.images[Graphics::GetReady], NULL, NULL);
   }
   
 
@@ -1616,9 +1666,89 @@ void Game::RunPlay()
     {
       RunPlayCleanup();
       state = SCORE;
+      
+      
+      //#LOG(DEBUG_BASIC, " saw " << frame << " frames in " << SDL_GetTicks() - songStartTime << " milliseconds" << endl)
+//LOG(DEBUG_BASIC, "IN PUTZ === " << SDL_GetTicks() - songStartTime << endl)
+//LOG(DEBUG_BASIC, "clap: " << songTime << " to hit: " << songTime + constants.internalBufferDelay << endl)
+//LOG(DEBUG_BASIC, "block: " << songTime << " to hit: " << songTime + constants.internalBufferDelay << " vp offset: " << viewportOffset + constants.internalBufferDelay * pixelsPerMsAtCurrentBpm << endl)
+      //#while (putzes.size() > 0 || wbs.size() > 0 || claps.size() > 0)
+      //#{
+        //#bool doputz = false; bool doblock = false; bool doclap = false;
+        //#if (putzes.size() > 0)
+        //#{
+          //#if (wbs.size() > 0)
+          //#{
+            //#if (claps.size() > 0)
+            //#{
+              //#doputz = putzes.front() < wbs.front() && putzes.front() < claps.front();
+              //#if (!doputz)
+              //#{
+                //#doclap = claps.front() < wbs.front();
+                //#doblock = ! doclap;
+              //#}
+            //#}
+            //#else
+            //#{
+              //#doputz = putzes.front() < wbs.front();
+              //#doblock = !doputz;
+            //#}
+          //#}
+          //#else
+          //#{
+            //#if (claps.size() > 0)
+            //#{
+              //#doputz = putzes.front() < claps.front();
+              //#doclap = !doputz;
+            //#}
+            //#else
+            //#{
+              //#doputz = true;
+            //#}
+          //#}
+        //#}
+        //#else
+        //#{
+          //#if (wbs.size() > 0)
+          //#{
+            //#if (claps.size() > 0)
+            //#{
+              //#doclap = claps.front() < wbs.front();
+              //#doblock = ! doclap;
+            //#}
+            //#else
+            //#{
+              //#doblock = true;
+            //#}
+          //#}
+          //#else
+          //#{
+            //#doclap = true;
+          //#}
+        //#}
+//#
+        //#if (doputz)
+        //#{
+          //#LOG(DEBUG_BASIC, "IN PUTZ === " << putzes.front() << endl)
+          //#putzes.erase(putzes.begin());
+        //#}
+        //#if (doblock)
+        //#{
+          //#LOG(DEBUG_BASIC, "block to hit: " << wbs.front() << endl)
+          //#wbs.erase(wbs.begin());
+        //#}
+        //#if (doclap)
+        //#{
+          //#LOG(DEBUG_BASIC, "clap to hit: " << claps.front() << endl)
+          //#claps.erase(claps.begin());
+        //#}
+      //#}
     }
   }
 
+  //TODO: abort code doesn't always work ???  if the song contains silence at the end,
+  // it is impossible to abort during this part.  possibly related to step information not
+  // being present for this part of the song?
   if (CheckAbort())
   {
     sound.PlaySample(Sound::RecordScratch);
@@ -1658,22 +1788,22 @@ bool Game::CheckAbort()
   }
   if (abortHeld)
   {
-    if (songAbortStartTime == -1)
+    if (songAbortStartTime == 0)
     {
       songAbortStartTime = SDL_GetTicks();
     }
     else
     {
-      if ((long)SDL_GetTicks() - songAbortStartTime > constants.songAbortDelay)
+      if (SDL_GetTicks() - songAbortStartTime > constants.songAbortDelay)
       {
-        songAbortStartTime = -1;
+        songAbortStartTime = 0;
         return true;
       }
     }
   }
   else
   {
-    songAbortStartTime = -1;
+    songAbortStartTime = 0;
   }
   return false;
 }
@@ -1681,7 +1811,6 @@ bool Game::CheckAbort()
 void Game::InitialFrame()
 {
   LOG(DEBUG_MINOR, "Game::InitialFrame" << endl)
-
   // add an offset to song start time.  if offset is positive,
   // first frame will calculate a negative current song time, allowing
   // actual song playback to be on sync if it starts a little later
@@ -1689,32 +1818,28 @@ void Game::InitialFrame()
   songStartTime = SDL_GetTicks() + constants.preStartDelay;
   LOG(DEBUG_MINOR, "Game::InitialFrame songStartTime: " << songStartTime << endl)
   
-  // viewport offset starts increasingly negative as song offset goes up,
-  // so that after offset time it is at 0.  this synchronises rating and drawing
-  viewportOffset = -constants.songStartOffset * pixelsPerMsAtCurrentBpm;
-  
-  // not taking into account partial pixels for initial offset. 
-  // fractional pixels are only important over time
+  viewportOffset = -constants.preStartDelay * pixelsPerMsAtCurrentBpm;
+LOG(DEBUG_BASIC, "vp init to " << viewportOffset << " based on px / ms : " << pixelsPerMsAtCurrentBpm << endl)  
   pixelsLeftToScroll = 0.0;
+  frame = 0;
 }
 
 void Game::Frame()
 {
   // process song time
   long oldSongTime = songTime;
-  songTime = SDL_GetTicks() - songStartTime;
+  songTime = SDL_GetTicks() - songStartTime;  
 
-  // due to constants.songStartOffset making songTime negative for the first few frames,
+  // due to songTime being negative for the first few frames,
   // on the very first frame, oldSongTime is after songTime.  this bugs the viewport by a few pixels.
   if (oldSongTime > songTime)
   {
     oldSongTime = songTime - 1;
   LOG(DEBUG_MINOR, "Game::Frame first frame songTime: " << songTime << endl)
   }
-
-
+  
   // process partial frames
-  long partialFrameTimeBegin = oldSongTime;
+  float partialFrameTimeBegin = oldSongTime;
   long frameTimeEnd = songTime;
   
   int frameEndBpmChange = currentBpmChange;
@@ -1729,8 +1854,9 @@ void Game::Frame()
 
     // update play data with the partial scroll between current
     // position and the position of the bpm change
-    //TODO: float to long :(  how much imprecision does this bring exactly?  aim == millisecond precision to end of 6 min. song
-    long partialFrameTimeEnd = songs[currentSong].bpmChanges[frameEndBpmChange].timestamp;
+    float partialFrameTimeEnd = songs[currentSong].bpmChanges[frameEndBpmChange].timestamp;
+
+//LOG(DEBUG_BASIC, "new beat length :" << Song::MsPerBeatFromBPM(songs[currentSong].bpmChanges[frameEndBpmChange].bpm) << " at timestamp " << songs[currentSong].bpmChanges[frameEndBpmChange].timestamp << " which is before song time " << frameTimeEnd << endl)
     
     PartialFrame(partialFrameTimeBegin, partialFrameTimeEnd);
     
@@ -1745,7 +1871,7 @@ void Game::Frame()
     
     currentBpmChange = frameEndBpmChange;
     
-    beatTimeElapsedAtPreviousBPMs += partialFrameTimeEnd - lastBeatTime - beatTimeElapsedAtPreviousBPMs;
+    beatTimeElapsedAtPreviousBPMs += songs[currentSong].bpmChanges[frameEndBpmChange].timestamp - lastBeatTime - beatTimeElapsedAtPreviousBPMs;
     beatFractionAtPreviousBPMs = currentBeatFraction;
   }
   
@@ -1757,7 +1883,7 @@ void Game::Frame()
 }
 
 
-void Game::PartialFrame(long begin, long end)
+void Game::PartialFrame(float begin, float end)
 {
   // process viewport scroll
   float pixelsToScroll = (end - begin) * pixelsPerMsAtCurrentBpm;
@@ -1765,31 +1891,47 @@ void Game::PartialFrame(long begin, long end)
   // add partial pixels left from last scroll's truncation
   pixelsToScroll += pixelsLeftToScroll;  
   
-  long wholePixelsToScroll = (long)pixelsToScroll;
+  int wholePixelsToScroll = (int)pixelsToScroll;
   pixelsLeftToScroll = pixelsToScroll - wholePixelsToScroll;
 
   viewportOffset += wholePixelsToScroll;
 
   // within this context, the current bpm does not change.
-  // however, time elapsed sinc thee last beat was not necessarily elapsed
+  // however, time elapsed since the last beat was not necessarily elapsed
   // at the current bpm, so special vars account for the current values
   // as of the last bpm change.
-  long timeElapsedAtCurrentBPM = end - lastBeatTime - beatTimeElapsedAtPreviousBPMs;
-  currentBeatFraction = partialBeatFraction + (timeElapsedAtCurrentBPM / Song::MsPerBeatFromBPM(songs[currentSong].bpmChanges[currentBpmChange].bpm) + beatFractionAtPreviousBPMs);
-//LOG(DEBUG_BASIC, "currentBeatFraction " << currentBeatFraction << endl)  
-  if ((currentBeatFraction + 0.00001) > 1)
+  float timeElapsedAtCurrentBPM = end - lastBeatTime - beatTimeElapsedAtPreviousBPMs;
+//LOG(DEBUG_BASIC, "I'm beginning to think so:  timeElapsedAtCurrentBPM:" << timeElapsedAtCurrentBPM)
+  
+  currentBeatFraction = beatFractionAtPreviousBPMs + (timeElapsedAtCurrentBPM / Song::MsPerBeatFromBPM(songs[currentSong].bpmChanges[currentBpmChange].bpm));
+//LOG(DEBUG_BASIC, "   currentBeatFraction " << currentBeatFraction << " which is at song time " << songTime << endl)
+  if (currentBeat != lastAssistBeat && currentBeatFraction + constants.internalWavBufferDelay / Song::MsPerBeatFromBPM(songs[currentSong].bpmChanges[currentBpmChange].bpm) >= 1.0)
+  {
+    //sound.PlaySample(Sound::WoodBlock);
+    lastAssistBeat = currentBeat;
+wbs.push_back(songTime + constants.internalWavBufferDelay);
+//LOG(DEBUG_BASIC, "block: " << songTime << " to hit: " << songTime + constants.internalBufferDelay << " vp offset: " << viewportOffset + constants.internalBufferDelay * pixelsPerMsAtCurrentBpm << endl)
+  }
+  if (currentBeatFraction >= 1.0)
   {
     ++currentBeat;
-    partialBeatFraction = currentBeatFraction - 1.0;
     currentBeatFraction -= 1.0;
-    lastBeatTime = end;
-    beatTimeElapsedAtPreviousBPMs = 0;
-    beatFractionAtPreviousBPMs = 0.0;
     if (currentBeat >= 4)
     {
       ++currentMeasure;
       currentBeat = 0;
     }
+
+
+    //ERROR:
+    // must find where exactly between frame start and frame end the
+    // last beat occurred.  this depends on the current BPM and if there
+    // were any BPM changes during the course of the previous beat
+    lastBeatTime = end - (currentBeatFraction * Song::MsPerBeatFromBPM(songs[currentSong].bpmChanges[currentBpmChange].bpm));
+//LOG(DEBUG_BASIC, " new lastBeatTime: " << lastBeatTime << " leaving remainder " << currentBeatFraction << "  end here being " << end << endl)
+    beatTimeElapsedAtPreviousBPMs = 0;
+    beatFractionAtPreviousBPMs = 0.0;
+    
   }
 }
 
@@ -1936,7 +2078,7 @@ void Game::DrawDecals(Player& p)
     long lastComboNumberTime = 0;
     for (unsigned int k = 0; k < comboDecals.size(); ++k)
     {
-      if (comboDecals[j].player == p.Index())
+      if (comboDecals[k].player == p.Index())
       {
         lastComboNumberTime = comboDecals[k].animStartTime;
       }
@@ -1962,6 +2104,7 @@ void Game::DrawDecals(Player& p)
   decalY = constants.goalOffset + 250;
   decalAnimH = 10;
   //TODO: hardcoded.  figure out a way to learn png size from resource
+  // answer: from the SDL surface this information is available
   int comboLabelWidth = 96;
   int comboLabelHeight = 32;
   int playerComboNumbers = 0;
@@ -2226,54 +2369,106 @@ void Game::DrawArrows(Player& p)
         else
         {
           SDL_Surface* arrowBitmapSrc = NULL;
-          switch(ar.type)
+          
+          // do quick vertical anti-aliasing by drawing an image of an arrow pre-rendered to be half
+          // a pixel lower than the normal arrow.  taking advantage of the fact that all arrows have
+          // integral spacing between each other, if any arrow is a half-pixel lower, they all are,
+          // so when viewport has over half a pixel left over after the scroll operation, use the
+          // half-pixel-lower version of the graphics
+          //#if (pixelsLeftToScroll < 0.5)
+          //#{
+            //#// arrow graphics moved a half-pixel down
+            //#switch(ar.type)
+            //#{
+            //#case Arrow::QUARTER:
+              //#arrowBitmapSrc = gfx.images[Graphics::QuarterArrows_0_5];
+              //#break;
+            //#case Arrow::EIGHTH:
+              //#arrowBitmapSrc = gfx.images[Graphics::EighthArrows];
+              //#break;
+            //#case Arrow::QUARTER_TRIPLET:
+              //#arrowBitmapSrc = gfx.images[Graphics::QuarterTripletArrows];
+              //#break;
+            //#case Arrow::SIXTEENTH:
+              //#arrowBitmapSrc = gfx.images[Graphics::SixteenthArrows];
+              //#break;
+            //#case Arrow::EIGHTH_TRIPLET:
+              //#arrowBitmapSrc = gfx.images[Graphics::EighthTripletArrows];
+              //#break;
+            //#case Arrow::THIRTYSECOND:
+              //#arrowBitmapSrc = gfx.images[Graphics::ThirtysecondArrows];
+              //#break;
+            //#case Arrow::SIXTEENTH_TRIPLET:
+              //#arrowBitmapSrc = gfx.images[Graphics::SixteenthTripletArrows];
+              //#break;
+            //#case Arrow::SIXTYFOURTH:
+              //#arrowBitmapSrc = gfx.images[Graphics::SixtyfourthArrows];
+              //#break;
+            //#//NOTE: same graphics used for 96th and 192nd
+            //#case Arrow::THIRTYSECOND_TRIPLET:
+            //#case Arrow::SIXTYFOURTH_TRIPLET:
+              //#arrowBitmapSrc = gfx.images[Graphics::SixtyfourthTripletArrows];
+              //#break;
+//#
+            //#default:
+              //#LOG(DEBUG_BASIC, "fell to default arrow type.  type=" << ar.type << endl)
+              //#arrowBitmapSrc = gfx.images[Graphics::QuarterArrows];
+              //#break;
+            //#}
+          //#}
+          //#else
           {
-          case Arrow::QUARTER:
-            arrowBitmapSrc = gfx.images[Graphics::QuarterArrows];
-            break;
-          case Arrow::EIGHTH:
-            arrowBitmapSrc = gfx.images[Graphics::EighthArrows];
-            break;
-          case Arrow::QUARTER_TRIPLET:
-            arrowBitmapSrc = gfx.images[Graphics::QuarterTripletArrows];
-            break;
-          case Arrow::SIXTEENTH:
-            arrowBitmapSrc = gfx.images[Graphics::SixteenthArrows];
-            break;
-          case Arrow::EIGHTH_TRIPLET:
-            arrowBitmapSrc = gfx.images[Graphics::EighthTripletArrows];
-            break;
-          case Arrow::THIRTYSECOND:
-            arrowBitmapSrc = gfx.images[Graphics::ThirtysecondArrows];
-            break;
-          case Arrow::SIXTEENTH_TRIPLET:
-            arrowBitmapSrc = gfx.images[Graphics::SixteenthTripletArrows];
-            break;
-          case Arrow::SIXTYFOURTH:
-            arrowBitmapSrc = gfx.images[Graphics::SixtyfourthArrows];
-            break;
-          //NOTE: same graphics used for 96th and 192nd
-          case Arrow::THIRTYSECOND_TRIPLET:
-          case Arrow::SIXTYFOURTH_TRIPLET:
-            arrowBitmapSrc = gfx.images[Graphics::SixtyfourthTripletArrows];
-            break;
+            // regular arrow graphics
+            switch(ar.type)
+            {
+            case Arrow::QUARTER:
+              arrowBitmapSrc = gfx.images[Graphics::QuarterArrows];
+              break;
+            case Arrow::EIGHTH:
+              arrowBitmapSrc = gfx.images[Graphics::EighthArrows];
+              break;
+            case Arrow::QUARTER_TRIPLET:
+              arrowBitmapSrc = gfx.images[Graphics::QuarterTripletArrows];
+              break;
+            case Arrow::SIXTEENTH:
+              arrowBitmapSrc = gfx.images[Graphics::SixteenthArrows];
+              break;
+            case Arrow::EIGHTH_TRIPLET:
+              arrowBitmapSrc = gfx.images[Graphics::EighthTripletArrows];
+              break;
+            case Arrow::THIRTYSECOND:
+              arrowBitmapSrc = gfx.images[Graphics::ThirtysecondArrows];
+              break;
+            case Arrow::SIXTEENTH_TRIPLET:
+              arrowBitmapSrc = gfx.images[Graphics::SixteenthTripletArrows];
+              break;
+            case Arrow::SIXTYFOURTH:
+              arrowBitmapSrc = gfx.images[Graphics::SixtyfourthArrows];
+              break;
+            //NOTE: same graphics used for 96th and 192nd
+            case Arrow::THIRTYSECOND_TRIPLET:
+            case Arrow::SIXTYFOURTH_TRIPLET:
+              arrowBitmapSrc = gfx.images[Graphics::SixtyfourthTripletArrows];
+              break;
 
-          default:
-            LOG(DEBUG_BASIC, "fell to default arrow type.  type=" << ar.type << endl)
-            arrowBitmapSrc = gfx.images[Graphics::QuarterArrows];
-            break;
+            default:
+              LOG(DEBUG_BASIC, "fell to default arrow type.  type=" << ar.type << endl)
+              arrowBitmapSrc = gfx.images[Graphics::QuarterArrows];
+              break;
+            }
           }
+
           sys.vid.ApplySurface(xpos, screenYPos, arrowBitmapSrc, NULL, &gfx.arrowsFrames[arrowsFramesIndex]);
-        }            
+        }
       }
       else
       {
         // arrow is hidden.  does it have an animation?
-        if (ar.animStartTime != -1)
+        if (ar.animStartTime != 0)
         {
           if (songTime - ar.animStartTime > constants.arrowsHitAnimMs)
           {
-            ar.animStartTime = -1;
+            ar.animStartTime = 0;
           }
           else
           {
@@ -2327,7 +2522,7 @@ void Game::DrawArrows(Player& p)
   // update base arrow
   for (int i = p.baseArrow; i < p.numArrows; i++)
   {
-    if (p.arrows[i].hidden && p.arrows[i].animStartTime == -1)
+    if (p.arrows[i].hidden && p.arrows[i].animStartTime == 0)
     {
       p.baseArrow = i;
     }
@@ -2356,6 +2551,7 @@ void Game::RateArrows(Player& p)
     return;
   }
   
+  // detect arrows that are too far past the goal line.  rate them as failed.
   for(int a = p.firstVisibleArrow; a <= p.lastVisibleArrow; a++)
   {
     LOG(DEBUG_GUTS, "f: " << p.firstVisibleArrow << " l: " << p.lastVisibleArrow << endl)
@@ -2379,17 +2575,32 @@ void Game::RateArrows(Player& p)
     }
   }
 
+  
+  // for each of the input directions pressed, rate the arrows
+  // near enough to the goal line to count.
+  
+  // kludge: multiple arrows in the same direction can be rated with one
+  // input press.  prevent the rating of more than one arrow in a given
+  // direction on a given pass through this function.
+  bool arrowRatedPerDirection[4];
+  for(int b=0; b<4; b++)
+  {
+    arrowRatedPerDirection[b] = false;
+  }
+  
   for(int b=0; b<4; b++)
   {
     if (p.inputs.directionDown[b])
     {
-//#LOG(DEBUG_BASIC, "IN PUTZ  " << endl)
       for(int a = p.firstVisibleArrow; a <= p.lastVisibleArrow; a++)
       {
         Arrow& ar = p.arrows[a];
         
         // when an arrow is reached that is too far ahead, don't bother looping any further
         if (ar.time - songTime > constants.booDelay) break;
+        
+        // if an arrow in this direction has already been rated, skip
+        if (arrowRatedPerDirection[b]) break;
         
         if (ar.direction == b && ar.rating == Arrow::RATING_NONE)
         {
@@ -2488,6 +2699,9 @@ void Game::RateArrows(Player& p)
                 {
                   jmpAr.hidden = true;
                 }
+                
+                // take note that an arrow was rated in the direction of this arrow
+                arrowRatedPerDirection[jmpAr.direction] = true;
               }
             }
           }
@@ -2511,6 +2725,8 @@ void Game::RateArrows(Player& p)
                 ar.hidden = true;
               }
               
+              // take note that an arrow was rated in the direction of this arrow
+              arrowRatedPerDirection[ar.direction] = true;
 
               float energyChange = 0.0;
               switch(newRating)
@@ -2588,6 +2804,11 @@ void Game::RateArrows(Player& p)
     }
   }
 
+
+  // for each input direction that is being held, check if a freeze
+  // arrow in the same direction is being held and has reached its end.
+  // for each input direction no longer held, check if a freeze arrow
+  // in the same direction was being held and is now failed.
   for(int b=0;b<4;b++)
   {
     if (p.inputs.directionHeld[b])
@@ -2681,6 +2902,23 @@ void Game::RateArrows(Player& p)
   
   //TODO: all rating of arrows should be looping by arrow not by direction
   // might be nice to be able to do if (pl.control_active[ar.direction])
+}
+
+void Game::DoAssistTick(Player& p)
+{
+  for (unsigned int a = p.baseAssistTickArrow; a < p.arrows.size(); ++a)
+  {
+    if (p.arrows[a].time - constants.internalWavBufferDelay <= songTime)
+    {
+      while (a < p.arrows.size() && p.arrows[a].time - constants.internalWavBufferDelay <= songTime)
+      {
+        ++a;
+        p.baseAssistTickArrow = a;
+      }
+//      sound.PlaySample(Sound::HandClap);
+      claps.push_back(songTime + constants.internalWavBufferDelay); 
+    }
+  }
 }
 
 bool Game::CanInterrupt()

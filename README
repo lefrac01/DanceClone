@@ -1,8 +1,11 @@
 DanceClone
 ------------------------
-DanceClone is a DDR clone aiming to support basic stepmania 
-files.  It uses SDL and runs on the Nintendo Wii using the
-Wiibrew channel.  
+DanceClone is a DDR clone allowing people with gamecube-style dance mats
+to play stepmania-compatible files.  Simply copy your mp3 and steps 
+exported in .sm format (from DDreamStudio for example) onto your SD card.
+
+It uses SDL and runs on the Nintendo Wii using the Wiibrew channel.
+It also runs on Linux for testing and development purposes (keyboard only).
 
 This source code is distributed under GNU LGPL, which can be
 found in the file "COPYING".
